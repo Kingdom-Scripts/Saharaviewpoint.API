@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Shareviewpoint.API</name>
+    </assembly>
+    <members>
+        <member name="M:Shareviewpoint.API.Controllers.BaseController.ProcessResponse(Shareviewpoint.Core.Models.Utilities.Result)">
+            <summary>
+            Returns the appropriate HTTP Response.
+            </summary>
+            <param name="result">The result.</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
