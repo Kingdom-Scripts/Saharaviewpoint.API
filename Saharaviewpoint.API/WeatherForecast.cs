@@ -1,4 +1,4 @@
-namespace Shareviewpoint.API
+namespace Saharaviewpoint.API
 {
     public class WeatherForecast
     {
@@ -8,6 +8,6 @@ namespace Shareviewpoint.API
 
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 
-        public string? Summary { get; set; }
+        public string Summary { get; set; }
     }
 }
