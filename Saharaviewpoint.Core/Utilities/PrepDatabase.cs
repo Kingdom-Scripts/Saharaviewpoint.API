@@ -12,11 +12,11 @@ public static class PrepDatabase
     {
         using (var serviceScope = app.ApplicationServices.CreateScope())
         {
-            SeedData(serviceScope.ServiceProvider.GetService<ShareviewpointContext>(), isProd);
+            SeedData(serviceScope.ServiceProvider.GetService<SaharaviewpointContext>(), isProd);
         }
     }
 
-    private static void SeedData(ShareviewpointContext context, bool isProd)
+    private static void SeedData(SaharaviewpointContext context, bool isProd)
     {
         // run migration when in prod
         if (isProd)

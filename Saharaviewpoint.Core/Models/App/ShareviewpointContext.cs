@@ -3,13 +3,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace Saharaviewpoint.Core.Models.App
 {
-    public partial class ShareviewpointContext : DbContext
+    public partial class SaharaviewpointContext : DbContext
     {
         protected readonly IConfiguration Configuration;
 
-        public ShareviewpointContext() { }
+        public SaharaviewpointContext() { }
 
-        public ShareviewpointContext(DbContextOptions<ShareviewpointContext> options) : base(options) { }
+        public SaharaviewpointContext(DbContextOptions<SaharaviewpointContext> options) : base(options) { }
 
         public virtual DbSet<Role> Roles { get; set; }
         public virtual DbSet<User> Users { get; set; }

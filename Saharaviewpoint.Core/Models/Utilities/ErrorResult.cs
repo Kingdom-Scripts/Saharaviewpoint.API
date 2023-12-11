@@ -87,5 +87,6 @@ public class ErrorResult : Result
     /// <summary>
     /// A collection of validation errors associated with the error.
     /// </summary>
-    public ICollection<ValidationError> ValidationErrors { get; set; }
+    public IDictionary<string, string[]> ValidationErrors { get; set; }
+    //public ICollection<ValidationError> ValidationErrors { get; set; }
 }
