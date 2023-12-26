@@ -1,9 +1,11 @@
 using System.Diagnostics;
-using System.Net;
 using System.Text.Json;
+using Azure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Models.Utilities;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
@@ -11,6 +13,10 @@ public class ErrorHandlerMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlerMiddleware> _logger;
+    private readonly JsonSerializerOptions _options = new() { 
+        WriteIndented = true, 
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+    };
 
     public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
     {
@@ -31,23 +37,11 @@ public class ErrorHandlerMiddleware
 
             _logger.LogError("Actual Error: {Error}", error);
 
-            switch (error)
+            response.StatusCode = error switch
             {
-                //case AppException e:
-                //    // custom application error
-                //    response.StatusCode = (int)HttpStatusCode.BadRequest;
-                //    break;
-                case KeyNotFoundException e:
-                    // not found error
-                    response.StatusCode = (int)HttpStatusCode.NotFound;
-                    break;
-                default:
-                    // unhandled error
-                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    break;
-            }
-
-            JsonSerializerOptions options = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+                KeyNotFoundException e => StatusCodes.Status404NotFound,// not found error
+                _ => StatusCodes.Status500InternalServerError,// unhandled error
+            };
 
             var result = JsonSerializer.Serialize(new ErrorResult
             {
@@ -58,11 +52,28 @@ public class ErrorHandlerMiddleware
                 Instance = Guid.NewGuid().ToString(),
                 Path = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}",
                 TraceInfo = GetErrorTraceInfo(error),
-            }, options);
+            }, _options);
 
             _logger.LogError("Error: {@result}", result);
 
             await response.WriteAsync(result);
+        }
+
+        // handle unauthorized error
+        if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
+        {
+            var result = JsonSerializer.Serialize(new ErrorResult
+            {
+                Success = false,
+                Message = "Authentication failed, please log in to access this resource",
+                Status = StatusCodes.Status401Unauthorized,
+            }, _options);
+
+            // Set the response content type to JSON
+            context.Response.ContentType = "application/json";
+
+            // Write the JSON response
+            await context.Response.WriteAsync(result);
         }
     }
 

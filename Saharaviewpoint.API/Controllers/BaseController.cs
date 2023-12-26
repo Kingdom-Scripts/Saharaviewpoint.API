@@ -16,6 +16,11 @@ public class BaseController : ControllerBase
     {
         if (result.Success)
         {
+            if(result.Status == StatusCodes.Status201Created)
+            {
+                return StatusCode(StatusCodes.Status201Created, result);
+            }
+
             return Ok(result);
         }
         else if (result.Status == StatusCodes.Status401Unauthorized)
@@ -32,11 +37,11 @@ public class BaseController : ControllerBase
         }
         else if (result.Status == StatusCodes.Status500InternalServerError)
         {
-            return StatusCode((int)HttpStatusCode.InternalServerError, result);
+            return StatusCode(StatusCodes.Status500InternalServerError, result);
         }
         else
         {
-            return StatusCode((int)HttpStatusCode.BadRequest, result);
+            return StatusCode(StatusCodes.Status400BadRequest, result);
         }
     }
 }

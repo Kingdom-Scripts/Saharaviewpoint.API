@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\Enums\**" />
+    <EmbeddedResource Remove="Models\Enums\**" />
+    <None Remove="Models\Enums\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="SaharaviewpointCore.xml" />
   </ItemGroup>
 
@@ -16,10 +22,6 @@
     <Content Include="SaharaviewpointCore.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\Enums\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,6 +50,10 @@
 
   <ItemGroup>
     <DocFileItem Remove="SaharaviewpointCore.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Enums\" />
   </ItemGroup>
 
 </Project>

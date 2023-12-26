@@ -1,18 +1,13 @@
-using FluentValidation;
-using FluentValidation.AspNetCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Core.Models.Auth;
+using Saharaviewpoint.Core.Models.App;
+using Saharaviewpoint.Core.Models.Configuration;
 using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
 using Serilog;
-using System.Reflection;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
+using System.Configuration;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -30,6 +25,14 @@ builder.Host.UseSerilog((hostContext, services, config) =>
     config.Enrich.FromLogContext();
     config.WriteTo.Console();
 });
+
+//Console.WriteLine("--> Using SqlServer DB");
+//builder.Services.AddDbContext<SaharaviewpointContext>(opt =>
+//{
+//    var df = builder.Configuration.GetConnectionString("Saharaviewpoint");
+//    opt.UseSqlServer(builder.Configuration.GetConnectionString("Saharaviewpoint"));
+//    opt.LogTo(Console.WriteLine, LogLevel.Information);
+//});
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -105,7 +108,12 @@ app.UseMiddleware<ErrorHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<JWTMiddleware>();
+
+app.UseMiddleware<UserSessionMiddleware>();
 
 app.MapControllers();
 

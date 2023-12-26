@@ -1,4 +1,4 @@
-namespace Saharaviewpoint.Core.Models.Auth;
+namespace Saharaviewpoint.Core.Models.Configuration;
 
 public class JwtConfig
 {
@@ -6,4 +6,5 @@ public class JwtConfig
     public int Expires { get; set; }
     public string Issuer { get; set; }
     public string Audience { get; set; }
+    public int RefreshExpireDays { get; set; }
 }
