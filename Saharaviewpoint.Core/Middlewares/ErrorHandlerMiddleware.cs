@@ -1,11 +1,8 @@
-using System.Diagnostics;
-using System.Text.Json;
-using Azure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Models.Utilities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
@@ -13,9 +10,11 @@ public class ErrorHandlerMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ErrorHandlerMiddleware> _logger;
-    private readonly JsonSerializerOptions _options = new() { 
-        WriteIndented = true, 
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+
+    private readonly JsonSerializerOptions _options = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
@@ -99,6 +98,5 @@ public class ErrorHandlerMiddleware
         };
 
         return trace;
-
     }
 }

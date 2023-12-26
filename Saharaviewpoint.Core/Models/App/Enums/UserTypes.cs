@@ -6,8 +6,10 @@ namespace Saharaviewpoint.Core.Models.App.Enums
     {
         [Description("Business")]
         Business = 1,
+
         [Description("Client")]
         Client = 2,
+
         [Description("Manager")]
         Manager = 3
     }

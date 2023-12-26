@@ -1,13 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Configuration;
 using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
 using Serilog;
-using System.Configuration;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -25,14 +22,6 @@ builder.Host.UseSerilog((hostContext, services, config) =>
     config.Enrich.FromLogContext();
     config.WriteTo.Console();
 });
-
-//Console.WriteLine("--> Using SqlServer DB");
-//builder.Services.AddDbContext<SaharaviewpointContext>(opt =>
-//{
-//    var df = builder.Configuration.GetConnectionString("Saharaviewpoint");
-//    opt.UseSqlServer(builder.Configuration.GetConnectionString("Saharaviewpoint"));
-//    opt.LogTo(Console.WriteLine, LogLevel.Information);
-//});
 
 // Add services to the container.
 builder.Services.AddControllers();

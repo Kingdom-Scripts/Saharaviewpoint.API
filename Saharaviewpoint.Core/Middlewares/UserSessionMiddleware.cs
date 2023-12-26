@@ -25,6 +25,5 @@ namespace Saharaviewpoint.Core.Middlewares
             // Call the next delegate/middleware in the pipeline
             await _next.Invoke(context);
         }
-
     }
 }

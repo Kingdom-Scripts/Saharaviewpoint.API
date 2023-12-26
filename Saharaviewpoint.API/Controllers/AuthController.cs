@@ -13,7 +13,6 @@ namespace Saharaviewpoint.API.Controllers
     [Authorize]
     public class AuthController : BaseController
     {
-
         private readonly ILogger<AuthController> _logger;
         private readonly IAuthService _authService;
 

@@ -1,6 +1,6 @@
-using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Models.Utilities;
+using System.Net;
 
 namespace Saharaviewpoint.API.Controllers;
 
@@ -16,7 +16,7 @@ public class BaseController : ControllerBase
     {
         if (result.Success)
         {
-            if(result.Status == StatusCodes.Status201Created)
+            if (result.Status == StatusCodes.Status201Created)
             {
                 return StatusCode(StatusCodes.Status201Created, result);
             }

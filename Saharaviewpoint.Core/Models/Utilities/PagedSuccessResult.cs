@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Http;
-using Saharaviewpoint.Core.Interfaces;
 using System.Text.Json.Serialization;
 
 namespace Saharaviewpoint.Core.Models.Utilities;
-
 
 /// <summary>
 /// Represents a successful result, derived from the <see cref="Result"/> class.
@@ -108,7 +106,6 @@ public class PagedSuccessResult : Result
     [JsonIgnore]
     public new IDictionary<string, string[]> ValidationErrors { get; set; }
 }
-
 
 /// <summary>
 /// Represents a generic successful result with content, derived from the <see cref="Result"/> class.

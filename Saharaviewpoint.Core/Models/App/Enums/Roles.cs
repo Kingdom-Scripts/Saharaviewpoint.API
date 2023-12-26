@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace Saharaviewpoint.Core.Models.App.Enums
+﻿namespace Saharaviewpoint.Core.Models.App.Enums
 {
     public enum Roles
     {

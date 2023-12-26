@@ -40,4 +40,8 @@
     <DocFileItem Remove="Saharaviewpoint.xml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
 </Project>

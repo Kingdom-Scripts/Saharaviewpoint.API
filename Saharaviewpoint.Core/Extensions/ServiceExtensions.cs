@@ -12,7 +12,6 @@ using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Input.Auth;
 using Saharaviewpoint.Core.Services;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Enums;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Reflection;
 using System.Text;
@@ -23,7 +22,7 @@ public static class ServiceExtensions
 {
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
-        // set up database 
+        // set up database
         //if (isProduction)
         //{
         Console.WriteLine("--> Using SqlServer DB");
@@ -70,7 +69,6 @@ public static class ServiceExtensions
             option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
         }).AddJwtBearer(options =>
         {
             options.SaveToken = true;

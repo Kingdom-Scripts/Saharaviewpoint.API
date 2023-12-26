@@ -1,17 +1,17 @@
 using Mapster;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Configuration;
 using Saharaviewpoint.Core.Models.Utilities;
 using Saharaviewpoint.Core.Models.View.Auth;
-using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Saharaviewpoint.Core.Constants;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -30,7 +30,6 @@ public class TokenGenerator : ITokenGenerator
 
     public async Task<Result> GenerateJwtToken(User user)
     {
-
         DateTime expiresAt = DateTime.UtcNow.AddMinutes(_jwtConfig.Expires);
 
         var token = GenerateAccessToken(user, expiresAt);

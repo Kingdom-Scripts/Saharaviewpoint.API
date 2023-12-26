@@ -113,6 +113,5 @@ namespace Saharaviewpoint.Core.Middlewares
 
             return false;
         }
-
     }
 }

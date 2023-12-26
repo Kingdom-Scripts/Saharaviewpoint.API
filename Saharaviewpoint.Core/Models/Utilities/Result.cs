@@ -67,6 +67,7 @@ public class Result<T>
     /// The title associated with the result.
     /// </summary>
     public string Title { get; set; }
+
     /// <summary>
     /// A collection of validation errors associated with the error.
     /// </summary>

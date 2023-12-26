@@ -76,7 +76,6 @@ public class ErrorResult : Result
     /// </summary>
     public new string Path { get; set; }
 
-
     // Ignore Success related properties
 
     /// <summary>
@@ -161,7 +160,6 @@ public class ErrorResult<T> : Result<T>
     /// The path associated with the error.
     /// </summary>
     public string Path { get; set; }
-
 
     // Ignore Success related properties
 

@@ -55,37 +55,37 @@
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult">
             <summary>
-            Represents an error result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.
+            Represents an error result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a default failure status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a default failure status.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified error message.
             </summary>
             <param name="message">The error message associated with the result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult.#ctor(System.Int32,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified status code and error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified status code and error message.
             </summary>
             <param name="status">The HTTP status code of the error result.</param>
             <param name="message">The error message associated with the result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult.#ctor(System.String,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified title and error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified title and error message.
             </summary>
             <param name="title">The title associated with the error result.</param>
             <param name="message">The error message associated with the result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult.#ctor(System.Int32,System.String,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified status code, title, and error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified status code, title, and error message.
             </summary>
             <param name="status">The HTTP status code of the error result.</param>
             <param name="title">The title associated with the error result.</param>
@@ -108,42 +108,42 @@
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.ErrorResult.Content">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.ErrorResult.Paging">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a default failure status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a default failure status.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified error message.
             </summary>
             <param name="message">The error message associated with the result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.#ctor(System.Int32,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified status code and error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified status code and error message.
             </summary>
             <param name="status">The HTTP status code of the error result.</param>
             <param name="message">The error message associated with the result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.#ctor(System.String,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified title and error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified title and error message.
             </summary>
             <param name="title">The title associated with the error result.</param>
             <param name="message">The error message associated with the result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.#ctor(System.Int32,System.String,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult"/> class with a specified status code, title, and error message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.ErrorResult" /> class with a specified status code, title, and error message.
             </summary>
             <param name="status">The HTTP status code of the error result.</param>
             <param name="title">The title associated with the error result.</param>
@@ -166,116 +166,116 @@
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.Content">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.ErrorResult`1.Paging">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult">
             <summary>
-            Represents a successful result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.
+            Represents a successful result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult"/> class with a default success status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult" /> class with a default success status.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.#ctor(System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult"/> class with a specified content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult" /> class with a specified content.
             </summary>
             <param name="content">The content associated with the successful result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult"/> class with a specified title.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult" /> class with a specified title.
             </summary>
             <param name="message">The message associated with the successful result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.#ctor(System.String,System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult"/> class with specified content and message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult" /> class with specified content and message.
             </summary>
             <param name="content">The content associated with the successful result.</param>
             <param name="message">The message associated with the successful result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.#ctor(System.Int32,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult"/> class with a specified status code and title.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult" /> class with a specified status code and title.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="message">The additional message associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.#ctor(System.Int32,System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult"/> class with a specified status code, title, and message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult" /> class with a specified status code, title, and message.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="content">The content associated with the successful result.</param>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.Detail">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.Instance">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.Path">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.TraceInfo">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedSuccessResult.ValidationErrors">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1">
             <summary>
-            Represents a generic successful result with content, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.
+            Represents a generic successful result with content, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class.
             </summary>
             <typeparam name="T">The type of the content.</typeparam>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1"/> class with a default success status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1" /> class with a default success status.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.#ctor(`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1"/> class with specified content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1" /> class with specified content.
             </summary>
             <param name="content">The content associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.#ctor(System.Int32,`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1"/> class with a specified status and content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1" /> class with a specified status and content.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="content">The content associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.#ctor(System.String,`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1"/> class with a specified title and content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1" /> class with a specified title and content.
             </summary>
             <param name="message">The additional message associated with the success result.</param>
             <param name="content">The content associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.#ctor(System.Int32,System.String,`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1"/> class with specified status code, title, and content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1" /> class with specified status code, title, and content.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="message">The additional message associated with the success result.</param>
@@ -283,27 +283,27 @@
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.Detail">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.Instance">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.Path">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.TraceInfo">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.PagedPagedSuccessResult`1.ValidationErrors">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.Result`1">
@@ -314,18 +314,18 @@
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.Result`1.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.Result`1.#ctor(System.Boolean)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class with a specified success status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class with a specified success status.
             </summary>
             <param name="success">A value indicating whether the operation was successful.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.Result`1.#ctor(System.Boolean,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class with a specified success status and message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class with a specified success status and message.
             </summary>
             <param name="success">A value indicating whether the operation was successful.</param>
             <param name="message">The additional message associated with the result.</param>
@@ -398,124 +398,124 @@
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.Result.#ctor(System.Boolean)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class with a specified success status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class with a specified success status.
             </summary>
             <param name="success">A value indicating whether the operation was successful.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.Result.#ctor(System.Boolean,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class with a specified success status and message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class with a specified success status and message.
             </summary>
             <param name="success">A value indicating whether the operation was successful.</param>
             <param name="message">The additional message associated with the result.</param>
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult">
             <summary>
-            Represents a successful result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.
+            Represents a successful result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult"/> class with a default success status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult" /> class with a default success status.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult.#ctor(System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult"/> class with a specified content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult" /> class with a specified content.
             </summary>
             <param name="content">The content associated with the successful result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult"/> class with a specified title.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult" /> class with a specified title.
             </summary>
             <param name="message">The message associated with the successful result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult.#ctor(System.String,System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult"/> class with specified content and message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult" /> class with specified content and message.
             </summary>
             <param name="content">The content associated with the successful result.</param>
             <param name="message">The message associated with the successful result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult.#ctor(System.Int32,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult"/> class with a specified status code and title.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult" /> class with a specified status code and title.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="message">The additional message associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult.#ctor(System.Int32,System.Object)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult"/> class with a specified status code, title, and message.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult" /> class with a specified status code, title, and message.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="content">The content associated with the successful result.</param>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult.Paging">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult.Detail">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult.Instance">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult.Path">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult.TraceInfo">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult.ValidationErrors">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1">
             <summary>
-            Represents a generic successful result with content, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.
+            Represents a generic successful result with content, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result" /> class.
             </summary>
             <typeparam name="T">The type of the content.</typeparam>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1"/> class with a default success status.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1" /> class with a default success status.
             </summary>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.#ctor(`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1"/> class with specified content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1" /> class with specified content.
             </summary>
             <param name="content">The content associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.#ctor(System.Int32,`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1"/> class with a specified status and content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1" /> class with a specified status and content.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="content">The content associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.#ctor(System.String,`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1"/> class with a specified title and content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1" /> class with a specified title and content.
             </summary>
             <param name="message">The additional message associated with the success result.</param>
             <param name="content">The content associated with the success result.</param>
         </member>
         <member name="M:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.#ctor(System.Int32,System.String,`0)">
             <summary>
-            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1"/> class with specified status code, title, and content.
+            Initializes a new instance of the <see cref="T:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1" /> class with specified status code, title, and content.
             </summary>
             <param name="status">The HTTP status code of the success result.</param>
             <param name="message">The additional message associated with the success result.</param>
@@ -523,32 +523,32 @@
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.Paging">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.Detail">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.Instance">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.Path">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.TraceInfo">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
         <member name="P:Saharaviewpoint.Core.Models.Utilities.SuccessResult`1.ValidationErrors">
             <summary>
-            <inheritdoc/>
+            <inheritdoc />
             </summary>
         </member>
     </members>
