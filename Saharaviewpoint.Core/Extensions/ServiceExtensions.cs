@@ -1,3 +1,5 @@
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
+using Saharaviewpoint.Core.Models.Configuration;
 using Saharaviewpoint.Core.Models.Input.Auth;
 using Saharaviewpoint.Core.Services;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
@@ -23,22 +26,28 @@ public static class ServiceExtensions
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
         // set up database
-        //if (isProduction)
-        //{
         Console.WriteLine("--> Using SqlServer DB");
+
+        var keyVault = new AzureKeyVaultConfig
+        {
+            Url = configuration.GetSection("KeyVault:KeyVaultURL").Value,
+            ClientId = configuration.GetSection("KeyVault:ClientId").Value,
+            ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
+            DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
+        };
+
+        var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
+
+        var client = new SecretClient(new Uri(keyVault.Url), credential);
+
+         var fff = client.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value;
+
         services.AddDbContext<SaharaviewpointContext>(opt =>
         {
-            var df = configuration.GetConnectionString("Saharaviewpoint");
-            opt.UseSqlServer(configuration.GetConnectionString("Saharaviewpoint"),
+            opt.UseSqlServer(client.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
                 b => b.MigrationsAssembly("Saharaviewpoint.API"));
             opt.LogTo(Console.WriteLine, LogLevel.Information);
         });
-        //}
-        //else
-        //{
-        //    Console.WriteLine("--> Using InMemory DB");
-        //    services.AddDbContext<SaharaviewpointContext>(opt => opt.UseInMemoryDatabase("InMem"));
-        //}
 
         // Add fluent validation.
         services.AddValidatorsFromAssembly(Assembly.Load("Saharaviewpoint.Core"));

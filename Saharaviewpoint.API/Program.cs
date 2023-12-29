@@ -83,6 +83,8 @@ builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfi
 
 builder.Services.ConfigureServices(builder.Configuration, builder.Environment.IsProduction());
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
