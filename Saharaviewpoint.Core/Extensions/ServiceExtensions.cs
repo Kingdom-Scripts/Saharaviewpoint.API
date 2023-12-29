@@ -26,8 +26,6 @@ public static class ServiceExtensions
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
         // set up database
-        Console.WriteLine("--> Using SqlServer DB");
-
         var keyVault = new AzureKeyVaultConfig
         {
             Url = configuration.GetSection("KeyVault:KeyVaultURL").Value,
