@@ -1,21 +1,24 @@
+using LazyCache;
+using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
 
 namespace Saharaviewpoint.Core.Services;
 
 public class CacheService : ICacheService
 {
-    public void AddToken(string key, string value, DateTime expiresAt)
+    private readonly IAppCache _cache;
+
+    public CacheService(IAppCache cache)
     {
-        throw new NotImplementedException();
+        _cache = cache;
     }
 
-    public Task<string> GetToken(string key)
-    {
-        throw new NotImplementedException();
-    }
+    public void AddToken(string key, string token, DateTime expiresAt)
+        => _cache.Add($"{AuthKeys.CacheKey}:{key}", token, expiresAt);
+
+    public async Task<string> GetToken(string key)
+        => await _cache.GetAsync<string>($"{AuthKeys.CacheKey}:{key}");
 
     public void RemoveToken(string key)
-    {
-        throw new NotImplementedException();
-    }
+        => _cache.Remove($"{AuthKeys.CacheKey}:{key}");
 }

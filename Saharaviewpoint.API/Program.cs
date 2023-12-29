@@ -1,7 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Core.Models.Auth;
+using Saharaviewpoint.Core.Models.Configuration;
 using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
 using Serilog;
@@ -33,20 +33,20 @@ builder.Services.AddSwaggerGen(swagger =>
     swagger.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
-        Title = "Shareviewpoint API",
-        Description = "Shareviewpoint Web API. A project for managing and tracking construction development.",
+        Title = "Saharaviewpoint API",
+        Description = "Saharaviewpoint Web API. A project for managing and tracking construction development.",
         Contact = new OpenApiContact
         {
-            Name = "Shareviewpoint",
-            Email = "contact@shareviewpoint.com"
+            Name = "Saharaviewpoint",
+            Email = "contact@saharaviewpoint.com"
         }
     });
 
-    string xmlFilePath = Path.Combine(AppContext.BaseDirectory, "Shareviewpoint.xml");
+    string xmlFilePath = Path.Combine(AppContext.BaseDirectory, "Saharaviewpoint.xml");
     swagger.IncludeXmlComments(xmlFilePath, true);
 
-    // include the XML of Shareviewpoint.Core
-    string coreXmlFilePath = Path.Combine(AppContext.BaseDirectory, "ShareviewpointCore.xml");
+    // include the XML of Saharaviewpoint.Core
+    string coreXmlFilePath = Path.Combine(AppContext.BaseDirectory, "SaharaviewpointCore.xml");
     swagger.IncludeXmlComments(coreXmlFilePath, true);
 
     swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
@@ -83,6 +83,8 @@ builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfi
 
 builder.Services.ConfigureServices(builder.Configuration, builder.Environment.IsProduction());
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -97,7 +99,12 @@ app.UseMiddleware<ErrorHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<JWTMiddleware>();
+
+app.UseMiddleware<UserSessionMiddleware>();
 
 app.MapControllers();
 

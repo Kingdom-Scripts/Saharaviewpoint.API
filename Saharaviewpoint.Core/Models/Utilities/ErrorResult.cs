@@ -64,6 +64,91 @@ public class ErrorResult : Result
     /// <summary>
     /// Additional details about the error.
     /// </summary>
+    public new string Detail { get; set; }
+
+    /// <summary>
+    /// The instance where the error occurred.
+    /// </summary>
+    public new string Instance { get; set; }
+
+    /// <summary>
+    /// The path associated with the error.
+    /// </summary>
+    public new string Path { get; set; }
+
+    // Ignore Success related properties
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    [JsonIgnore]
+    public new object Content { get; set; }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    [JsonIgnore]
+    public new Paging Paging { get; set; }
+}
+
+public class ErrorResult<T> : Result<T>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorResult"/> class with a default failure status.
+    /// </summary>
+    public ErrorResult() : base(false)
+    {
+        Status = StatusCodes.Status500InternalServerError;
+        Title = "Error Occurred";
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorResult"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The error message associated with the result.</param>
+    public ErrorResult(string message) : base(false, message)
+    {
+        Status = StatusCodes.Status500InternalServerError;
+        Title = "Error Occurred";
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorResult"/> class with a specified status code and error message.
+    /// </summary>
+    /// <param name="status">The HTTP status code of the error result.</param>
+    /// <param name="message">The error message associated with the result.</param>
+    public ErrorResult(int status, string message) : base(false, message)
+    {
+        Status = status;
+        Title = "Error Occurred";
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorResult"/> class with a specified title and error message.
+    /// </summary>
+    /// <param name="title">The title associated with the error result.</param>
+    /// <param name="message">The error message associated with the result.</param>
+    public ErrorResult(string title, string message) : base(false, message)
+    {
+        Status = StatusCodes.Status500InternalServerError;
+        Title = title;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ErrorResult"/> class with a specified status code, title, and error message.
+    /// </summary>
+    /// <param name="status">The HTTP status code of the error result.</param>
+    /// <param name="title">The title associated with the error result.</param>
+    /// <param name="message">The error message associated with the result.</param>
+    public ErrorResult(int status, string title, string message) : base(false, message)
+    {
+        Status = status;
+        Title = title;
+    }
+
+    /// <summary>
+    /// Additional details about the error.
+    /// </summary>
     public string Detail { get; set; }
 
     /// <summary>
@@ -76,16 +161,17 @@ public class ErrorResult : Result
     /// </summary>
     public string Path { get; set; }
 
-    /// <summary>
-    /// Information about the trace of the error.
-    /// </summary>
-#if !DEBUG
-    [JsonIgnore]
-#endif
-    public TraceInfo TraceInfo { get; set; }
+    // Ignore Success related properties
 
     /// <summary>
-    /// A collection of validation errors associated with the error.
+    /// <inheritdoc/>
     /// </summary>
-    public ICollection<ValidationError> ValidationErrors { get; set; }
+    [JsonIgnore]
+    public new T Content { get; set; }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    [JsonIgnore]
+    public new Paging Paging { get; set; }
 }

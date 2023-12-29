@@ -63,6 +63,7 @@ namespace Saharaviewpoint.Core.Extensions
                 throw;
             }
         }
+
         private static async Task<PagedList<T>> CreateAsync<T>(IEnumerable<T> source, int pageIndex, int pageSize)
         {
             try
