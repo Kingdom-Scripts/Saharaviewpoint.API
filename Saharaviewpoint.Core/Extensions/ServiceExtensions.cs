@@ -40,8 +40,6 @@ public static class ServiceExtensions
 
         var client = new SecretClient(new Uri(keyVault.Url), credential);
 
-         var fff = client.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value;
-
         services.AddDbContext<SaharaviewpointContext>(opt =>
         {
             opt.UseSqlServer(client.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
