@@ -1,4 +1,4 @@
-namespace Saharaviewpoint.Core.Models.Configuration;
+namespace Saharaviewpoint.Core.Models.Configurations;
 
 public class JwtConfig
 {

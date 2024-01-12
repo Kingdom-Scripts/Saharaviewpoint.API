@@ -41,7 +41,7 @@ public class BaseController : ControllerBase
         }
         else
         {
-            return StatusCode(StatusCodes.Status400BadRequest, result);
+            return BadRequest(result);
         }
     }
 }

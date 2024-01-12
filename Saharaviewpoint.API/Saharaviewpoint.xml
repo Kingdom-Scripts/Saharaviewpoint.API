@@ -59,5 +59,77 @@
         <member name="M:Saharaviewpoint.API.Migrations.increaseTokenLength.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Projects">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Projects.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Projects.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Projects.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateProject">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProject.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProject.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProject.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.ProjectStatus">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.ProjectStatus.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.ProjectStatus.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.ProjectStatus.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.ProjectStatus_Two">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.ProjectStatus_Two.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.ProjectStatus_Two.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.ProjectStatus_Two.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateProject2">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProject2.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProject2.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProject2.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateUser">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateUser.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateUser.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateUser.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

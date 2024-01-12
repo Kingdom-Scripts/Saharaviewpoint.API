@@ -23,6 +23,166 @@ namespace Saharaviewpoint.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Document", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Folder")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("Documents", "dbo", t =>
+                        {
+                            t.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word Document', 'Unknown')");
+                        });
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssigneeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Budget")
+                        .HasColumnType("decimal(19, 2)");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedById")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("DesignId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPriority")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SiteCondition")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SizeOfSite")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<int>("TypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssigneeId");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("DeletedById");
+
+                    b.HasIndex("DesignId");
+
+                    b.HasIndex("TypeId");
+
+                    b.ToTable("Projects", "dbo", t =>
+                        {
+                            t.HasCheckConstraint("CK_Project_Status", "[Status] IN ('Requested', 'In Progress', 'Completed')");
+                        });
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.ProjectType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedById")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProjectTypes", "dbo");
+                });
+
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -32,6 +192,7 @@ namespace Saharaviewpoint.API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -57,6 +218,7 @@ namespace Saharaviewpoint.API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -76,6 +238,7 @@ namespace Saharaviewpoint.API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -84,6 +247,7 @@ namespace Saharaviewpoint.API.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("HashedPassword")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -101,19 +265,24 @@ namespace Saharaviewpoint.API.Migrations
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("Uid")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", "dbo");
+                    b.ToTable("Users", "dbo", t =>
+                        {
+                            t.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')");
+                        });
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
@@ -130,11 +299,62 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
                     b.HasKey("RoleId", "UserId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoles", "dbo");
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Document", b =>
+                {
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
+                {
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "Assignee")
+                        .WithMany()
+                        .HasForeignKey("AssigneeId");
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "DeletedBy")
+                        .WithMany()
+                        .HasForeignKey("DeletedById");
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.Document", "Design")
+                        .WithMany()
+                        .HasForeignKey("DesignId");
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.ProjectType", "Type")
+                        .WithMany()
+                        .HasForeignKey("TypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assignee");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("DeletedBy");
+
+                    b.Navigation("Design");
+
+                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>

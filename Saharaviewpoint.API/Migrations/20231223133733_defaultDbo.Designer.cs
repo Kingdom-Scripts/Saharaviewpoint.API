@@ -9,174 +9,173 @@ using Saharaviewpoint.Core.Models.App;
 
 #nullable disable
 
-namespace Saharaviewpoint.API.Migrations
+namespace Saharaviewpoint.API.Migrations;
+
+[DbContext(typeof(SaharaviewpointContext))]
+[Migration("20231223133733_defaultDbo")]
+partial class defaultDbo
 {
-    [DbContext(typeof(SaharaviewpointContext))]
-    [Migration("20231223133733_defaultDbo")]
-    partial class defaultDbo
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasDefaultSchema("dbo")
-                .HasAnnotation("ProductVersion", "7.0.14")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+        modelBuilder
+            .HasDefaultSchema("dbo")
+            .HasAnnotation("ProductVersion", "7.0.14")
+            .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+        SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Code")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
+                b.Property<string>("Code")
+                    .HasMaxLength(64)
+                    .HasColumnType("nvarchar(64)");
 
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("ExpiresAt")
+                    .HasColumnType("datetime2");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", "dbo");
-                });
+                b.ToTable("RefreshTokens", "dbo");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Name")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Roles", "dbo");
-                });
+                b.ToTable("Roles", "dbo");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
+            {
+                b.Property<int>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("DateCreated")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                b.Property<string>("Email")
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("FirstName")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("HashedPassword")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
+                b.Property<string>("HashedPassword")
+                    .HasMaxLength(64)
+                    .HasColumnType("nvarchar(64)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("bit");
 
-                    b.Property<DateTime>("LastLoginDate")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("LastLoginDate")
+                    .HasColumnType("datetime2");
 
-                    b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("LastName")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)");
+                b.Property<string>("Phone")
+                    .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                b.Property<int>("Type")
+                    .HasColumnType("int");
 
-                    b.Property<Guid>("Uid")
-                        .HasColumnType("uniqueidentifier");
+                b.Property<Guid>("Uid")
+                    .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Username")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                b.Property<string>("Username")
+                    .HasMaxLength(20)
+                    .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Users", "dbo");
-                });
+                b.ToTable("Users", "dbo");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
+            {
+                b.Property<int>("RoleId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                b.Property<int>("UserId")
+                    .HasColumnType("int");
 
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
+                b.Property<int>("CreatedById")
+                    .HasColumnType("int");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                b.Property<DateTime>("DateCreated")
+                    .HasColumnType("datetime2");
 
-                    b.HasKey("RoleId", "UserId");
+                b.HasKey("RoleId", "UserId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("UserRoles", "dbo");
-                });
+                b.ToTable("UserRoles", "dbo");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
-                {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
+            {
+                b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
-                {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.Role", "Role")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
+            {
+                b.HasOne("Saharaviewpoint.Core.Models.App.Role", "Role")
+                    .WithMany("UserRoles")
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
+                    .WithMany("UserRoles")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Role");
+                b.Navigation("Role");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
-                {
-                    b.Navigation("UserRoles");
-                });
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
+            {
+                b.Navigation("UserRoles");
+            });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
-                {
-                    b.Navigation("UserRoles");
-                });
+        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
+            {
+                b.Navigation("UserRoles");
+            });
 #pragma warning restore 612, 618
-        }
     }
 }
