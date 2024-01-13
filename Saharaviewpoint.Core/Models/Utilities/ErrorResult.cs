@@ -91,6 +91,9 @@ public class ErrorResult : Result
     public new Paging Paging { get; set; }
 }
 
+/// <summary>
+/// Represents an error result.
+/// </summary>
 public class ErrorResult<T> : Result<T>
 {
     /// <summary>

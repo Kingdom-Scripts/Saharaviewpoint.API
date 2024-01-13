@@ -15,21 +15,29 @@ public partial class SaharaviewpointContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Project> Projects { get; set; }
+    public DbSet<ProjectType> ProjectTypes { get; set; }
+    public DbSet<Document> Documents { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(builder);
 
-        modelBuilder.HasDefaultSchema("dbo");
+        builder.HasDefaultSchema("dbo");
 
-        modelBuilder
+        builder
             .Entity<User>()
-            .Property(u => u.Type)
-            .HasConversion<int>();
+            .ToTable(p => p.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')"));
 
-        modelBuilder.Entity<UserRole>(entity =>
+        builder.Entity<UserRole>(entity =>
         {
             entity.HasKey(t => new { t.RoleId, t.UserId });
         });
+
+        builder.Entity<Project>()
+            .ToTable(p => p.HasCheckConstraint("CK_Project_Status", "[Status] IN ('Requested', 'In Progress', 'Completed')"));
+
+        builder.Entity<Document>()
+            .ToTable(p => p.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word Document', 'Unknown')"));
     }
 }

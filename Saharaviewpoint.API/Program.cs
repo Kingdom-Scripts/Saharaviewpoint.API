@@ -1,7 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Core.Models.Configuration;
 using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
 using Serilog;
@@ -80,10 +79,9 @@ builder.Services.AddSwaggerGen(swagger =>
 
 builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
 
 builder.Services.ConfigureServices(builder.Configuration, builder.Environment.IsProduction());
-
-
 
 var app = builder.Build();
 

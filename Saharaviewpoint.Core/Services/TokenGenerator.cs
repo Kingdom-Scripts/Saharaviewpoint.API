@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Configuration;
+using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Models.Utilities;
 using Saharaviewpoint.Core.Models.View.Auth;
 using System.IdentityModel.Tokens.Jwt;
@@ -30,7 +30,7 @@ public class TokenGenerator : ITokenGenerator
 
     public async Task<Result> GenerateJwtToken(User user)
     {
-        DateTime expiresAt = DateTime.UtcNow.AddMinutes(_jwtConfig.Expires);
+        DateTime expiresAt = DateTime.UtcNow.AddDays(_jwtConfig.Expires);
 
         var token = GenerateAccessToken(user, expiresAt);
 

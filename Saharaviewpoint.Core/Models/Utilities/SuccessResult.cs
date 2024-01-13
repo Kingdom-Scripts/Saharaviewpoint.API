@@ -26,6 +26,7 @@ public class SuccessResult : Result
         Status = StatusCodes.Status200OK;
         Title = "Operation Successful";
         Content = content;
+        AddPaging(content);
     }
 
     /// <summary>
@@ -47,6 +48,7 @@ public class SuccessResult : Result
         Status = StatusCodes.Status200OK;
         Title = "Operation Successful";
         Content = content;
+        AddPaging(content);
     }
 
     /// <summary>
@@ -69,15 +71,10 @@ public class SuccessResult : Result
         Status = status;
         Title = "Operation Successful";
         Content = content;
+        AddPaging(content);
     }
 
     // Ignore error related properties
-
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    [JsonIgnore]
-    public new Paging Paging { get; set; }
 
     /// <summary>
     /// <inheritdoc/>
@@ -134,6 +131,7 @@ public class SuccessResult<T> : Result<T>
         Status = StatusCodes.Status200OK;
         Title = "Operation Successful";
         Content = content;
+        AddPaging(content);
     }
 
     /// <summary>
@@ -146,6 +144,7 @@ public class SuccessResult<T> : Result<T>
         Status = status;
         Title = "Operation Successful";
         Content = content;
+        AddPaging(content);
     }
 
     /// <summary>
@@ -157,6 +156,7 @@ public class SuccessResult<T> : Result<T>
     {
         Status = StatusCodes.Status200OK;
         Content = content;
+        AddPaging(content);
     }
 
     /// <summary>
@@ -169,6 +169,7 @@ public class SuccessResult<T> : Result<T>
     {
         Status = status;
         Content = content;
+        AddPaging(content);
     }
 
     // Ignore error related properties
@@ -177,13 +178,7 @@ public class SuccessResult<T> : Result<T>
     /// <inheritdoc/>
     /// </summary>
     [JsonIgnore]
-    public new Paging Paging { get; set; }
-
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    [JsonIgnore]
-    public string Detail { get; set; }
+    public new string Detail { get; set; }
 
     // Ignore error related properties
     /// <summary>

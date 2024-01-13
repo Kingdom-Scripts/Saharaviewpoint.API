@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Saharaviewpoint.Core.Models.App.Enums;
+using Saharaviewpoint.Core.Models.App.Constants;
 
 namespace Saharaviewpoint.Core.Models.Input.Auth;
 
@@ -7,7 +7,7 @@ public class RegisterModel
 {
     public string Username { get; set; }
     public string Email { get; set; }
-    public UserTypes Type { get; set; }
+    public string Type { get; set; }
     public string Password { get; set; }
     public string ConfirmPassword { get; set; }
 }
@@ -26,6 +26,14 @@ public class RegisterModelValidation : AbstractValidator<RegisterModel>
             .Matches(@"[A-Z]+").WithMessage("Your password must contain at least one uppercase letter.")
             .Matches(@"[a-z]+").WithMessage("Your password must contain at least one lowercase letter.")
             .Matches(@"[0-9]+").WithMessage("Your password must contain at least one number.")
-            .Matches(@"[\!\?\*\.\#\$]+").WithMessage("Your password must contain at least one (!?#$ *.)."); ;
+            .Matches(@"[\!\?\*\.\#\$]+").WithMessage("Your password must contain at least one (!?#$ *.).");
+        RuleFor(x => x.Type)
+            .Must(BeAValidType)
+            .WithMessage($"Type must be either '{UserTypes.BUSINESS}' or '{UserTypes.CLIENT}' or '{UserTypes.MANAGER}'");
+    }
+
+    private bool BeAValidType(string type)
+    {
+        return type == UserTypes.BUSINESS || type == UserTypes.CLIENT || type == UserTypes.MANAGER;
     }
 }

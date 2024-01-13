@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Configuration;
+using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Models.Input.Auth;
 using Saharaviewpoint.Core.Services;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
@@ -26,9 +26,9 @@ public static class ServiceExtensions
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
         // set up database
-        var keyVault = new AzureKeyVaultConfig
+        var keyVault = new KeyVaultConfig
         {
-            Url = configuration.GetSection("KeyVault:KeyVaultURL").Value,
+            KeyVaultURL = configuration.GetSection("KeyVault:KeyVaultURL").Value,
             ClientId = configuration.GetSection("KeyVault:ClientId").Value,
             ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
             DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
@@ -36,7 +36,7 @@ public static class ServiceExtensions
 
         var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
 
-        var client = new SecretClient(new Uri(keyVault.Url), credential);
+        var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
 
         services.AddDbContext<SaharaviewpointContext>(opt =>
         {
@@ -107,9 +107,13 @@ public static class ServiceExtensions
                         .AddDestinationTransform(DestinationTransform.EmptyCollectionIfNull);
 
         services.AddSingleton<ICacheService, CacheService>();
+
         services.TryAddScoped<UserSession>();
         services.TryAddScoped<ITokenGenerator, TokenGenerator>();
+        services.TryAddScoped<IFileService, FileService>();
+
         services.TryAddTransient<IAuthService, AuthService>();
+        services.TryAddTransient<IProjectService, ProjectService>();
 
         return services;
     }

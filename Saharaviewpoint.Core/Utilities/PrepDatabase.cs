@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.App.Enums;
+using Saharaviewpoint.Core.Models.App.Constants;
 using Serilog;
 
 namespace Saharaviewpoint.Core.Utilities;
@@ -11,10 +10,12 @@ public static class PrepDatabase
 {
     public static void PrepPopulation(IApplicationBuilder app, bool isProd)
     {
+#if !DEBUG
         using (var serviceScope = app.ApplicationServices.CreateScope())
         {
             SeedData(serviceScope.ServiceProvider.GetService<SaharaviewpointContext>(), isProd);
         }
+#endif
     }
 
     private static void SeedData(SaharaviewpointContext context, bool isProd)
@@ -46,33 +47,6 @@ public static class PrepDatabase
                 new Role { Name = nameof(Roles.Client) }
                 );
         }
-
-        //// For development mode only
-        //if (isProd)
-        //{
-        //    if (!context.Users.Any())
-        //    {
-        //        Log.Information("--> Seeding default User data");
-
-        //        var user = new User
-        //        {
-        //            Uid = new Guid("35ff7ef6-b2a8-4fed-8c2b-fce547207be4"),
-        //            Email = "davidire71@gmail.com",
-        //            Username = "MO",
-        //            Type = UserTypes.Manager,
-        //            HashedPassword = "6U2utTVEpDZk56siZhWgWCFPZMwFcsQbaOxDBHiCkNFZgexcm/lflsHPz72SHpe1ZTTeU207jwcEogG7BTQ1RQ==",
-        //            IsActive = true
-        //        };
-
-        //        context.Add(user);
-
-        //        context.Add(new UserRole
-        //        {
-        //            User = user,
-        //            Role = superAdminRole
-        //        });
-        //    }
-        //}
 
         context.SaveChanges();
     }
