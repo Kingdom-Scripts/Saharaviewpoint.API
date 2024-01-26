@@ -21,6 +21,7 @@ public class ProjectsController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "BasicAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<IEnumerable<ProjectDetailView>>))]
     public async Task<IActionResult> ListProjects([FromQuery] ProjectSearchModel paging)
     {

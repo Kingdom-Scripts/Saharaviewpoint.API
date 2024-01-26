@@ -31,23 +31,23 @@ public class JWTMiddleware
 
     public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig)
     {
+        // continue if action called is anonymous.
+        if (IsAnonymous(context)) await _next(context);
+
+        // get the token
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-        if (token != null && !IsAnonymous(context))
-        {
-            // attach the token to the request
-            if (await attachAccountToContext(context, token, jwtConfig.Value))
-            {
-                await _next(context);
-            }
-        }
-        else
+        // continue if token is null
+        if (token == null) await _next(context);
+
+        // attach the token to the request
+        if (await AttachAccountToContext(context, token, jwtConfig.Value))
         {
             await _next(context);
         }
     }
 
-    private bool IsAnonymous(HttpContext context)
+    private static bool IsAnonymous(HttpContext context)
     {
         // Check if the request is handled by an MVC endpoint
         var endpoint = context.GetEndpoint();
@@ -56,16 +56,13 @@ public class JWTMiddleware
             // Check if the action method is decorated with AllowAnonymous attribute
             var actionDescriptor = routeEndpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
 
-            var controllerAllowAnonymousAttribute =
-                actionDescriptor?.ControllerTypeInfo.GetCustomAttributes(inherit: true)
-                .OfType<AllowAnonymousAttribute>().Any();
-
             var methodAllowAnonymousAttribute =
                 actionDescriptor?.MethodInfo.GetCustomAttributes(inherit: true)
                 .OfType<AllowAnonymousAttribute>().Any();
 
-            if ((controllerAllowAnonymousAttribute.HasValue && controllerAllowAnonymousAttribute.Value)
-                || (methodAllowAnonymousAttribute.HasValue && methodAllowAnonymousAttribute.Value))
+            bool actionIsAnonymous = methodAllowAnonymousAttribute.HasValue && methodAllowAnonymousAttribute.Value;
+
+            if (actionIsAnonymous)
             {
                 return true;
             }
@@ -78,7 +75,7 @@ public class JWTMiddleware
         return false;
     }
 
-    private async Task<bool> attachAccountToContext(HttpContext context, string token, JwtConfig jwtConfig)
+    private async Task<bool> AttachAccountToContext(HttpContext context, string token, JwtConfig jwtConfig)
     {
         try
         {
