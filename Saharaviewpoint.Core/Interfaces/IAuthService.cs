@@ -5,7 +5,7 @@ namespace Saharaviewpoint.Core.Interfaces;
 
 public interface IAuthService
 {
-    Task<Result> CreateUserAsync(RegisterModel model);
+    Task<Result> CreateClient(RegisterModel model);
 
     Task<Result> AuthenticateUser(LoginModel model);
 

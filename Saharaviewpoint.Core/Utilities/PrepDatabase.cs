@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.App.Constants;
@@ -11,12 +12,10 @@ public static class PrepDatabase
 {
     public static void PrepPopulation(IApplicationBuilder app, bool isProd)
     {
-#if !DEBUG
         using (var serviceScope = app.ApplicationServices.CreateScope())
         {
             SeedData(serviceScope.ServiceProvider.GetService<SaharaviewpointContext>(), isProd);
         }
-#endif
     }
 
     private static void SeedData(SaharaviewpointContext context, bool isProd)
@@ -40,12 +39,17 @@ public static class PrepDatabase
         {
             Log.Information("--> Seeding Role Data...");
 
+            // reset the identity count
+            context.Database.ExecuteSqlRaw($"DBCC CHECKIDENT ('Roles', RESEED, 0)");
+
             context.Roles.AddRange(
-                new Role { Name = nameof(Roles.SuperAdmin) },
-                new Role { Name = nameof(Roles.Admin) },
-                new Role { Name = nameof(Roles.Manager) },
-                new Role { Name = nameof(Roles.Business) },
-                new Role { Name = nameof(Roles.Client) }
+                new Role { Name = nameof(Roles.SvpAdmin) },
+                new Role { Name = nameof(Roles.SvpManager) },
+                new Role { Name = nameof(Roles.BusinessAdmin) },
+                new Role { Name = nameof(Roles.BusinessManager) },
+                new Role { Name = nameof(Roles.BusinessClient) },
+                new Role { Name = nameof(Roles.Client) },
+                new Role { Name = nameof(Roles.SuperAdmin) }
                 );
         }
 

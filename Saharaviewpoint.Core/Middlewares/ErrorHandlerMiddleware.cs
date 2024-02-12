@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Saharaviewpoint.Core.Models.Utilities;
@@ -66,6 +67,21 @@ public class ErrorHandlerMiddleware
                 Success = false,
                 Message = "Authentication failed, please log in to access this resource",
                 Status = StatusCodes.Status401Unauthorized,
+            }, _options);
+
+            // Set the response content type to JSON
+            context.Response.ContentType = "application/json";
+
+            // Write the JSON response
+            await context.Response.WriteAsync(result);
+        } 
+        else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
+        {
+            var result = JsonSerializer.Serialize(new ErrorResult
+            {
+                Success = false,
+                Message = "You are not authorized to access this resource.",
+                Status = StatusCodes.Status403Forbidden
             }, _options);
 
             // Set the response content type to JSON

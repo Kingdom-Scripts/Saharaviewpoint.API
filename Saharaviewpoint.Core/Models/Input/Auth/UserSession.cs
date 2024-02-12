@@ -4,5 +4,6 @@ public class UserSession
 {
     public int UserId { get; set; }
     public string Uid { get; set; }
-    public int? BusinessId { get; set; }
+    public string Type { get; set; }
+    public string BusinessCode { get; set; }
 }

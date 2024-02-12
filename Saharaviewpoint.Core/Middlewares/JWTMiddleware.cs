@@ -32,13 +32,21 @@ public class JWTMiddleware
     public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig)
     {
         // continue if action called is anonymous.
-        if (IsAnonymous(context)) await _next(context);
+        if (IsAnonymous(context))
+        {
+            await _next(context);
+            return;
+        }
 
         // get the token
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
         // continue if token is null
-        if (token == null) await _next(context);
+        if (token == null)
+        {
+            await _next(context);
+            return;
+        }
 
         // attach the token to the request
         if (await AttachAccountToContext(context, token, jwtConfig.Value))
@@ -62,14 +70,7 @@ public class JWTMiddleware
 
             bool actionIsAnonymous = methodAllowAnonymousAttribute.HasValue && methodAllowAnonymousAttribute.Value;
 
-            if (actionIsAnonymous)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return actionIsAnonymous;
         }
 
         return false;
@@ -97,6 +98,7 @@ public class JWTMiddleware
             var jwtToken = (JwtSecurityToken)validatedToken;
             var id = jwtToken.Claims.First(x => x.Type == "sid").Value;
             var uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
+            var type = jwtToken.Claims.First(x => x.Type == "type").Value;
 
             //check if token is string in the cache
             string sToken = await _cacheService.GetToken($"{AuthKeys.TokenCacheKey}{uid}");
@@ -112,7 +114,8 @@ public class JWTMiddleware
             context.Items["User"] = new UserView()
             {
                 Uid = uid,
-                Id = int.Parse(id)
+                Id = int.Parse(id),
+                Type = type
             };
 
             return true;

@@ -9,7 +9,7 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/projects")]
-[AllowAnonymous] // TODO: remove this
+//[AllowAnonymous] // TODO: remove this
 // [Authorize] TODO: activate this
 public class ProjectsController : BaseController
 {

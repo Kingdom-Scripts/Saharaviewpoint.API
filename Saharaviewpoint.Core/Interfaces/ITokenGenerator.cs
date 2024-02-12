@@ -9,5 +9,5 @@ public interface ITokenGenerator
 
     Task<Result> RefreshJwtToken(string refreshToken);
 
-    Task InvalidateToken(string userName);
+    Task InvalidateToken(string userReference);
 }

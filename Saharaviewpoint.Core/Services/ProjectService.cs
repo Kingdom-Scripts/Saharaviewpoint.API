@@ -214,7 +214,7 @@ public class ProjectService : IProjectService
 
         type.IsDeleted = true;
         type.DeletedById = _userSession.UserId;
-        type.DateCreated = DateTime.UtcNow;
+        type.CreatedAt = DateTime.UtcNow;
 
         int saved = await _context.SaveChangesAsync();
 

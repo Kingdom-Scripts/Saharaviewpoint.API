@@ -5,7 +5,7 @@ using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Input.Auth;
 using Saharaviewpoint.Core.Models.Utilities;
 using Saharaviewpoint.Core.Models.View.Project;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -54,7 +54,7 @@ public class ProjectTypeService : IProjectTypeService
 
         type.IsDeleted = true;
         type.DeletedById = _userSession.UserId;
-        type.DateCreated = DateTime.UtcNow;
+        type.CreatedAt = DateTime.UtcNow;
 
         int saved = await _context.SaveChangesAsync();
 

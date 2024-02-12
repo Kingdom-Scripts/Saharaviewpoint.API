@@ -2,7 +2,7 @@
 
 namespace Saharaviewpoint.Core.Models.App;
 
-public partial class SaharaviewpointContext : DbContext
+public class SaharaviewpointContext : DbContext
 {
     public SaharaviewpointContext()
     { }
