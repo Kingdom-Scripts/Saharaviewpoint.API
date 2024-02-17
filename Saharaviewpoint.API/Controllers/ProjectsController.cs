@@ -9,7 +9,7 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/projects")]
-[AllowAnonymous] // TODO: remove this
+//[AllowAnonymous] // TODO: remove this
 // [Authorize] TODO: activate this
 public class ProjectsController : BaseController
 {
@@ -21,6 +21,7 @@ public class ProjectsController : BaseController
     }
 
     [HttpGet]
+    [Authorize(Policy = "BasicAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<IEnumerable<ProjectDetailView>>))]
     public async Task<IActionResult> ListProjects([FromQuery] ProjectSearchModel paging)
     {

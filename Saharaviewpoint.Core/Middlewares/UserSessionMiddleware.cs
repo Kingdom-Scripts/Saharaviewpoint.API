@@ -20,6 +20,7 @@ public class UserSessionMiddleware
 
             session.UserId = UserId;
             session.Uid = context.User.Claims.SingleOrDefault(c => c.Type == "uid")?.Value;
+            session.Type = context.User.Claims.SingleOrDefault(c => c.Type == "type")?.Value;
         }
 
         // Call the next delegate/middleware in the pipeline

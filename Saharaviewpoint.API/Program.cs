@@ -81,6 +81,19 @@ builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfi
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
 builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
 
+// Set up CORS
+string svpAllowedOrigins = "_svpAllowedDomains";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: svpAllowedOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 builder.Services.ConfigureServices(builder.Configuration, builder.Environment.IsProduction());
 
 var app = builder.Build();
@@ -96,6 +109,8 @@ app.UseSwaggerUI();
 app.UseMiddleware<ErrorHandlerMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseCors(svpAllowedOrigins);
 
 app.UseAuthentication();
 app.UseAuthorization();

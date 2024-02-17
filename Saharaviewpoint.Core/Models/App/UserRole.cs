@@ -2,7 +2,7 @@
 
 namespace Saharaviewpoint.Core.Models.App;
 
-public partial class UserRole : BaseAppModel
+public class UserRole : BaseAppModel
 {
     /// <summary>
     /// A foreign key to the user this role is attached to

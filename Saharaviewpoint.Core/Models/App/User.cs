@@ -2,17 +2,13 @@
 
 namespace Saharaviewpoint.Core.Models.App;
 
-public partial class User : BaseAppModel
+public class User : BaseAppModel
 {
     public Guid Uid { get; set; } = Guid.NewGuid();
 
     [Required]
     [MaxLength(50)]
     public string Email { get; internal set; }
-
-    [Required]
-    [MaxLength(20)]
-    public string Username { get; set; }
 
     [Required]
     public string Type { get; set; }
@@ -34,7 +30,7 @@ public partial class User : BaseAppModel
     public bool IsActive { get; set; } = true;
 
     [Required]
-    public DateTime LastLoginDate { get; set; }
+    public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;
 
     public virtual ICollection<UserRole> UserRoles { get; set; }
 }

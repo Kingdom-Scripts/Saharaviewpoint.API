@@ -84,6 +84,8 @@ public class TokenGenerator : ITokenGenerator
 
         claimIdentity.AddClaims(new[] { new Claim("uid", user.Uid.ToString()) });
         claimIdentity.AddClaims(new[] { new Claim("sid", user.Id.ToString()) });
+        claimIdentity.AddClaims(new[] { new Claim("Type", user.Type) });
+        claimIdentity.AddClaims(new[] { new Claim("SubscriptionPlan", "Basic") });
 
         claimIdentity.AddClaims(user.UserRoles.Select(role =>
             new Claim(ClaimTypes.Role, role.Role.Name)));

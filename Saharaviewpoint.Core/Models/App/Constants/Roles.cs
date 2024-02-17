@@ -2,9 +2,11 @@
 
 public enum Roles
 {
-    Admin = 1,
-    Business = 2,
-    Client = 3,
-    Manager = 4,
-    SuperAdmin = 5
+    SvpAdmin = 1,
+    SvpManager = 2,
+    BusinessAdmin = 3,
+    BusinessManager = 4,
+    BusinessClient = 5,
+    Client = 6,
+    SuperAdmin = 7
 }

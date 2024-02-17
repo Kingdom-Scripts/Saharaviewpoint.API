@@ -25,7 +25,7 @@ public class AuthController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
     public async Task<IActionResult> SignUp(RegisterModel model)
     {
-        var res = await _authService.CreateUserAsync(model);
+        var res = await _authService.CreateClient(model);
         return ProcessResponse(res);
     }
 
