@@ -13,19 +13,19 @@ using Saharaviewpoint.Core.Models.View.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
 public class JWTMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IConfiguration _configuration;
     private readonly ICacheService _cacheService;
+    private readonly ILogger<JWTMiddleware> _logger;
 
-    public JWTMiddleware(RequestDelegate next, IConfiguration configuration, ICacheService cacheService)
+    public JWTMiddleware(RequestDelegate next, ICacheService cacheService)
     {
         _next = next;
-        _configuration = configuration;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     }
 
@@ -98,7 +98,7 @@ public class JWTMiddleware
             var jwtToken = (JwtSecurityToken)validatedToken;
             var id = jwtToken.Claims.First(x => x.Type == "sid").Value;
             var uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
-            var type = jwtToken.Claims.First(x => x.Type == "type").Value;
+            var type = jwtToken.Claims.First(x => x.Type == "Type").Value;
 
             //check if token is string in the cache
             string sToken = await _cacheService.GetToken($"{AuthKeys.TokenCacheKey}{uid}");
@@ -120,7 +120,7 @@ public class JWTMiddleware
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
             // do nothing if jwt validation fails
             // account is not attached to context so request won't have access to secure routes
