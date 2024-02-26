@@ -223,10 +223,14 @@ public class ProjectService : IProjectService
            : new ErrorResult("Unable to save changes, please try again later.");
     }
 
-    public async Task<Result> ListTypes()
+    public async Task<Result> ListTypes(string searchTerm)
     {
+        searchTerm = string.IsNullOrEmpty(searchTerm)
+            ? null : searchTerm.ToLower().Trim();
+
         var allTypes = await _context.ProjectTypes
             .Where(pt => !pt.IsDeleted)
+            .Where(pt => searchTerm == null || pt.Name.ToLower().Trim().Contains(searchTerm))
             .ProjectToType<ProjectTypeView>()
             .ToListAsync();
 

@@ -9,8 +9,6 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/projects")]
-//[AllowAnonymous] // TODO: remove this
-// [Authorize] TODO: activate this
 public class ProjectsController : BaseController
 {
     private readonly IProjectService _projectService;
@@ -20,6 +18,7 @@ public class ProjectsController : BaseController
         _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
     }
 
+    [AllowAnonymous] // TODO: remove this
     [HttpGet]
     [Authorize(Policy = "BasicAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<IEnumerable<ProjectDetailView>>))]
@@ -29,7 +28,8 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpGet("{id}")]
+    [AllowAnonymous] // TODO: remove this
+    [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     public async Task<IActionResult> GetProject(int id)
@@ -38,6 +38,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
+    [AllowAnonymous] // TODO: remove this
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadErrorResult))]
@@ -47,7 +48,8 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpPut("{id}")]
+    [AllowAnonymous] // TODO: remove this
+    [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -57,7 +59,8 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpDelete("{id}")]
+    [AllowAnonymous] // TODO: remove this
+    [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     public async Task<IActionResult> DeleteProject(int id)
@@ -66,7 +69,8 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpPost("{id}/reassign")]
+    [AllowAnonymous] // TODO: remove this
+    [HttpPost("{id:int}/reassign")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -76,7 +80,8 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpPut("{id}/update-status")]
+    [AllowAnonymous] // TODO: remove this
+    [HttpPut("{id:int}/update-status")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -87,23 +92,26 @@ public class ProjectsController : BaseController
     }
 
     [HttpPost("types")]
+    [AllowAnonymous] // TODO: remove this
     public async Task<IActionResult> CreateType(TaskModel model)
     {
         var result = await _projectService.CreateType(model);
         return ProcessResponse(result);
     }
 
-    [HttpDelete("types/{id}")]
+    [AllowAnonymous] // TODO: remove this
+    [HttpDelete("types/{id:int}")]
     public async Task<IActionResult> DeleteType(int id)
     {
         var result = await _projectService.DeleteType(id);
         return ProcessResponse(result);
     }
 
+    [AllowAnonymous] // TODO: remove this
     [HttpGet("types")]
-    public async Task<IActionResult> ListTypes()
+    public async Task<IActionResult> ListTypes(string searchTerm)
     {
-        var result = await _projectService.ListTypes();
+        var result = await _projectService.ListTypes(searchTerm);
         return ProcessResponse(result);
     }
 }
