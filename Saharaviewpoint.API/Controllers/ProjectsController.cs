@@ -109,7 +109,7 @@ public class ProjectsController : BaseController
 
     [AllowAnonymous] // TODO: remove this
     [HttpGet("types")]
-    public async Task<IActionResult> ListTypes(string searchTerm)
+    public async Task<IActionResult> ListTypes(string? searchTerm)
     {
         var result = await _projectService.ListTypes(searchTerm);
         return ProcessResponse(result);

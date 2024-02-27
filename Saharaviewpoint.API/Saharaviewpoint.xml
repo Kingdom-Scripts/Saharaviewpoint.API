@@ -109,6 +109,7 @@
         </member>
         <member name="T:Saharaviewpoint.API.Migrations.UpdateProject2">
             <inheritdoc />
+            <inheritdoc />
         </member>
         <member name="M:Saharaviewpoint.API.Migrations.UpdateProject2.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
@@ -141,6 +142,18 @@
             <inheritdoc />
         </member>
         <member name="M:Saharaviewpoint.API.Migrations.One.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateProjectTitleName">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

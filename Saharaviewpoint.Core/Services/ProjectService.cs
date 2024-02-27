@@ -32,10 +32,14 @@ public class ProjectService : IProjectService
         mappedProject.Status = ProjectStatuses.REQUESTED;
         mappedProject.CreatedById = _userSession.UserId;
 
+        var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.Type);
+        type ??= new ProjectType { Name = model.Type, CreatedById = _userSession.UserId };
+        mappedProject.Type = type;
+
         // upload design file if it exists
         if (model.Design != null)
         {
-            var designUpload = await _fileService.UploadFile(model.Name, model.Design);
+            var designUpload = await _fileService.UploadFile(model.Title, model.Design);
             if (!designUpload.Success)
                 return new ErrorResult("Unable to upload design file", designUpload.Message);
 
@@ -223,7 +227,7 @@ public class ProjectService : IProjectService
            : new ErrorResult("Unable to save changes, please try again later.");
     }
 
-    public async Task<Result> ListTypes(string searchTerm)
+    public async Task<Result> ListTypes(string? searchTerm)
     {
         searchTerm = string.IsNullOrEmpty(searchTerm)
             ? null : searchTerm.ToLower().Trim();
@@ -231,6 +235,8 @@ public class ProjectService : IProjectService
         var allTypes = await _context.ProjectTypes
             .Where(pt => !pt.IsDeleted)
             .Where(pt => searchTerm == null || pt.Name.ToLower().Trim().Contains(searchTerm))
+            .OrderBy(pt => pt.Name)
+            .Take(5)
             .ProjectToType<ProjectTypeView>()
             .ToListAsync();
 

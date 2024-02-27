@@ -7,12 +7,17 @@ public static class CustomFileValidator
     public class FileValidationResult
     {
         public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 
-    public static FileValidationResult HaveValidFile(IFormFile design)
+    public static FileValidationResult HaveValidFile(IFormFile? design)
     {
-        if (design == null || design.Length == 0)
+        if (design == null)
+        {
+            return new FileValidationResult { IsValid = true };
+        }
+
+        if (design.Length == 0)
         {
             return new FileValidationResult { IsValid = false, ErrorMessage = "No file provided or the file is empty." };
         }

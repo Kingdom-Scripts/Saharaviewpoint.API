@@ -24,6 +24,6 @@ public interface IProjectService
     #region TYPES
     Task<Result> CreateType(TaskModel model);
     Task<Result> DeleteType(int id);
-    Task<Result> ListTypes(string searchTerm);
+    Task<Result> ListTypes(string? searchTerm);
     #endregion
 }
