@@ -5,9 +5,9 @@ namespace Saharaviewpoint.Core.Models.View.Project;
 public class ProjectView
 {
     public int Id { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
-    public string Status { get; set; }
+    public required string Title { get; set; }
+    public required string TypeName { get; set; }
+    public required string Status { get; set; }
     public DateTime DueDate { get; set; }
     public bool IsPriority { get; set; }
     public int Order { get; internal set; }

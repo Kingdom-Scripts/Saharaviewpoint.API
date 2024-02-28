@@ -81,7 +81,7 @@ public class AuthService : IAuthService
 
     public async Task<Result> RefreshToken(RefreshTokenModel model)
     {
-        return await _tokenGenerator.RefreshJwtToken(model.Token);
+        return await _tokenGenerator.RefreshJwtToken(model.RefreshToken);
     }
 
     public async Task<Result> Logout(string userReference)

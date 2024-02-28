@@ -32,8 +32,8 @@ public class ProjectService : IProjectService
         mappedProject.Status = ProjectStatuses.REQUESTED;
         mappedProject.CreatedById = _userSession.UserId;
 
-        var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.Type);
-        type ??= new ProjectType { Name = model.Type, CreatedById = _userSession.UserId };
+        var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.TypeName);
+        type ??= new ProjectType { Name = model.TypeName, CreatedById = _userSession.UserId };
         mappedProject.Type = type;
 
         // upload design file if it exists

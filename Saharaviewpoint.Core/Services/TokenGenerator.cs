@@ -51,10 +51,10 @@ public class TokenGenerator : ITokenGenerator
     public async Task<Result> RefreshJwtToken(string refreshToken)
     {
         var refreshTokenObject = await _context.RefreshTokens
-            .Include(r => r.User).ThenInclude(u => u.UserRoles)
+            .Include(r => r.User).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(r => r.Code == refreshToken);
 
-        if (refreshTokenObject == null || refreshTokenObject.ExpiresAt > DateTime.UtcNow)
+        if (refreshTokenObject == null || refreshTokenObject.ExpiresAt < DateTime.UtcNow)
             return new ErrorResult("Timeout", "User session expired, kindly log in again.");
 
         await InvalidateToken(refreshTokenObject.User.Uid.ToString());

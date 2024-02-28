@@ -107,7 +107,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpGet("types")]
     public async Task<IActionResult> ListTypes(string? searchTerm)
     {

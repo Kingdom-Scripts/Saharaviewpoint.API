@@ -14,7 +14,7 @@ public class ProjectModel
     public required string SizeOfSite { get; set; }
     public decimal Budget { get; set; }
     public required string Location { get; set; }
-    public required string Type { get; set; }
+    public required string TypeName { get; set; }
     public string? SurroundingFacilities { get; set; }
     public IFormFile? Design { get; set; }
 }
@@ -41,9 +41,9 @@ public class ProjectModelValidator : AbstractValidator<ProjectModel>
         RuleFor(model => model.Location)
             .NotEmpty().WithMessage("Location is required");
 
-        RuleFor(model => model.Type)
-            .NotNull().WithMessage("Type is required")
-            .MinimumLength(2).WithMessage("Provide a valid type of at least two characters");
+        RuleFor(model => model.TypeName)
+            .NotNull().WithMessage("Project type is required")
+            .MinimumLength(2).WithMessage("Provide a valid project type of at least two characters");
 
         RuleFor(model => model.SurroundingFacilities)
             .MaximumLength(500).WithMessage("Surrounding Facilities cannot be more than 500 characters");
