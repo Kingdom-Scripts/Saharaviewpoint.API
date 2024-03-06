@@ -22,7 +22,7 @@ public static class CustomFileValidator
             return new FileValidationResult { IsValid = false, ErrorMessage = "No file provided or the file is empty." };
         }
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
         var maxFileSize = 5 * 1024 * 1024; // 5 MB
 
         var fileExtension = Path.GetExtension(design.FileName).ToLowerInvariant();

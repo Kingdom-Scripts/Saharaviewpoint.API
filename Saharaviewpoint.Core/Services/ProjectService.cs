@@ -32,8 +32,8 @@ public class ProjectService : IProjectService
         mappedProject.Status = ProjectStatuses.REQUESTED;
         mappedProject.CreatedById = _userSession.UserId;
 
-        var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.TypeName);
-        type ??= new ProjectType { Name = model.TypeName, CreatedById = _userSession.UserId };
+        var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.Type);
+        type ??= new ProjectType { Name = model.Type, CreatedById = _userSession.UserId };
         mappedProject.Type = type;
 
         // upload design file if it exists
@@ -95,17 +95,31 @@ public class ProjectService : IProjectService
             && !request.StartDueDate.HasValue
             && !request.EndDueDate.HasValue;
 
-        //if(shouldGetAll)
-        //{
+        if (shouldGetAll)
+        {
             var allProjects = await _context.Projects
                 .Where(prd => !prd.IsDeleted)
-                .Where(prd => !request.PriorityOnly || prd.IsPriority)
                 .OrderBy(prd => prd.Order)
                 .ProjectToType<ProjectView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
-        //}
 
-        return new SuccessResult(allProjects);
+            return new SuccessResult(allProjects);
+        }
+
+        string searchTerm = request.SearchQuery.Trim().ToLower();
+
+        var filteredProjects = await _context.Projects
+            .Where(prd => !prd.IsDeleted)
+            .Where(prd => string.IsNullOrEmpty(searchTerm) || (prd.Title.ToLower().Contains(searchTerm) || prd.Description.ToLower().Contains(searchTerm)))
+            .Where(prd => string.IsNullOrEmpty(request.Status) || prd.Status == request.Status)
+            .Where(prd => !request.StartDueDate.HasValue || prd.DueDate >= request.StartDueDate)
+            .Where(prd => !request.EndDueDate.HasValue || prd.DueDate <= request.EndDueDate)
+            .Where(prd => !request.PriorityOnly || prd.IsPriority)
+            .OrderBy(prd => prd.Order)
+            .ProjectToType<ProjectView>()
+            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+
+        return new SuccessResult(filteredProjects);
     }
 
     public async Task<Result> ReassignProject(int id, ReassignProjectModel model)
@@ -142,7 +156,7 @@ public class ProjectService : IProjectService
         if (project == null)
             return new BadErrorResult("Project does not exist");
 
-        if(model.AssigneeId.HasValue)
+        if (model.AssigneeId.HasValue)
         {
             bool? userActive = await _context.Users
                 .Where(u => u.Id == model.AssigneeId)

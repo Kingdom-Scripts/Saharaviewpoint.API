@@ -18,7 +18,6 @@ public class ProjectsController : BaseController
         _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpGet]
     [Authorize(Policy = "BasicAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<IEnumerable<ProjectDetailView>>))]
@@ -28,7 +27,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -38,7 +36,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(BadErrorResult))]
@@ -48,7 +45,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -59,7 +55,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -69,7 +64,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpPost("{id:int}/reassign")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -80,7 +74,6 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpPut("{id:int}/update-status")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -92,14 +85,12 @@ public class ProjectsController : BaseController
     }
 
     [HttpPost("types")]
-    [AllowAnonymous] // TODO: remove this
     public async Task<IActionResult> CreateType(TaskModel model)
     {
         var result = await _projectService.CreateType(model);
         return ProcessResponse(result);
     }
 
-    [AllowAnonymous] // TODO: remove this
     [HttpDelete("types/{id:int}")]
     public async Task<IActionResult> DeleteType(int id)
     {

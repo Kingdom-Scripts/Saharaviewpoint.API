@@ -14,7 +14,7 @@ public class ProjectModel
     public required string SizeOfSite { get; set; }
     public decimal Budget { get; set; }
     public required string Location { get; set; }
-    public required string TypeName { get; set; }
+    public required string Type { get; set; }
     public string? SurroundingFacilities { get; set; }
     public IFormFile? Design { get; set; }
 }
@@ -30,6 +30,9 @@ public class ProjectModelValidator : AbstractValidator<ProjectModel>
         RuleFor(model => model.Description)
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters");
 
+        RuleFor(model => model.SizeOfSite)
+            .NotEmpty().WithMessage("What is the size of this site?");
+
         RuleFor(model => model.DueDate)
             .NotEmpty().WithMessage("Due date is required")
             .GreaterThanOrEqualTo(DateTime.UtcNow).WithMessage("Due date must be in the future");
@@ -41,7 +44,7 @@ public class ProjectModelValidator : AbstractValidator<ProjectModel>
         RuleFor(model => model.Location)
             .NotEmpty().WithMessage("Location is required");
 
-        RuleFor(model => model.TypeName)
+        RuleFor(model => model.Type)
             .NotNull().WithMessage("Project type is required")
             .MinimumLength(2).WithMessage("Provide a valid project type of at least two characters");
 

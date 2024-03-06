@@ -15,6 +15,7 @@ using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Models.Input.Auth;
+using Saharaviewpoint.Core.Models.Input.Project;
 using Saharaviewpoint.Core.Services;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Reflection;
@@ -108,6 +109,10 @@ public static class ServiceExtensions
                         .AddDestinationTransform((string x) => x.Trim())
                         .AddDestinationTransform((string x) => x ?? "")
                         .AddDestinationTransform(DestinationTransform.EmptyCollectionIfNull);
+
+        // ignore converting Type property in project class
+        TypeAdapterConfig<ProjectModel, Project>
+            .NewConfig().Ignore(p => p.Type);
 
         services.AddSingleton<ICacheService, CacheService>();
 
