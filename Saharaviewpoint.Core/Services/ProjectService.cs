@@ -106,12 +106,16 @@ public class ProjectService : IProjectService
             return new SuccessResult(allProjects);
         }
 
-        string searchTerm = request.SearchQuery.Trim().ToLower();
+        string? searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
+            ? request.SearchQuery.Trim().ToLower()
+            : null;
 
         var filteredProjects = await _context.Projects
             .Where(prd => !prd.IsDeleted)
-            .Where(prd => string.IsNullOrEmpty(searchTerm) || (prd.Title.ToLower().Contains(searchTerm) || prd.Description.ToLower().Contains(searchTerm)))
+            // search by title, description, or status
+            .Where(prd => searchTerm == null || (prd.Title.ToLower().Contains(searchTerm) || (prd.Description == null || prd.Description.ToLower().Contains(searchTerm))))
             .Where(prd => string.IsNullOrEmpty(request.Status) || prd.Status == request.Status)
+            // filter by due date
             .Where(prd => !request.StartDueDate.HasValue || prd.DueDate >= request.StartDueDate)
             .Where(prd => !request.EndDueDate.HasValue || prd.DueDate <= request.EndDueDate)
             .Where(prd => !request.PriorityOnly || prd.IsPriority)

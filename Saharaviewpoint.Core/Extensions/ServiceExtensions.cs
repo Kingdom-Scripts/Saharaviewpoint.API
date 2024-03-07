@@ -102,6 +102,12 @@ public static class ServiceExtensions
             options.AddPolicy("BasicAccess", policy => policy.RequireClaim("SubscriptionPlan", "Basic"));
         });
 
+        // set up In Memory Caching
+        services.AddMemoryCache(options =>
+        {
+            options.SizeLimit = 1024;
+        });
+
         //Mapster global Setting. This can also be overwritten per transform
         TypeAdapterConfig.GlobalSettings.Default
                         .NameMatchingStrategy(NameMatchingStrategy.IgnoreCase)
