@@ -10,7 +10,7 @@ public class Project : BaseAppModel
     [MaxLength(50)]
     public string Title { get; set; }
 
-    [MaxLength(1000)]
+    [MaxLength(5000)]
     public string? Description { get; set; }
 
     public required string SizeOfSite { get; set; }
@@ -33,6 +33,8 @@ public class Project : BaseAppModel
     [MaxLength(15)]
     public required string Status { get; set; }
     
+    public DateTime StartDate { get; set; }
+
     public DateTime DueDate { get; set; }
     
     [Required]

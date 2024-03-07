@@ -156,5 +156,17 @@
         <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateProjectStartDate">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectStartDate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectStartDate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectStartDate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

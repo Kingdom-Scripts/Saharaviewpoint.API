@@ -8,6 +8,7 @@ public class ProjectModel
 {
     public required string Title { get; set; }
     public string? Description { get; set; }
+    public DateTime StartDate { get; set; }
     public DateTime DueDate { get; set; }
     public bool IsPriority { get; set; }
     public int? AssigneeId { get; set; }
@@ -28,10 +29,14 @@ public class ProjectModelValidator : AbstractValidator<ProjectModel>
             .MaximumLength(50).WithMessage("Title cannot exceed 50 characters");
 
         RuleFor(model => model.Description)
-            .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters");
+            .MaximumLength(5000).WithMessage("Description cannot exceed 1000 characters");
 
         RuleFor(model => model.SizeOfSite)
             .NotEmpty().WithMessage("What is the size of this site?");
+
+        RuleFor(model => model.StartDate)
+            .NotEmpty().WithMessage("When is this project likely to start?")
+            .GreaterThanOrEqualTo(DateTime.UtcNow).WithMessage("Due date must be in the future");
 
         RuleFor(model => model.DueDate)
             .NotEmpty().WithMessage("Due date is required")

@@ -8,6 +8,7 @@ public class ProjectView
     public required string Title { get; set; }
     public required string TypeName { get; set; }
     public required string Status { get; set; }
+    public DateTime StartDate { get; set; }
     public DateTime DueDate { get; set; }
     public bool IsPriority { get; set; }
     public int Order { get; internal set; }
