@@ -18,6 +18,7 @@ public class ProjectsController : BaseController
         _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
     }
 
+    #region PROJECTS
     [HttpGet]
     [Authorize(Policy = "BasicAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<IEnumerable<ProjectDetailView>>))]
@@ -84,6 +85,16 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
+    [HttpGet("count")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<int>))]
+    public async Task<IActionResult> CountProjects()
+    {
+        var result = await _projectService.CountProjects();
+        return ProcessResponse(result);
+    }
+    #endregion
+
+    #region TYPES
     [HttpPost("types")]
     public async Task<IActionResult> CreateType(TaskModel model)
     {
@@ -104,4 +115,5 @@ public class ProjectsController : BaseController
         var result = await _projectService.ListTypes(searchTerm);
         return ProcessResponse(result);
     }
+    #endregion
 }

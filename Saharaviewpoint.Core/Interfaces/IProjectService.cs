@@ -6,6 +6,7 @@ namespace Saharaviewpoint.Core.Interfaces;
 public interface IProjectService
 {
     #region PROJECTS
+
     Task<Result> CreateProject(ProjectModel model);
 
     Task<Result> UpdateProject(int id, ProjectModel model);
@@ -16,14 +17,21 @@ public interface IProjectService
 
     Task<Result> ListProjects(ProjectSearchModel paging);
 
+    Task<Result> CountProjects();
+
     Task<Result> ReassignProject(int id, ReassignProjectModel model);
 
     Task<Result> UpdateProjectStatus(int id, ProjectStatusModel model);
-    #endregion
+
+    #endregion PROJECTS
 
     #region TYPES
+
     Task<Result> CreateType(TaskModel model);
+
     Task<Result> DeleteType(int id);
+
     Task<Result> ListTypes(string? searchTerm);
-    #endregion
+
+    #endregion TYPES
 }

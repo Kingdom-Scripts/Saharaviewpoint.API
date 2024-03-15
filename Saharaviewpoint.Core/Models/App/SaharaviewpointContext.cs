@@ -18,6 +18,7 @@ public class SaharaviewpointContext : DbContext
     public required DbSet<Project> Projects { get; set; }
     public required DbSet<ProjectType> ProjectTypes { get; set; }
     public required DbSet<Document> Documents { get; set; }
+    public required DbSet<PMInvitation> PMInvitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -17,6 +17,7 @@ public class ProjectService : IProjectService
     private readonly SaharaviewpointContext _context;
     private readonly UserSession _userSession;
     private readonly IFileService _fileService;
+    private readonly IEmailService _emailService;
 
     public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService)
     {
@@ -90,6 +91,7 @@ public class ProjectService : IProjectService
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
 
+
         var shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
             && string.IsNullOrEmpty(request.Status)
             && !request.StartDueDate.HasValue
@@ -124,6 +126,15 @@ public class ProjectService : IProjectService
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
 
         return new SuccessResult(filteredProjects);
+    }
+
+    public async Task<Result> CountProjects()
+    {
+        var count = await _context.Projects
+            .Where(prd => !prd.IsDeleted)
+            .CountAsync();
+
+        return new SuccessResult(count);
     }
 
     public async Task<Result> ReassignProject(int id, ReassignProjectModel model)

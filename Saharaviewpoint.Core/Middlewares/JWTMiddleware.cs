@@ -100,8 +100,11 @@ public class JWTMiddleware
             var uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
             var type = jwtToken.Claims.First(x => x.Type == "Type").Value;
 
+            // get request domain
+            var domain = context.Request.Headers["Origin"].ToString();
+
             //check if token is string in the cache
-            string sToken = await _cacheService.GetToken($"{AuthKeys.TokenCacheKey}{uid}");
+            string sToken = await _cacheService.GetToken($"{AuthKeys.TokenCacheKey}:{domain}:{uid}");
             if (string.IsNullOrEmpty(sToken) || sToken != token)
             {
                 context.Items["User"] = null;

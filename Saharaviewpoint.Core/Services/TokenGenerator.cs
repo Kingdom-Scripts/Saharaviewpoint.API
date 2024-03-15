@@ -1,4 +1,5 @@
 using Mapster;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -20,22 +21,27 @@ public class TokenGenerator : ITokenGenerator
     private readonly JwtConfig _jwtConfig;
     private readonly ICacheService _cacheService;
     private readonly SaharaviewpointContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public TokenGenerator(IOptions<JwtConfig> jwtConfig, ICacheService cacheService, SaharaviewpointContext context)
+    public TokenGenerator(IOptions<JwtConfig> jwtConfig, ICacheService cacheService, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor)
     {
         _jwtConfig = jwtConfig.Value;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
     public async Task<Result> GenerateJwtToken(User user)
     {
         DateTime expiresAt = DateTime.UtcNow.AddDays(_jwtConfig.Expires);
 
-        var token = GenerateAccessToken(user, expiresAt);
+        // get the request domain 
+        var requestDomain = _httpContextAccessor.HttpContext!.Request.Headers["Origin"].ToString();
+
+        var token = GenerateAccessToken(user, requestDomain, expiresAt);
 
         //cache the token
-        _cacheService.AddToken($"{AuthKeys.TokenCacheKey}{user.Uid}", token, expiresAt);
+        _cacheService.AddToken($"{AuthKeys.TokenCacheKey}:{requestDomain}:{user.Uid}", token, expiresAt);
 
         var result = new AuthDataView
         {
@@ -76,7 +82,7 @@ public class TokenGenerator : ITokenGenerator
         }
     }
 
-    private string GenerateAccessToken(User user, DateTime expiresAt)
+    private string GenerateAccessToken(User user, string requestDomain, DateTime expiresAt)
     {
         // generate token that is valid for 7 days
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -91,6 +97,11 @@ public class TokenGenerator : ITokenGenerator
             new Claim(ClaimTypes.Role, role.Role.Name)));
 
         var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
+
+        // validate domain
+        var domains = _jwtConfig.AllowedDomains.Split(",");
+        if (!domains.Contains(requestDomain))
+            throw new Exception("Unable to process request");
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
