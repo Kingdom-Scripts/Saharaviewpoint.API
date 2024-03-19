@@ -88,7 +88,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: svpAllowedOrigins,
         policy =>
         {
-            policy.WithOrigins("http://localhost:4200", "http://localhost:4201")
+            string[] hosts = builder.Configuration.GetSection("AppConfig:AllowedHosts").Get<string[]>()!;
+            policy.WithOrigins(hosts)
                 .AllowAnyHeader()
                 .AllowAnyMethod();
         });
