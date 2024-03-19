@@ -23,5 +23,7 @@ namespace Saharaviewpoint.Core.Models.App
         public bool IsFulfilled { get; set; } = false;
 
         public bool IsExpired { get; set; } = false;
+
+        public bool EmailSent { get; set; } = false;
     }
 }

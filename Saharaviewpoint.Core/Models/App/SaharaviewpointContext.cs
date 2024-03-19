@@ -29,7 +29,9 @@ public class SaharaviewpointContext : DbContext
 
         builder
             .Entity<User>()
-            .ToTable(p => p.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')"));
+            .ToTable(p => p.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')"))
+            .HasMany(u => u.Projects)
+            .WithOne(u => u.Assignee);
 
         builder.Entity<UserRole>(entity =>
         {

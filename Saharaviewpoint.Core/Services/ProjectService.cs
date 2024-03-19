@@ -91,7 +91,7 @@ public class ProjectService : IProjectService
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        bool res = await _emailService.SendMessage("davidire71@gmail.com", "Test Email", "This is merely to test the email service");
+        bool res = _emailService.TestAnother();
 
         var shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
             && string.IsNullOrEmpty(request.Status)

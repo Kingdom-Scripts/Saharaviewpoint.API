@@ -33,9 +33,6 @@ namespace Saharaviewpoint.Core.Services
 
         public async Task<Result> ListProjectManagersAsync(int pageIndex, int pageSize)
         {
-            Console.WriteLine("=========================================");
-            Console.WriteLine("=========================================");
-            Console.WriteLine();
             var projectManagers = await _context.UserRoles
                 .Where(uRole => uRole.RoleId == (int)Roles.SvpManager)
                 .SelectMany(uRole => uRole.User.Projects.DefaultIfEmpty(), (userRole, project) => new
@@ -56,12 +53,7 @@ namespace Saharaviewpoint.Core.Services
                     IsActive = g.Key.IsActive
                 })
                 .OrderBy(u => u.FirstName)
-                .ToListAsync();
-                //.ToPaginatedListAsync(pageIndex, pageSize);
-
-            Console.WriteLine();
-            Console.WriteLine("=========================================");
-            Console.WriteLine("=========================================");
+                .ToPaginatedListAsync(pageIndex, pageSize);
 
             return new SuccessResult(projectManagers);
         }
@@ -77,6 +69,14 @@ namespace Saharaviewpoint.Core.Services
                 return new ErrorResult("An account with this email already exist.");
             }
 
+            // TODO: uncomment the check below
+            // check if user hasn't been invited before
+            var invitationExist = await _context.PMInvitations
+                .AnyAsync(i => i.Email.ToLower().Trim() == model.Email.ToLower().Trim());
+
+            if (invitationExist)
+                return new ErrorResult("This email has been invited before.");
+
             var mappedInvitation = model.Adapt<PMInvitation>();
             mappedInvitation.ExpiryDate = DateTime.UtcNow.AddDays(7);
 
@@ -85,8 +85,9 @@ namespace Saharaviewpoint.Core.Services
             var token = CodeGenerator.GenerateCode(100);
             var emailBody = ComposePMInvitationEmailBody($"{model.FirstName} {model.LastName}", model.Email, token);
 
-            await _emailService.SendMessage(model.Email, "Saharaviewpoint Project Manager Invitation", emailBody);
+            bool emailSent = await _emailService.SendMessage(model.Email, "Saharaviewpoint Project Manager Invitation", emailBody);
 
+            mappedInvitation.EmailSent = emailSent;
             int saved = await _context.SaveChangesAsync();
 
             return saved > 0
@@ -100,7 +101,7 @@ namespace Saharaviewpoint.Core.Services
 
             // validate request
             var request = await _context.PMInvitations
-                .FirstOrDefaultAsync(i => i.Email == model.Email 
+                .FirstOrDefaultAsync(i => i.Email == model.Email
                     && (i.IsFulfilled == false && i.ExpiryDate < today));
 
             if (request == null)
@@ -108,12 +109,12 @@ namespace Saharaviewpoint.Core.Services
 
             // validate token
             var token = await _context.Codes
-                .FirstOrDefaultAsync(c => c.Purpose == model.Type 
-                    &&c.Token == model.Token 
-                    && c.ExpiryDate > today 
+                .FirstOrDefaultAsync(c => c.Purpose == model.Type
+                    &&c.Token == model.Token
+                    && c.ExpiryDate > today
                     && c.Used == false);
 
-            if (token == null) 
+            if (token == null)
                 return new ErrorResult("Invalid invitation, kindly request a new invitation.");
 
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == (int)Roles.SvpManager);
@@ -147,7 +148,7 @@ namespace Saharaviewpoint.Core.Services
             // return user token
             if (!authData.Success)
                 return new ErrorResult(authData.Message);
-            
+
             return new SuccessResult($"Welcome, {request.FirstName} {request.LastName}", authData.Content);
         }
 
