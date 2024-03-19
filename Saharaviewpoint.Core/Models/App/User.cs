@@ -32,5 +32,7 @@ public class User : BaseAppModel
     [Required]
     public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;
 
-    public required ICollection<UserRole> UserRoles { get; set; }
+    public ICollection<UserRole>? UserRoles { get; set; }
+
+    public ICollection<Project> Projects { get; set; } = new List<Project>();
 }

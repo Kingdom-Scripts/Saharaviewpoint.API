@@ -4,6 +4,6 @@ namespace Saharaviewpoint.Core.Interfaces
 {
     public interface IEmailService
     {
-        public bool SendMessage(string from, string to, string subject, string body, Attachment attachment);
+        public Task<bool> SendMessage(string to, string subject, string body, Attachment? attachment = null);
     }
 }

@@ -20,5 +20,8 @@ namespace Saharaviewpoint.Core.Models.App
         [Required]
         public DateTime ExpiryDate { get; set; }
 
+        public bool IsFulfilled { get; set; } = false;
+
+        public bool IsExpired { get; set; } = false;
     }
 }

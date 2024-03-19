@@ -19,11 +19,12 @@ public class ProjectService : IProjectService
     private readonly IFileService _fileService;
     private readonly IEmailService _emailService;
 
-    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService)
+    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IEmailService emailService)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-        _fileService = fileService;
+        _fileService = fileService ?? throw new ArgumentNullException(nameof(EmailService));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(context));
     }
 
     #region PROJECTS
@@ -90,7 +91,7 @@ public class ProjectService : IProjectService
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-
+        bool res = await _emailService.SendMessage("davidire71@gmail.com", "Test Email", "This is merely to test the email service");
 
         var shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
             && string.IsNullOrEmpty(request.Status)

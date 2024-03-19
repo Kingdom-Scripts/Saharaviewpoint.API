@@ -1,73 +1,69 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Options;
-using Saharaviewpoint.Core.Models.Configurations;
-using System.Net;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Saharaviewpoint.Core.Interfaces;
 using System.Net.Mail;
 using System.Text;
 
 namespace Saharaviewpoint.Core.Services
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
-        private readonly SmtpClient _client;
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IOptions<KeyVaultConfig> keyVaultConfig)
+        public EmailService(IHttpClientFactory httpClientFactory, ILogger<EmailService> logger)
         {
-            if (keyVaultConfig == null) throw new ArgumentNullException(nameof(keyVaultConfig));
+            if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
+            _httpClient = httpClientFactory.CreateClient("MailerSend");
 
-            //TODO: Store username and password in keyvault
-            //var keyVault = keyVaultConfig.Value;
-            //var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
-
-            //var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
-
-
-
-            _client = new SmtpClient
-            {
-                Host = "mail.kingdomscripts.com",
-                Port = 80,
-                DeliveryMethod = SmtpDeliveryMethod.Network
-            };
-
-            _client.UseDefaultCredentials = false;
-            _client.Credentials = new NetworkCredential(
-                    "mordecai@kingdomscripts.com",
-                    "Davidire0)("
-                );
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public bool SendMessage(string from, string to, string subject, string body, Attachment attachment)
+        public async Task<bool> SendMessage(string to, string subject, string body, Attachment? attachment = null)
         {
-            MailMessage mail = null;
-            var isSent = false;
-
             try
             {
-                //Create message
-                mail = new MailMessage(from, to, subject, body)
+                var request = new 
                 {
-                    DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure,
-                    IsBodyHtml = true,
-                    BodyEncoding = UTF8Encoding.UTF8
+                    from = new { email = "info@trial-o65qngk8emdgwr12.mlsender.net" },
+                    to = new List<object>()
+                    {
+                        new { email = to }
+                    },
+                    subject = subject,
+                    text = body,
+                    html = body
                 };
 
-                // Add attachment
-                if (attachment != null)
-                    mail.Attachments.Add(attachment);
+                var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("email", content);
 
-                //This method send our mail
-                _client.Send(mail);
-                isSent = true;
-
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Error sending email");
+                return false;
             }
             finally
             {
-                mail.Dispose();
+                //mail.Dispose();
             }
-
-            return isSent;
+            
         }
+    }
+
+    public class MailModel
+    {
+        public MailRecipient from { get; set; }
+        public List<MailRecipient> to { get; set; }
+        public string subject { get; set; }
+        public string text { get; set; }
+        public string html { get; set; }
+    }
+
+    public class MailRecipient
+    {
+        public string email { get; set; }
     }
 }
