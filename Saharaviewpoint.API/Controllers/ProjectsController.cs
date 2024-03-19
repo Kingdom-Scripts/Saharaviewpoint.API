@@ -9,8 +9,6 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/projects")]
-//[AllowAnonymous] // TODO: remove this
-// [Authorize] TODO: activate this
 public class ProjectsController : BaseController
 {
     private readonly IProjectService _projectService;
@@ -20,6 +18,7 @@ public class ProjectsController : BaseController
         _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
     }
 
+    #region PROJECTS
     [HttpGet]
     [Authorize(Policy = "BasicAccess")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<IEnumerable<ProjectDetailView>>))]
@@ -29,7 +28,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     public async Task<IActionResult> GetProject(int id)
@@ -47,7 +46,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -57,7 +56,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     public async Task<IActionResult> DeleteProject(int id)
@@ -66,7 +65,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpPost("{id}/reassign")]
+    [HttpPost("{id:int}/reassign")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -76,7 +75,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpPut("{id}/update-status")]
+    [HttpPut("{id:int}/update-status")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -86,6 +85,16 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
+    [HttpGet("count")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<int>))]
+    public async Task<IActionResult> CountProjects()
+    {
+        var result = await _projectService.CountProjects();
+        return ProcessResponse(result);
+    }
+    #endregion
+
+    #region TYPES
     [HttpPost("types")]
     public async Task<IActionResult> CreateType(TaskModel model)
     {
@@ -93,7 +102,7 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
-    [HttpDelete("types/{id}")]
+    [HttpDelete("types/{id:int}")]
     public async Task<IActionResult> DeleteType(int id)
     {
         var result = await _projectService.DeleteType(id);
@@ -101,9 +110,10 @@ public class ProjectsController : BaseController
     }
 
     [HttpGet("types")]
-    public async Task<IActionResult> ListTypes()
+    public async Task<IActionResult> ListTypes(string? searchTerm)
     {
-        var result = await _projectService.ListTypes();
+        var result = await _projectService.ListTypes(searchTerm);
         return ProcessResponse(result);
     }
+    #endregion
 }

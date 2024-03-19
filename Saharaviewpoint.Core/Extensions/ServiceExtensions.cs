@@ -10,13 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.VisualBasic;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Models.Input.Auth;
+using Saharaviewpoint.Core.Models.Input.Project;
 using Saharaviewpoint.Core.Services;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 
@@ -37,11 +38,11 @@ public static class ServiceExtensions
 
         var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
 
-        var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
+        var keyVaultClient = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
 
         services.AddDbContext<SaharaviewpointContext>(opt =>
         {
-            opt.UseSqlServer(client.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
+            opt.UseSqlServer(keyVaultClient.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
                 b => b.MigrationsAssembly("Saharaviewpoint.API"));
             opt.LogTo(Console.WriteLine, LogLevel.Information);
         });
@@ -101,6 +102,17 @@ public static class ServiceExtensions
             options.AddPolicy("BasicAccess", policy => policy.RequireClaim("SubscriptionPlan", "Basic"));
         });
 
+        // add HttpClient for MailerSend
+        services.AddHttpClient("MailerSend", client =>
+        {
+            client.BaseAddress = new Uri(configuration.GetSection("AppConfig:BaseURLs:MailerSend").Value);
+
+            // add bearer authorization token
+            // TODO: get token from key vault
+            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", keyVaultClient.GetSecret("ApiKeys--MailerSend").Value.Value);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "mlsn.0e11ea1c635bf195dbde5a1fbf1dd5033a83c9f8d7f1ead2080eb2e66e4698fa");
+        });
+
         //Mapster global Setting. This can also be overwritten per transform
         TypeAdapterConfig.GlobalSettings.Default
                         .NameMatchingStrategy(NameMatchingStrategy.IgnoreCase)
@@ -109,14 +121,20 @@ public static class ServiceExtensions
                         .AddDestinationTransform((string x) => x ?? "")
                         .AddDestinationTransform(DestinationTransform.EmptyCollectionIfNull);
 
+        // ignore converting Type property in project class
+        TypeAdapterConfig<ProjectModel, Project>
+            .NewConfig().Ignore(p => p.Type);
+
         services.AddSingleton<ICacheService, CacheService>();
 
         services.TryAddScoped<UserSession>();
         services.TryAddScoped<ITokenGenerator, TokenGenerator>();
         services.TryAddScoped<IFileService, FileService>();
+        services.TryAddScoped<IEmailService, EmailService>();
 
         services.TryAddTransient<IAuthService, AuthService>();
         services.TryAddTransient<IProjectService, ProjectService>();
+        services.TryAddTransient<IUserService, UserService>();
 
         return services;
     }

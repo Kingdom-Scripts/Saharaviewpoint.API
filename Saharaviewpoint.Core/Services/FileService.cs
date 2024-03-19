@@ -4,6 +4,7 @@ using Azure.Storage.Blobs;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
@@ -20,9 +21,12 @@ public class FileService : IFileService
     private SaharaviewpointContext _context;
     private readonly BlobServiceClient _blobServiceClient;
     private readonly UserSession _userSession;
+    private readonly ILogger<FileService> _logger;
 
-    public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession, SaharaviewpointContext context)
+    public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession, SaharaviewpointContext context, ILogger<FileService> logger)
     {
+        _logger = logger;
+
         if (keyVaultConfig == null) throw new ArgumentNullException(nameof(keyVaultConfig));
 
         var keyVault = keyVaultConfig.Value;
@@ -42,43 +46,53 @@ public class FileService : IFileService
 
     public async Task<Result<DocumentView>> UploadFile(string projectName, IFormFile file)
     {
-        projectName = projectName.ToLower().Trim();
-        string fileName = file.FileName.Split(".")[0];
-        string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        string fileType = GetDocumentType(ext);
-
-        var containerClient = _blobServiceClient.GetBlobContainerClient(projectName);
-
-        await containerClient.CreateIfNotExistsAsync();
-
-        if (fileType != DocumentTypes.IMAGE)
+        try
         {
-            var blobClient = containerClient.GetBlobClient(file.FileName);
+            projectName = projectName.ToLower().Trim();
+            string fileName = file.FileName.Split(".")[0];
+            string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            string fileType = GetDocumentType(ext);
 
-            // Upload data
-            await blobClient.UploadAsync(file.OpenReadStream(), true);
-        } else
+            string containerName = CreateContainerNameFromProjectTitle(projectName);
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+
+            await containerClient.CreateIfNotExistsAsync();
+
+            if (fileType != DocumentTypes.IMAGE)
+            {
+                var blobClient = containerClient.GetBlobClient(file.FileName);
+
+                // Upload data
+                await blobClient.UploadAsync(file.OpenReadStream(), true);
+            }
+            else
+            {
+                await SaveImageAsync(containerClient, file);
+            }
+
+            var document = new Document
+            {
+                Folder = containerName,
+                Name = fileName,
+                Extension = ext,
+                Type = fileType,
+                CreatedById = _userSession.UserId
+            };
+
+            await _context.AddAsync(document);
+
+            int saved = await _context.SaveChangesAsync();
+
+            if (saved > 0)
+                return new SuccessResult<DocumentView>(document.Adapt<DocumentView>());
+
+            return new ErrorResult<DocumentView>("Saving file failed");
+        }
+        catch (Exception ex)
         {
-            await SaveImageAsync(containerClient, file);
-        }        
-
-        var document = new Document
-        {
-            Folder = projectName,
-            Name = fileName,
-            Extension = ext,
-            Type = fileType,
-            CreatedById = _userSession.UserId
-        };
-
-        await _context.AddAsync(document);
-
-        int saved = await _context.SaveChangesAsync();
-
-        if (saved > 0)
-            return new SuccessResult<DocumentView>(document.Adapt<DocumentView>());
-
-        return new ErrorResult<DocumentView>("Saving file failed");
+            _logger.LogError(ex, "Error uploading file");
+            return new ErrorResult<DocumentView>("An unexpected error occurred while uploading your file(s)");
+        }
     }
 
     public async Task<FileStreamResult> GetFileByPath(string folder, string fileName)
@@ -93,6 +107,30 @@ public class FileService : IFileService
 
     //    return await GetFile(document.Folder, $"{document.Name}.{document.Extension}");
     //}
+
+    private static string CreateContainerNameFromProjectTitle(string projectTitle)
+    {
+        string result = projectTitle.ToLower().Trim().Replace(" ", "-");
+
+        // remove any duplicate hyphen in the string
+        while (result.Contains("--"))
+        {
+            result = result.Replace("--", "-");
+        }
+
+        // reduce the result if it's larger than 63 characters, result should not end with hypen
+        if (result.Length > 63)
+        {
+            result = result[..63];
+            if (result.EndsWith("-"))
+            {
+                // remove the last character
+                result = result[..^1];
+            }
+        }
+
+        return result;
+    }
 
     private async Task<FileStreamResult> GetFile(string folder, string fileName)
     {
@@ -130,6 +168,7 @@ public class FileService : IFileService
                     {
                         method = "thumb",
                         width = 150,
+                        height = 150
                     }).ToBuffer();
 
             // compress original

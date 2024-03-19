@@ -11,13 +11,15 @@ public class SaharaviewpointContext : DbContext
     {
     }
 
-    public DbSet<Role> Roles { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<RefreshToken> RefreshTokens { get; set; }
-    public DbSet<Project> Projects { get; set; }
-    public DbSet<ProjectType> ProjectTypes { get; set; }
-    public DbSet<Document> Documents { get; set; }
+    public required DbSet<Role> Roles { get; set; }
+    public required DbSet<User> Users { get; set; }
+    public required DbSet<UserRole> UserRoles { get; set; }
+    public required DbSet<RefreshToken> RefreshTokens { get; set; }
+    public required DbSet<Project> Projects { get; set; }
+    public required DbSet<ProjectType> ProjectTypes { get; set; }
+    public required DbSet<Document> Documents { get; set; }
+    public required DbSet<PMInvitation> PMInvitations { get; set; }
+    public required DbSet<Code> Codes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -27,7 +29,9 @@ public class SaharaviewpointContext : DbContext
 
         builder
             .Entity<User>()
-            .ToTable(p => p.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')"));
+            .ToTable(p => p.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')"))
+            .HasMany(u => u.Projects)
+            .WithOne(u => u.Assignee);
 
         builder.Entity<UserRole>(entity =>
         {

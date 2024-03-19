@@ -8,23 +8,23 @@ public class User : BaseAppModel
 
     [Required]
     [MaxLength(50)]
-    public string Email { get; internal set; }
+    public required string Email { get; set; }
 
     [Required]
-    public string Type { get; set; }
+    public required string Type { get; set; }
 
     [MaxLength(50)]
-    public string FirstName { get; set; }
+    public string? FirstName { get; set; }
 
     [MaxLength(50)]
-    public string LastName { get; set; }
+    public string? LastName { get; set; }
 
     [MaxLength(25)]
-    public string Phone { get; set; }
+    public string? Phone { get; set; }
 
     [Required]
     [MaxLength(255)]
-    public string HashedPassword { get; set; }
+    public required string HashedPassword { get; set; }
 
     [Required]
     public bool IsActive { get; set; } = true;
@@ -32,5 +32,7 @@ public class User : BaseAppModel
     [Required]
     public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;
 
-    public virtual ICollection<UserRole> UserRoles { get; set; }
+    public ICollection<UserRole>? UserRoles { get; set; }
+
+    public ICollection<Project> Projects { get; set; } = new List<Project>();
 }

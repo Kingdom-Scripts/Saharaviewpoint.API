@@ -1,5 +1,4 @@
 using Saharaviewpoint.Core.Interfaces;
-using System.Text.Json.Serialization;
 
 namespace Saharaviewpoint.Core.Models.Utilities;
 

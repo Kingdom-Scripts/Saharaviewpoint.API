@@ -7,17 +7,22 @@ public static class CustomFileValidator
     public class FileValidationResult
     {
         public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 
-    public static FileValidationResult HaveValidFile(IFormFile design)
+    public static FileValidationResult HaveValidFile(IFormFile? design)
     {
-        if (design == null || design.Length == 0)
+        if (design == null)
+        {
+            return new FileValidationResult { IsValid = true };
+        }
+
+        if (design.Length == 0)
         {
             return new FileValidationResult { IsValid = false, ErrorMessage = "No file provided or the file is empty." };
         }
 
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
         var maxFileSize = 5 * 1024 * 1024; // 5 MB
 
         var fileExtension = Path.GetExtension(design.FileName).ToLowerInvariant();

@@ -17,12 +17,14 @@ public class ProjectService : IProjectService
     private readonly SaharaviewpointContext _context;
     private readonly UserSession _userSession;
     private readonly IFileService _fileService;
+    private readonly IEmailService _emailService;
 
-    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService)
+    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IEmailService emailService)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-        _fileService = fileService;
+        _fileService = fileService ?? throw new ArgumentNullException(nameof(EmailService));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(context));
     }
 
     #region PROJECTS
@@ -32,10 +34,14 @@ public class ProjectService : IProjectService
         mappedProject.Status = ProjectStatuses.REQUESTED;
         mappedProject.CreatedById = _userSession.UserId;
 
+        var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.Type);
+        type ??= new ProjectType { Name = model.Type, CreatedById = _userSession.UserId };
+        mappedProject.Type = type;
+
         // upload design file if it exists
         if (model.Design != null)
         {
-            var designUpload = await _fileService.UploadFile(model.Name, model.Design);
+            var designUpload = await _fileService.UploadFile(model.Title, model.Design);
             if (!designUpload.Success)
                 return new ErrorResult("Unable to upload design file", designUpload.Message);
 
@@ -85,23 +91,51 @@ public class ProjectService : IProjectService
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
+        bool res = _emailService.TestAnother();
 
         var shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
             && string.IsNullOrEmpty(request.Status)
             && !request.StartDueDate.HasValue
             && !request.EndDueDate.HasValue;
 
-        //if(shouldGetAll)
-        //{
+        if (shouldGetAll)
+        {
             var allProjects = await _context.Projects
                 .Where(prd => !prd.IsDeleted)
-                .Where(prd => !request.PriorityOnly || prd.IsPriority)
                 .OrderBy(prd => prd.Order)
                 .ProjectToType<ProjectView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
-        //}
 
-        return new SuccessResult(allProjects);
+            return new SuccessResult(allProjects);
+        }
+
+        string? searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
+            ? request.SearchQuery.Trim().ToLower()
+            : null;
+
+        var filteredProjects = await _context.Projects
+            .Where(prd => !prd.IsDeleted)
+            // search by title, description, or status
+            .Where(prd => searchTerm == null || (prd.Title.ToLower().Contains(searchTerm) || (prd.Description == null || prd.Description.ToLower().Contains(searchTerm))))
+            .Where(prd => string.IsNullOrEmpty(request.Status) || prd.Status == request.Status)
+            // filter by due date
+            .Where(prd => !request.StartDueDate.HasValue || prd.DueDate >= request.StartDueDate)
+            .Where(prd => !request.EndDueDate.HasValue || prd.DueDate <= request.EndDueDate)
+            .Where(prd => !request.PriorityOnly || prd.IsPriority)
+            .OrderBy(prd => prd.Order)
+            .ProjectToType<ProjectView>()
+            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+
+        return new SuccessResult(filteredProjects);
+    }
+
+    public async Task<Result> CountProjects()
+    {
+        var count = await _context.Projects
+            .Where(prd => !prd.IsDeleted)
+            .CountAsync();
+
+        return new SuccessResult(count);
     }
 
     public async Task<Result> ReassignProject(int id, ReassignProjectModel model)
@@ -138,7 +172,7 @@ public class ProjectService : IProjectService
         if (project == null)
             return new BadErrorResult("Project does not exist");
 
-        if(model.AssigneeId.HasValue)
+        if (model.AssigneeId.HasValue)
         {
             bool? userActive = await _context.Users
                 .Where(u => u.Id == model.AssigneeId)
@@ -223,10 +257,16 @@ public class ProjectService : IProjectService
            : new ErrorResult("Unable to save changes, please try again later.");
     }
 
-    public async Task<Result> ListTypes()
+    public async Task<Result> ListTypes(string? searchTerm)
     {
+        searchTerm = string.IsNullOrEmpty(searchTerm)
+            ? null : searchTerm.ToLower().Trim();
+
         var allTypes = await _context.ProjectTypes
             .Where(pt => !pt.IsDeleted)
+            .Where(pt => searchTerm == null || pt.Name.ToLower().Trim().Contains(searchTerm))
+            .OrderBy(pt => pt.Name)
+            .Take(5)
             .ProjectToType<ProjectTypeView>()
             .ToListAsync();
 

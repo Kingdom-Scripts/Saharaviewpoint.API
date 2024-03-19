@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Saharaviewpoint.Core.Models.App.Constants;
 
 namespace Saharaviewpoint.Core.Models.Input.Auth;
 

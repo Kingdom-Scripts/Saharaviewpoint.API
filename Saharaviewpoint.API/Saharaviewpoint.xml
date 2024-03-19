@@ -109,6 +109,7 @@
         </member>
         <member name="T:Saharaviewpoint.API.Migrations.UpdateProject2">
             <inheritdoc />
+            <inheritdoc />
         </member>
         <member name="M:Saharaviewpoint.API.Migrations.UpdateProject2.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
@@ -141,6 +142,54 @@
             <inheritdoc />
         </member>
         <member name="M:Saharaviewpoint.API.Migrations.One.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateProjectTitleName">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectTitleName.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.UpdateProjectStartDate">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectStartDate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectStartDate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.UpdateProjectStartDate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Two">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Two.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Two.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Two.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Three">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Three.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Three.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Three.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

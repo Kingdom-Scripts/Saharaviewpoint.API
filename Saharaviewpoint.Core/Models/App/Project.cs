@@ -8,30 +8,33 @@ public class Project : BaseAppModel
 {
     [Required]
     [MaxLength(50)]
-    public string Name { get; set; }
+    public string Title { get; set; }
 
-    [MaxLength(500)]
-    public string Description { get; set; }
+    [MaxLength(5000)]
+    public string? Description { get; set; }
 
-    public string SizeOfSite { get; set; }
+    public required string SizeOfSite { get; set; }
 
     [Column(TypeName = "decimal(19, 2)")]
     public decimal Budget { get; set; }
 
-    public string Location { get; set; }
+    public required string Location { get; set; }
 
     public int TypeId { get; set; }
+
+    [MaxLength(500)]
+    public string? SurroundingFacilities { get; set; }
 
     public int? DesignId { get; set; }
 
     public int? AssigneeId { get; set; }
-
-    public string SiteCondition { get; set; }
     
     [Required]
     [MaxLength(15)]
-    public string Status { get; set; }
+    public required string Status { get; set; }
     
+    public DateTime StartDate { get; set; }
+
     public DateTime DueDate { get; set; }
     
     [Required]

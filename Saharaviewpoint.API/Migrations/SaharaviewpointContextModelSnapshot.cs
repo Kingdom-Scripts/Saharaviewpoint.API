@@ -23,6 +23,37 @@ namespace Saharaviewpoint.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Code", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("Used")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Codes", "dbo");
+                });
+
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Document", b =>
                 {
                     b.Property<int>("Id")
@@ -66,6 +97,51 @@ namespace Saharaviewpoint.API.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.PMInvitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("EmailSent")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsExpired")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFulfilled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PMInvitations", "dbo");
+                });
+
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -93,8 +169,8 @@ namespace Saharaviewpoint.API.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(5000)
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DesignId")
                         .HasColumnType("int");
@@ -109,26 +185,32 @@ namespace Saharaviewpoint.API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<string>("SiteCondition")
+                    b.Property<string>("SizeOfSite")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SizeOfSite")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("SurroundingFacilities")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
@@ -321,7 +403,7 @@ namespace Saharaviewpoint.API.Migrations
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
                 {
                     b.HasOne("Saharaviewpoint.Core.Models.App.User", "Assignee")
-                        .WithMany()
+                        .WithMany("Projects")
                         .HasForeignKey("AssigneeId");
 
                     b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
@@ -392,6 +474,8 @@ namespace Saharaviewpoint.API.Migrations
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
                 {
+                    b.Navigation("Projects");
+
                     b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
