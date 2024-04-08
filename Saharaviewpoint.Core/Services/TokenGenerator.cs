@@ -36,9 +36,9 @@ public class TokenGenerator : ITokenGenerator
         DateTime expiresAt = DateTime.UtcNow.AddDays(_jwtConfig.Expires);
 
         // get the request domain 
-        var requestDomain = _httpContextAccessor.HttpContext!.Request.Headers["Origin"].ToString();
+        string? requestDomain = _httpContextAccessor.HttpContext!.Request.Headers["Origin"].ToString();
 
-        var token = GenerateAccessToken(user, requestDomain, expiresAt);
+        string? token = GenerateAccessToken(user, requestDomain, expiresAt);
 
         //cache the token
         _cacheService.AddToken($"{AuthKeys.TokenCacheKey}:{requestDomain}:{user.Uid}", token, expiresAt);
@@ -96,10 +96,10 @@ public class TokenGenerator : ITokenGenerator
         claimIdentity.AddClaims(user.UserRoles.Select(role =>
             new Claim(ClaimTypes.Role, role.Role.Name)));
 
-        var key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
+        byte[]? key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
 
         // validate domain
-        var domains = _jwtConfig.AllowedDomains.Split(",");
+        string[]? domains = _jwtConfig.AllowedDomains.Split(",");
         if (!domains.Contains(requestDomain))
             throw new Exception("Unable to process request");
 
@@ -113,7 +113,7 @@ public class TokenGenerator : ITokenGenerator
         };
 
         var securityToken = tokenHandler.CreateToken(tokenDescriptor);
-        var token = tokenHandler.WriteToken(securityToken);
+        string? token = tokenHandler.WriteToken(securityToken);
 
         return token;
     }
@@ -121,7 +121,7 @@ public class TokenGenerator : ITokenGenerator
     private async Task<string> GenerateRefreshToken(int userId)
     {
         // Create a byte array to store the random bytes
-        var randomNumber = new byte[64];
+        byte[]? randomNumber = new byte[64];
 
         // Generate a random characters
         using var rng = RandomNumberGenerator.Create();

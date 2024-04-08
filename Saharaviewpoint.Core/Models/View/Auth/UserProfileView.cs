@@ -3,7 +3,7 @@
 public class UserProfileView
 {
     public Guid Uid { get; set; } = new Guid();
-    public string Email { get; internal set; }
+    public string Email { get; set; }
     public string Type { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }

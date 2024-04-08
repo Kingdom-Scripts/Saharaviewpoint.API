@@ -22,7 +22,7 @@ public class ProjectTypeService : IProjectTypeService
 
     public async Task<Result> CreateType(string name)
     {
-        var typeExist = await _context.ProjectTypes
+        bool typeExist = await _context.ProjectTypes
             .AnyAsync(t => t.Name.ToLower().Trim() ==  name.ToLower().Trim());
 
         if (typeExist)
@@ -36,7 +36,7 @@ public class ProjectTypeService : IProjectTypeService
 
         await _context.AddAsync(newType);
 
-        var saved = await _context.SaveChangesAsync();
+        int saved = await _context.SaveChangesAsync();
 
         var savedType = newType.Adapt<ProjectType>();
 

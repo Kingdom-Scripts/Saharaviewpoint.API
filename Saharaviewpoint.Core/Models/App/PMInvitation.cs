@@ -25,5 +25,10 @@ namespace Saharaviewpoint.Core.Models.App
         public bool IsExpired { get; set; } = false;
 
         public bool EmailSent { get; set; } = false;
+
+        // TODO: make this required`
+        public int? CreatedById { get; set; }
+
+        public User? CreatedBy { get; set; }
     }
 }

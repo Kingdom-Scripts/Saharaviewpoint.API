@@ -3,21 +3,33 @@ using Newtonsoft.Json;
 using Saharaviewpoint.Core.Interfaces;
 using System.Net.Mail;
 using System.Text;
+using System.Web;
+using Fluid;
+using Fluid.Values;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Options;
+using Saharaviewpoint.Core.Models.App.Constants;
+using Saharaviewpoint.Core.Models.Configurations;
+using Saharaviewpoint.Core.Models.Email;
+using Saharaviewpoint.Core.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly HttpClient _httpClient;
         private readonly ILogger<EmailService> _logger;
         private readonly SmtpClient _smtpClient;
+        private readonly IWebHostEnvironment _hostingEnvironment;
+        private readonly AppConfig _appConfig;
 
-        public EmailService(IHttpClientFactory httpClientFactory, ILogger<EmailService> logger)
+        public EmailService(ILogger<EmailService> logger, IWebHostEnvironment hostingEnvironment,
+            IOptions<AppConfig> options)
         {
-            if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
-            _httpClient = httpClientFactory.CreateClient("MailerSend");
+            if (options is null) throw new ArgumentNullException(nameof(options));
 
+            _appConfig = options.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
 
             _smtpClient = new SmtpClient("plesk6700.is.cc");
             _smtpClient.Port = 587;
@@ -25,7 +37,7 @@ namespace Saharaviewpoint.Core.Services
             _smtpClient.EnableSsl = false;
         }
 
-        public async Task<bool> SendMessage(string to, string subject, string body, Attachment? attachment = null)
+        public Result SendMessage(string to, string subject, string body, Attachment? attachment = null)
         {
             var mail = new MailMessage();
             try
@@ -37,36 +49,123 @@ namespace Saharaviewpoint.Core.Services
                 mail.IsBodyHtml = true;
 
                 _smtpClient.Send(mail);
-                return true;
-
-                var request = new
-                {
-                    from = new { email = "info@trial-o65qngk8emdgwr12.mlsender.net" },
-                    to = new List<object>()
-                    {
-                        new { email = to }
-                    },
-                    subject = subject,
-                    text = body,
-                    html = body
-                };
-
-                var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
-                    "application/json");
-                var response = await _httpClient.PostAsync("email", content);
-
-                return response.IsSuccessStatusCode;
+                return new SuccessResult(true);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending email");
-                return false;
+                return new ErrorResult(ex.Message);
             }
             finally
             {
                 mail.Dispose();
             }
         }
+
+        public async Task<Result> SendConfirmEmail(string to, string token)
+        {
+            // get template file
+            string templatePath =
+                Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", "email-verify.html");
+
+            // validate file
+            if (!File.Exists(templatePath))
+            {
+                _logger.LogError("Email template file not found");
+                return new ErrorResult("Email template file not found");
+            }
+
+            // read template file as string
+            string sourceString = await File.ReadAllTextAsync(templatePath);
+
+            var fluidParser = new FluidParser();
+            // return error on failure to parse input
+            if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+            {
+                _logger.LogError("Error in parsing template: {FluidError}", fluidError);
+                return new ErrorResult($"Error in parsing template: {fluidError}");
+            }
+
+            // get and encode the url with token
+            string url =
+                $"{_appConfig.BaseURLs.Client}/auth/confirm-email?email={to}&token={HttpUtility.UrlEncode(token)}";
+
+            // parse template using Fluid
+            var context = new TemplateContext
+            {
+                Options =
+                {
+                    MemberAccessStrategy = new UnsafeMemberAccessStrategy()
+                }
+            };
+
+            context.Options.Filters.AddFilter("to_comma_separated",
+                (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
+            context.SetValue("url", url);
+
+            // compute output
+            string output = await fluidTemplate.RenderAsync(context);
+
+            // send email
+            return SendMessage(to, "Confirm Your Email Address", output);
+        }
+
+        public async Task<Result> SendInvitationEmail(InvitationEmailModel model)
+        {
+            // get template file
+            string templatePath =
+                Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", "invitation.html");
+
+            // validate file
+            if (!File.Exists(templatePath))
+            {
+                _logger.LogError("Email template file not found");
+                return new ErrorResult("Email template file not found");
+            }
+
+            // read template file as string
+            string sourceString = await File.ReadAllTextAsync(templatePath);
+
+            var fluidParser = new FluidParser();
+            // return error on failure to parse input
+            if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+            {
+                _logger.LogError("Error in parsing template: {FluidError}", fluidError);
+                return new ErrorResult($"Error in parsing template: {fluidError}");
+            }
+
+            // get and encode the url with token
+            string baseUrl = model.UserType == UserTypes.SVP_MANAGER
+                ? _appConfig.BaseURLs.Admin
+                : _appConfig.BaseURLs.Client;
+
+            string url = $"{baseUrl}/auth/accept-invitation" +
+                         $"/{model.RecipientEmail}" +
+                         $"/{HttpUtility.UrlPathEncode(model.UserType)}" +
+                         $"/{model.Token}";
+
+            // parse template using Fluid
+            var context = new TemplateContext
+            {
+                Options =
+                {
+                    MemberAccessStrategy = new UnsafeMemberAccessStrategy()
+                }
+            };
+
+            context.Options.Filters.AddFilter("to_comma_separated",
+                (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
+            context.SetValue("url", url);
+            context.SetValue("name", model.RecipientName);
+            context.SetValue("inviteSenderName", model.SenderName);
+
+            // compute output
+            string output = await fluidTemplate.RenderAsync(context);
+
+            // send email
+            return SendMessage(model.RecipientEmail, "Invitation to Join Team - Saharaviewpoint", output);
+        }
+
 
         public bool TestAnother()
         {
@@ -95,19 +194,5 @@ namespace Saharaviewpoint.Core.Services
                 return false;
             }
         }
-    }
-
-    public class MailModel
-    {
-        public MailRecipient from { get; set; }
-        public List<MailRecipient> to { get; set; }
-        public string subject { get; set; }
-        public string text { get; set; }
-        public string html { get; set; }
-    }
-
-    public class MailRecipient
-    {
-        public string email { get; set; }
     }
 }

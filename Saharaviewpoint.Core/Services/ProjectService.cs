@@ -19,20 +19,36 @@ public class ProjectService : IProjectService
     private readonly IFileService _fileService;
     private readonly IEmailService _emailService;
 
-    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IEmailService emailService)
+    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
+        IEmailService emailService)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-        _fileService = fileService ?? throw new ArgumentNullException(nameof(EmailService));
-        _emailService = emailService ?? throw new ArgumentNullException(nameof(context));
+        _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     }
 
     #region PROJECTS
+
     public async Task<Result> CreateProject(ProjectModel model)
     {
+        // validate user doesn't have a project with same title
+        bool projectExist = await _context.Projects
+            .AnyAsync(p => p.Title.ToLower().Trim() == model.Title.ToLower().Trim()
+                           && p.CreatedById == _userSession.UserId);
+        if (projectExist)
+            return new ErrorResult("Project with the title already exist");
+
         var mappedProject = model.Adapt<Project>();
-        mappedProject.Status = ProjectStatuses.REQUESTED;
+        mappedProject.Status = ProjectStatuses.Requested;
         mappedProject.CreatedById = _userSession.UserId;
+
+        // get user uid as folder
+        string folder = _userSession.Uid.ToLower();
+        string subFolder = model.Title.ToFolderName();
+
+        mappedProject.FolderNames.Add(folder);
+        mappedProject.FolderNames.Add(subFolder);
 
         var type = await _context.ProjectTypes.FirstOrDefaultAsync(t => t.Name == model.Type);
         type ??= new ProjectType { Name = model.Type, CreatedById = _userSession.UserId };
@@ -41,11 +57,12 @@ public class ProjectService : IProjectService
         // upload design file if it exists
         if (model.Design != null)
         {
-            var designUpload = await _fileService.UploadFile(model.Title, model.Design);
+            var designUpload = await _fileService
+                .UploadFileInternal(folder, subFolder, model.Design);
             if (!designUpload.Success)
                 return new ErrorResult("Unable to upload design file", designUpload.Message);
 
-            mappedProject.DesignId = designUpload.Content.Id;
+            mappedProject.Design = designUpload.Content;
         }
 
         await _context.AddAsync(mappedProject);
@@ -54,6 +71,48 @@ public class ProjectService : IProjectService
 
         return saved > 0
             ? new SuccessResult(StatusCodes.Status201Created, mappedProject)
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
+    public async Task<Result> ApproveProject(int id, string assigneeUid)
+    {
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+        if (project == null)
+            return new BadErrorResult("Project does not exist");
+
+        var assignee = await _context.Users
+            .FirstOrDefaultAsync(u => u.Uid.ToString() == assigneeUid);
+
+        if (assignee == null)
+            return new BadErrorResult("Assignee does not exist");
+
+        project.AssigneeId = assignee.Id;
+        project.Status = ProjectStatuses.InProgress;
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult()
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
+    public async Task<Result> RejectProject(RejectProjectModel model)
+    {
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == model.ProjectId && !p.IsDeleted);
+
+        if (project == null)
+            return new BadErrorResult("Project does not exist");
+
+        project.Status = ProjectStatuses.Rejected;
+        // project.RejectionReason = model.Reason; TODO: finish this and test
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult()
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
@@ -91,18 +150,17 @@ public class ProjectService : IProjectService
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        bool res = _emailService.TestAnother();
-
-        var shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
-            && string.IsNullOrEmpty(request.Status)
-            && !request.StartDueDate.HasValue
-            && !request.EndDueDate.HasValue;
+        bool shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
+                            && string.IsNullOrEmpty(request.Status)
+                            && !request.StartDueDate.HasValue
+                            && !request.EndDueDate.HasValue;
 
         if (shouldGetAll)
         {
             var allProjects = await _context.Projects
                 .Where(prd => !prd.IsDeleted)
                 .OrderBy(prd => prd.Order)
+                .ThenByDescending(prd => prd.StartDate)
                 .ProjectToType<ProjectView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
 
@@ -116,7 +174,9 @@ public class ProjectService : IProjectService
         var filteredProjects = await _context.Projects
             .Where(prd => !prd.IsDeleted)
             // search by title, description, or status
-            .Where(prd => searchTerm == null || (prd.Title.ToLower().Contains(searchTerm) || (prd.Description == null || prd.Description.ToLower().Contains(searchTerm))))
+            .Where(prd => searchTerm == null || (prd.Title.ToLower().Contains(searchTerm) ||
+                                                 (prd.Description == null ||
+                                                  prd.Description.ToLower().Contains(searchTerm))))
             .Where(prd => string.IsNullOrEmpty(request.Status) || prd.Status == request.Status)
             // filter by due date
             .Where(prd => !request.StartDueDate.HasValue || prd.DueDate >= request.StartDueDate)
@@ -131,7 +191,7 @@ public class ProjectService : IProjectService
 
     public async Task<Result> CountProjects()
     {
-        var count = await _context.Projects
+        int count = await _context.Projects
             .Where(prd => !prd.IsDeleted)
             .CountAsync();
 
@@ -210,14 +270,16 @@ public class ProjectService : IProjectService
             ? new SuccessResult()
             : new ErrorResult("Unable to save changes, please try again later.");
     }
+
     #endregion
 
     #region TYPES
-    public async Task<Result> CreateType(TaskModel model)
+
+    public async Task<Result> CreateType(ProjectTypeModel model)
     {
-        var typeExist = await _context.ProjectTypes
+        bool typeExist = await _context.ProjectTypes
             .AnyAsync(t => t.Name.ToLower().Trim() == model.Name.ToLower().Trim()
-                && t.CreatedById == _userSession.UserId);
+                           && t.CreatedById == _userSession.UserId);
 
         if (typeExist)
             return new ErrorResult("Project type with the name already exist");
@@ -230,7 +292,7 @@ public class ProjectService : IProjectService
 
         await _context.AddAsync(newType);
 
-        var saved = await _context.SaveChangesAsync();
+        int saved = await _context.SaveChangesAsync();
 
         var savedType = newType.Adapt<ProjectTypeView>();
 
@@ -253,14 +315,15 @@ public class ProjectService : IProjectService
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
-           ? new SuccessResult()
-           : new ErrorResult("Unable to save changes, please try again later.");
+            ? new SuccessResult()
+            : new ErrorResult("Unable to save changes, please try again later.");
     }
 
     public async Task<Result> ListTypes(string? searchTerm)
     {
         searchTerm = string.IsNullOrEmpty(searchTerm)
-            ? null : searchTerm.ToLower().Trim();
+            ? null
+            : searchTerm.ToLower().Trim();
 
         var allTypes = await _context.ProjectTypes
             .Where(pt => !pt.IsDeleted)
@@ -272,5 +335,6 @@ public class ProjectService : IProjectService
 
         return new SuccessResult(allTypes);
     }
+
     #endregion
 }

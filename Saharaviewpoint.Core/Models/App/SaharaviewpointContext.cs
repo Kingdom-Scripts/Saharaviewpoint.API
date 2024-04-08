@@ -1,11 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Newtonsoft.Json;
+using Saharaviewpoint.Core.Models.App.Constants;
+using Saharaviewpoint.Core.Utilities;
 
 namespace Saharaviewpoint.Core.Models.App;
 
 public class SaharaviewpointContext : DbContext
 {
     public SaharaviewpointContext()
-    { }
+    {
+    }
 
     public SaharaviewpointContext(DbContextOptions<SaharaviewpointContext> options) : base(options)
     {
@@ -20,6 +25,9 @@ public class SaharaviewpointContext : DbContext
     public required DbSet<Document> Documents { get; set; }
     public required DbSet<PMInvitation> PMInvitations { get; set; }
     public required DbSet<Code> Codes { get; set; }
+    public required DbSet<SvpTask> Tasks { get; set; }
+    public required DbSet<TaskAttachment> TaskAttachments { get; set; }
+    public required DbSet<EpicTask> EpicTasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -29,19 +37,50 @@ public class SaharaviewpointContext : DbContext
 
         builder
             .Entity<User>()
-            .ToTable(p => p.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')"))
+            .ToTable(p => p.HasCheckConstraint("CK_User_Type", $"[Type] IN ({UserTypes.DB_CONSTRAINT})"))
             .HasMany(u => u.Projects)
             .WithOne(u => u.Assignee);
 
-        builder.Entity<UserRole>(entity =>
-        {
-            entity.HasKey(t => new { t.RoleId, t.UserId });
-        });
+        builder.Entity<UserRole>(entity => { entity.HasKey(t => new { t.RoleId, t.UserId }); });
 
         builder.Entity<Project>()
-            .ToTable(p => p.HasCheckConstraint("CK_Project_Status", "[Status] IN ('Requested', 'In Progress', 'Completed')"));
+            .ToTable(p =>
+                p.HasCheckConstraint("CK_Project_Status", $"[Status] IN ('{ProjectStatuses.Requested}', '{ProjectStatuses.InProgress}', '{ProjectStatuses.Completed}')"))
+            .Property(p => p.FolderNames)
+            .HasConversion(v => JsonConvert.SerializeObject(v), v => JsonConvert.DeserializeObject<List<string>>(v)!);
+
+        var valueComparer = new ValueComparer<List<string>>(
+            (c1, c2) => c1.SequenceEqual(c2),
+            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c.ToList());
+
+        builder
+            .Entity<Project>()
+            .Property(e => e.FolderNames)
+            .Metadata
+            .SetValueComparer(valueComparer);
 
         builder.Entity<Document>()
-            .ToTable(p => p.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word Document', 'Unknown')"));
+            .ToTable(p =>
+                p.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word Document', 'Unknown')"));
+
+        builder.Entity<SvpTask>()
+            .ToTable(p => p.HasCheckConstraint("CK_Task_Type",
+                $"[Type] IN ('{TaskTypeEnum.EPIC}', '{TaskTypeEnum.TASK}', '{TaskTypeEnum.SUBTASK}')"))
+            .ToTable(p => p.HasCheckConstraint("CK_Task_Status",
+                $"[Status] IN ('{TaskStatusEnum.TODO}', '{TaskStatusEnum.IN_PROGRESS}', '{TaskStatusEnum.COMPLETED}')"))
+            .HasOne(t => t.CreatedBy)
+            .WithMany()
+            .HasForeignKey(t => t.CreatedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<TaskAttachment>()
+            .HasOne(ta => ta.Task)
+            .WithMany()
+            .HasForeignKey(ta => ta.TaskId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<EpicTask>()
+            .HasIndex(et => et.TaskId);
     }
 }

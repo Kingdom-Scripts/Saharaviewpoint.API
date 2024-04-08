@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.Input.User;
 using Saharaviewpoint.Core.Models.Utilities;
@@ -20,9 +21,9 @@ namespace Saharaviewpoint.API.Controllers
         [HttpGet("project-managers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<UserView>>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
-        public async Task<IActionResult> ListProjectManagersAsync(int pageIndex, int pageSize)
+        public async Task<IActionResult> ListProjectManagersAsync(string? searchQuery, int pageIndex, int pageSize)
         {
-            var res = await _userService.ListProjectManagersAsync(pageIndex, pageSize);
+            var res = await _userService.ListProjectManagersAsync(searchQuery, pageIndex, pageSize);
             return ProcessResponse(res);
         }
 
@@ -36,6 +37,7 @@ namespace Saharaviewpoint.API.Controllers
         }
 
         [HttpPost("accept-invitation")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
         public async Task<IActionResult> AcceptInvitation(AcceptInvitationModel model)

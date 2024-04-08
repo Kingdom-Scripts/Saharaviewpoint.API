@@ -2,12 +2,12 @@
 
 namespace Saharaviewpoint.Core.Models.Input.Project;
 
-public class TaskModel
+public class ProjectTypeModel
 {
     public string Name { get; set; }
 }
 
-public class TaskModelValidation : AbstractValidator<TaskModel>
+public class TaskModelValidation : AbstractValidator<ProjectTypeModel>
 {
     public TaskModelValidation()
     {

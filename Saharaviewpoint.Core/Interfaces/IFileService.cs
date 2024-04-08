@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.Utilities;
 using Saharaviewpoint.Core.Models.View;
 
@@ -7,6 +8,31 @@ namespace Saharaviewpoint.Core.Interfaces;
 
 public interface IFileService
 {
-    Task<Result<DocumentView>> UploadFile(string projectName, IFormFile file);
-    Task<FileStreamResult> GetFileByPath(string folder, string fileName);
+    /// <summary>
+    /// Uploads a file to Azure Blob storage and does not save the info to the database. The response
+    /// contains the document object that can be saved to the database by the caller.
+    /// </summary>
+    /// <param name="folder"></param>
+    /// <param name="subFolder"></param>
+    /// <param name="file">The file to be uploaded</param>
+    /// <returns></returns>
+    Task<Result<Document>> UploadFileInternal(string folder, string subFolder, IFormFile file);
+
+    /// <summary>
+    /// Uploads a file to Azure Blob Storage and stores the document info in the database.
+    /// </summary>
+    /// <param name="folder">The folder name (typically the user's UID)</param>
+    /// <param name="subFolder">The sub folder (typically the project title or task name)</param>
+    /// <param name="file">The file to be uploaded</param>
+    /// <returns></returns>
+    Task<Result<DocumentView>> UploadFile(string folder, string subFolder, IFormFile file);
+
+    /// <summary>
+    /// Gets a file from azure blob storage
+    /// </summary>
+    /// <param name="folder">The folder name (typically the user's UID)</param>
+    /// <param name="subFolder">The sub folder (typically the project title or task name)</param>
+    /// <param name="fileName">The name of the file to be retrieved.</param>
+    /// <returns></returns>
+    Task<FileStreamResult?> GetFileByPath(string folder, string subFolder, string fileName);
 }

@@ -18,34 +18,29 @@ public class AssetsController : BaseController
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
     }
 
-    [HttpPost("{projectName}")]
-    public async Task<IActionResult> UploadAsset(string projectName, IFormFile file)
+    [HttpPost("{folder}/{subFolder}")]
+    public async Task<IActionResult> UploadAsset(string folder, string subFolder, IFormFile file)
     {
-        var result = await _fileService.UploadFile(projectName, file);
-        if (result.Success)
-        {
-            return ProcessResponse(new SuccessResult(result.Status, result.Content));
-        }
-        else
-        {
-            return ProcessResponse(new ErrorResult(result.Status, result.Title, result.Message));
-        }
+        var result = await _fileService.UploadFile(folder, subFolder, file);
+        return result.Success
+            ? ProcessResponse(new SuccessResult(result.Status, result.Content))
+            : ProcessResponse(new ErrorResult(result.Status, result.Title, result.Message));
     }
 
-    [HttpGet("{folder}/thumbnails/{fileName}")]
-    public async Task<IActionResult> GetThumbnail(string folder, string fileName)
+    [HttpGet("{folder}/{subfolder}/thumbnails/{fileName}")]
+    public async Task<IActionResult> GetThumbnail(string folder, string subFolder, string fileName)
     {
-        var result = await _fileService.GetFileByPath(folder, $"thumbnails/{fileName}");
+        var result = await _fileService.GetFileByPath(folder, $"{subFolder}/_thumbnail", fileName);
         if (result != null)
             return result;
 
         return NotFound(new ErrorResult(StatusCodes.Status404NotFound, "File not found."));
     }
 
-    [HttpGet("{folder}/{fileName}")]
-    public async Task<IActionResult> GetAsset(string folder, string fileName)
+    [HttpGet("{folder}/{subFolder}/{fileName}")]
+    public async Task<IActionResult> GetAsset(string folder, string subFolder, string fileName)
     {
-        var result = await _fileService.GetFileByPath(folder, fileName);
+        var result = await _fileService.GetFileByPath(folder, subFolder, fileName);
         if (result != null)
             return result;
 

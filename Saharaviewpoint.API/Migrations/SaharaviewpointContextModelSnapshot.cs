@@ -34,12 +34,18 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Purpose")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Token")
                         .IsRequired()
@@ -68,24 +74,24 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<int>("CreatedById")
                         .HasColumnType("int");
 
-                    b.Property<string>("Extension")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("Folder")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 
@@ -107,6 +113,9 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -138,6 +147,8 @@ namespace Saharaviewpoint.API.Migrations
                         .HasColumnType("nvarchar(25)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
 
                     b.ToTable("PMInvitations", "dbo");
                 });
@@ -178,6 +189,11 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FolderNames")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -215,6 +231,12 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssigneeId");
@@ -226,6 +248,8 @@ namespace Saharaviewpoint.API.Migrations
                     b.HasIndex("DesignId");
 
                     b.HasIndex("TypeId");
+
+                    b.HasIndex("UpdatedById");
 
                     b.ToTable("Projects", "dbo", t =>
                         {
@@ -308,6 +332,120 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("Roles", "dbo");
                 });
 
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedById")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(5000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReporterId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("DeletedById");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.ToTable("Tasks", "dbo", t =>
+                        {
+                            t.HasCheckConstraint("CK_Task_Status", "[Status] IN ('TODO', 'IN PROGRESS', 'COMPLETED')");
+
+                            t.HasCheckConstraint("CK_Task_Type", "[Type] IN ('Epic', 'Task', 'Subtask')");
+                        });
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SvpTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("SvpTaskId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskAttachments", "dbo");
+                });
+
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
                 {
                     b.Property<int>("Id")
@@ -358,7 +496,7 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.ToTable("Users", "dbo", t =>
                         {
-                            t.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')");
+                            t.HasCheckConstraint("CK_User_Type", "[Type] IN ('SVP Official', 'SVP Admin', 'SVP Manager', 'Business Manager', 'Business Client', 'Client')");
                         });
                 });
 
@@ -400,6 +538,15 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("CreatedBy");
                 });
 
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.PMInvitation", b =>
+                {
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById");
+
+                    b.Navigation("CreatedBy");
+                });
+
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
                 {
                     b.HasOne("Saharaviewpoint.Core.Models.App.User", "Assignee")
@@ -426,6 +573,10 @@ namespace Saharaviewpoint.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById");
+
                     b.Navigation("Assignee");
 
                     b.Navigation("CreatedBy");
@@ -435,6 +586,8 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("Design");
 
                     b.Navigation("Type");
+
+                    b.Navigation("UpdatedBy");
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
@@ -446,6 +599,66 @@ namespace Saharaviewpoint.API.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
+                {
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "DeletedBy")
+                        .WithMany()
+                        .HasForeignKey("DeletedById");
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId");
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("DeletedBy");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskAttachment", b =>
+                {
+                    b.HasOne("Saharaviewpoint.Core.Models.App.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.SvpTask", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("SvpTaskId");
+
+                    b.HasOne("Saharaviewpoint.Core.Models.App.SvpTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
@@ -470,6 +683,11 @@ namespace Saharaviewpoint.API.Migrations
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
                 {
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
+                {
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>

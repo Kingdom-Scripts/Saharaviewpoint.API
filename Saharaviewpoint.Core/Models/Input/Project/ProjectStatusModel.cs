@@ -16,14 +16,14 @@ public class ProjectStatusModelValidation : AbstractValidator<ProjectStatusModel
             .NotNull()
             .WithMessage("Status is required")
             .Must(BeValidProjectStatus)
-            .WithMessage($"Invalid status value. Must be one of the following: {ProjectStatuses.REQUESTED}, {ProjectStatuses.IN_PROGRESS}, {ProjectStatuses.COMPLETED}");
+            .WithMessage($"Invalid status value. Must be one of the following: {ProjectStatuses.Requested}, {ProjectStatuses.InProgress}, {ProjectStatuses.Completed}");
     }
 
     private bool BeValidProjectStatus(string status)
     {
         // Check if the provided status is one of the valid values
-        return status == ProjectStatuses.REQUESTED ||
-               status == ProjectStatuses.IN_PROGRESS ||
-               status == ProjectStatuses.COMPLETED;
+        return status == ProjectStatuses.Requested ||
+               status == ProjectStatuses.InProgress ||
+               status == ProjectStatuses.Completed;
     }
 }

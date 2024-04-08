@@ -27,7 +27,7 @@ public class AuthService : IAuthService
     public async Task<Result> CreateClient(RegisterModel model)
     {
         // validate user with email doesn't exist
-        var userExist = await _context.Users
+        bool userExist = await _context.Users
             .AnyAsync(u => u.Email.ToLower().Trim() == model.Email.ToLower().Trim());
 
         if (userExist)

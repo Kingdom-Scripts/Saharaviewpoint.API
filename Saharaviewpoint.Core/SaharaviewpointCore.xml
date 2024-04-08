@@ -24,6 +24,34 @@
             <returns>Returns a paginated list.</returns>
             <remarks>This functionality may not work in SQL Compact 3.5</remarks>
         </member>
+        <member name="M:Saharaviewpoint.Core.Interfaces.IFileService.UploadFileInternal(System.String,System.String,Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads a file to Azure Blob storage and does not save the info to the database. The response
+            contains the document object that can be saved to the database by the caller.
+            </summary>
+            <param name="folder"></param>
+            <param name="subFolder"></param>
+            <param name="file">The file to be uploaded</param>
+            <returns></returns>
+        </member>
+        <member name="M:Saharaviewpoint.Core.Interfaces.IFileService.UploadFile(System.String,System.String,Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads a file to Azure Blob Storage and stores the document info in the database.
+            </summary>
+            <param name="folder">The folder name (typically the user's UID)</param>
+            <param name="subFolder">The sub folder (typically the project title or task name)</param>
+            <param name="file">The file to be uploaded</param>
+            <returns></returns>
+        </member>
+        <member name="M:Saharaviewpoint.Core.Interfaces.IFileService.GetFileByPath(System.String,System.String,System.String)">
+            <summary>
+            Gets a file from azure blob storage
+            </summary>
+            <param name="folder">The folder name (typically the user's UID)</param>
+            <param name="subFolder">The sub folder (typically the project title or task name)</param>
+            <param name="fileName">The name of the file to be retrieved.</param>
+            <returns></returns>
+        </member>
         <member name="P:Saharaviewpoint.Core.Models.App.UserRole.UserId">
             <summary>
             A foreign key to the user this role is attached to

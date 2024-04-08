@@ -9,6 +9,8 @@ public interface IProjectService
 
     Task<Result> CreateProject(ProjectModel model);
 
+    Task<Result> ApproveProject(int id, string assigneeUid);
+
     Task<Result> UpdateProject(int id, ProjectModel model);
 
     Task<Result> GetProject(int id);
@@ -27,7 +29,7 @@ public interface IProjectService
 
     #region TYPES
 
-    Task<Result> CreateType(TaskModel model);
+    Task<Result> CreateType(ProjectTypeModel model);
 
     Task<Result> DeleteType(int id);
 
