@@ -38,7 +38,7 @@ public class JWTMiddleware
         }
 
         // get the token
-        var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+        string? token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
         // continue if token is null
         if (token == null)
@@ -63,7 +63,7 @@ public class JWTMiddleware
             // Check if the action method is decorated with AllowAnonymous attribute
             var actionDescriptor = routeEndpoint.Metadata.GetMetadata<ControllerActionDescriptor>();
 
-            var methodAllowAnonymousAttribute =
+            bool? methodAllowAnonymousAttribute =
                 actionDescriptor?.MethodInfo.GetCustomAttributes(inherit: true)
                 .OfType<AllowAnonymousAttribute>().Any();
 
@@ -80,7 +80,7 @@ public class JWTMiddleware
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(jwtConfig.Secret);
+            byte[]? key = Encoding.ASCII.GetBytes(jwtConfig.Secret);
             tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
@@ -95,12 +95,12 @@ public class JWTMiddleware
             }, out SecurityToken validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
-            var id = jwtToken.Claims.First(x => x.Type == "sid").Value;
-            var uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
-            var type = jwtToken.Claims.First(x => x.Type == "Type").Value;
+            string? id = jwtToken.Claims.First(x => x.Type == "sid").Value;
+            string? uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
+            string? type = jwtToken.Claims.First(x => x.Type == "Type").Value;
 
             // get request domain
-            var domain = context.Request.Headers["Origin"].ToString();
+            string? domain = context.Request.Headers["Origin"].ToString();
 
             //check if token is string in the cache
             string sToken = await _cacheService.GetToken($"{AuthKeys.TokenCacheKey}:{domain}:{uid}");

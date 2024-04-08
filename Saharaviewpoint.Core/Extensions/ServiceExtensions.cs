@@ -27,25 +27,38 @@ public static class ServiceExtensions
 {
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
+        // TODO: uncomment the code below to use Azure Key Vault to retrieve secrets
         // set up database
-        var keyVault = new KeyVaultConfig
+        // var keyVault = new KeyVaultConfig
+        // {
+        //     KeyVaultURL = configuration.GetSection("KeyVault:KeyVaultURL").Value,
+        //     ClientId = configuration.GetSection("KeyVault:ClientId").Value,
+        //     ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
+        //     DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
+        // };
+        //
+        // var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
+        //
+        // var keyVaultClient = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
+
+        // TODO: uncomment the code below to use connection string form Azure keyvauOylt
+        // services.AddDbContext<SaharaviewpointContext>(opt =>
+        // {
+        //     opt.UseSqlServer(keyVaultClient.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
+        //         b => b.MigrationsAssembly("Saharaviewpoint.API"));
+        //     opt.LogTo(Console.WriteLine, LogLevel.Information);
+        // });
+
+        // TODO: remove the block of code below
         {
-            KeyVaultURL = configuration.GetSection("KeyVault:KeyVaultURL").Value,
-            ClientId = configuration.GetSection("KeyVault:ClientId").Value,
-            ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
-            DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
-        };
-
-        var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
-
-        var keyVaultClient = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
-
-        services.AddDbContext<SaharaviewpointContext>(opt =>
-        {
-            opt.UseSqlServer(keyVaultClient.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
-                b => b.MigrationsAssembly("Saharaviewpoint.API"));
-            opt.LogTo(Console.WriteLine, LogLevel.Information);
-        });
+            string connectionString = configuration.GetConnectionString("Saharaviewpoint") ?? string.Empty;
+            services.AddDbContext<SaharaviewpointContext>(opt =>
+            {
+                opt.UseSqlServer(connectionString,
+                    b => b.MigrationsAssembly("Saharaviewpoint.API"));
+                opt.LogTo(Console.WriteLine, LogLevel.Information);
+            });
+        }
 
         // Add fluent validation.
         services.AddValidatorsFromAssembly(Assembly.Load("Saharaviewpoint.Core"));
@@ -100,17 +113,6 @@ public static class ServiceExtensions
                 .Build();
 
             options.AddPolicy("BasicAccess", policy => policy.RequireClaim("SubscriptionPlan", "Basic"));
-        });
-
-        // add HttpClient for MailerSend
-        services.AddHttpClient("MailerSend", client =>
-        {
-            client.BaseAddress = new Uri(configuration.GetSection("AppConfig:BaseURLs:MailerSend").Value);
-
-            // add bearer authorization token
-            // TODO: get token from key vault
-            //client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", keyVaultClient.GetSecret("ApiKeys--MailerSend").Value.Value);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "mlsn.0e11ea1c635bf195dbde5a1fbf1dd5033a83c9f8d7f1ead2080eb2e66e4698fa");
         });
 
         //Mapster global Setting. This can also be overwritten per transform

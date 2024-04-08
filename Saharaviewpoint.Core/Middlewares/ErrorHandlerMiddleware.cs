@@ -43,7 +43,7 @@ public class ErrorHandlerMiddleware
                 _ => StatusCodes.Status500InternalServerError,// unhandled error
             };
 
-            var result = JsonSerializer.Serialize(new ErrorResult
+            string? result = JsonSerializer.Serialize(new ErrorResult
             {
                 Success = false,
                 Message = error?.Message,
@@ -62,7 +62,7 @@ public class ErrorHandlerMiddleware
         // handle unauthorized error
         if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
         {
-            var result = JsonSerializer.Serialize(new ErrorResult
+            string? result = JsonSerializer.Serialize(new ErrorResult
             {
                 Success = false,
                 Message = "Authentication failed, please log in to access this resource",
@@ -77,7 +77,7 @@ public class ErrorHandlerMiddleware
         } 
         else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
         {
-            var result = JsonSerializer.Serialize(new ErrorResult
+            string? result = JsonSerializer.Serialize(new ErrorResult
             {
                 Success = false,
                 Message = "You are not authorized to access this resource.",

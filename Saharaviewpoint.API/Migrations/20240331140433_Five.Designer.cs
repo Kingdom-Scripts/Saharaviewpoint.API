@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Core.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Core.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240331140433_Five")]
+    partial class Five
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,8 +194,7 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.Property<string>("FolderNames")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -231,12 +233,6 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UpdatedById")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedOn")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AssigneeId");
@@ -248,8 +244,6 @@ namespace Saharaviewpoint.API.Migrations
                     b.HasIndex("DesignId");
 
                     b.HasIndex("TypeId");
-
-                    b.HasIndex("UpdatedById");
 
                     b.ToTable("Projects", "dbo", t =>
                         {
@@ -496,7 +490,7 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.ToTable("Users", "dbo", t =>
                         {
-                            t.HasCheckConstraint("CK_User_Type", "[Type] IN ('SVP Official', 'SVP Admin', 'SVP Manager', 'Business Manager', 'Business Client', 'Client')");
+                            t.HasCheckConstraint("CK_User_Type", "[Type] IN ('Business', 'Client', 'Manager')");
                         });
                 });
 
@@ -573,10 +567,6 @@ namespace Saharaviewpoint.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "UpdatedBy")
-                        .WithMany()
-                        .HasForeignKey("UpdatedById");
-
                     b.Navigation("Assignee");
 
                     b.Navigation("CreatedBy");
@@ -586,8 +576,6 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("Design");
 
                     b.Navigation("Type");
-
-                    b.Navigation("UpdatedBy");
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>

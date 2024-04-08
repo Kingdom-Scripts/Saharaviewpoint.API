@@ -13,12 +13,12 @@ public class Project : BaseAppModel
     [MaxLength(5000)]
     public string? Description { get; set; }
 
-    public required string SizeOfSite { get; set; }
+    [Required] public string SizeOfSite { get; set; } = null!;
 
     [Column(TypeName = "decimal(19, 2)")]
     public decimal Budget { get; set; }
 
-    public required string Location { get; set; }
+    public string Location { get; set; } = null!;
 
     public int TypeId { get; set; }
 
@@ -28,23 +28,26 @@ public class Project : BaseAppModel
     public int? DesignId { get; set; }
 
     public int? AssigneeId { get; set; }
-    
+
     [Required]
     [MaxLength(15)]
-    public required string Status { get; set; }
-    
+    public string Status { get; set; }  = null!;
+
     public DateTime StartDate { get; set; }
 
     public DateTime DueDate { get; set; }
-    
+
     [Required]
     public int Order { get; set; }
-    
+
     [Required]
     public bool IsPriority { get; set; }
-    
+
     [Required]
     public int CreatedById { get; set; }
+
+    public int? UpdatedById { get; set; }
+    public DateTime? UpdatedOn { get; set; }
 
     [Required]
     public bool IsDeleted { get; set; } = false;
@@ -55,11 +58,15 @@ public class Project : BaseAppModel
 
     public ProjectType Type { get; set; }
 
-    public User Assignee { get; set; }
+    // TODO, make this required
+    [MaxLength(255)]
+    public List<string> FolderNames { get; set; } = new();
 
-    public Document Design { get; set; }
-    
-    public User CreatedBy { get; set; }
+    public User? Assignee { get; set; }
+    public Document? Design { get; set; }
 
-    public User DeletedBy { get; set; }
+    public User? CreatedBy { get; set; }
+    public User? UpdatedBy { get; set; }
+
+    public User? DeletedBy { get; set; }
 }

@@ -36,7 +36,7 @@ public class ProjectModelValidator : AbstractValidator<ProjectModel>
 
         RuleFor(model => model.StartDate)
             .NotEmpty().WithMessage("When is this project likely to start?")
-            .GreaterThanOrEqualTo(DateTime.UtcNow).WithMessage("Due date must be in the future");
+            .GreaterThanOrEqualTo(DateTime.Now).WithMessage("Start date must be in the future");
 
         RuleFor(model => model.DueDate)
             .NotEmpty().WithMessage("Due date is required")

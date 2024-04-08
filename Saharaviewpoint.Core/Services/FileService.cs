@@ -23,7 +23,8 @@ public class FileService : IFileService
     private readonly UserSession _userSession;
     private readonly ILogger<FileService> _logger;
 
-    public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession, SaharaviewpointContext context, ILogger<FileService> logger)
+    public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession,
+        SaharaviewpointContext context, ILogger<FileService> logger)
     {
         _logger = logger;
 
@@ -44,99 +45,81 @@ public class FileService : IFileService
         TinifyAPI.Tinify.Key = appConfig.Value.TinifyKey;
     }
 
-    public async Task<Result<DocumentView>> UploadFile(string projectName, IFormFile file)
+    public async Task<Result<Document>> UploadFileInternal(string folder, string subFolder, IFormFile file)
+    {
+        return await Upload(folder, subFolder, file);
+    }
+
+    public async Task<Result<DocumentView>> UploadFile(string folder, string subFolder, IFormFile file)
+    {
+        var result = await Upload(folder, subFolder, file);
+        if (!result.Success)
+            return new ErrorResult<DocumentView>(result.Title, result.Message);
+
+        await _context.Documents.AddAsync(result.Content);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult<DocumentView>(result.Content.Adapt<DocumentView>())
+            : new ErrorResult<DocumentView>("Saving file failed");
+    }
+
+    public async Task<FileStreamResult?> GetFileByPath(string folder, string subFolder, string fileName)
+    {
+        return await GetFile(folder, subFolder, fileName);
+    }
+
+    private async Task<Result<Document>> Upload(string folder, string subFolder, IFormFile file)
     {
         try
         {
-            projectName = projectName.ToLower().Trim();
-            string fileName = file.FileName.Split(".")[0];
             string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             string fileType = GetDocumentType(ext);
 
-            string containerName = CreateContainerNameFromProjectTitle(projectName);
-            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+            // string containerName = CreateContainerNameFromProjectTitle(subFolder);
+            var containerClient = _blobServiceClient.GetBlobContainerClient(folder);
 
             await containerClient.CreateIfNotExistsAsync();
 
+            string fileUploadName = $"{Guid.NewGuid()}{ext}";
             if (fileType != DocumentTypes.IMAGE)
             {
-                var blobClient = containerClient.GetBlobClient(file.FileName);
+                var blobClient = containerClient.GetBlobClient($"{subFolder}/{fileUploadName}");
 
                 // Upload data
                 await blobClient.UploadAsync(file.OpenReadStream(), true);
             }
             else
             {
-                await SaveImageAsync(containerClient, file);
+                await SaveImageAsync(containerClient, subFolder, fileUploadName, file);
             }
 
             var document = new Document
             {
-                Folder = containerName,
-                Name = fileName,
-                Extension = ext,
+                Name = file.FileName,
                 Type = fileType,
+                Url = $"{folder}/{subFolder}/{fileUploadName}",
+                ThumbnailUrl = fileType == DocumentTypes.IMAGE
+                    ? $"{folder}/{subFolder}/_thumbnail/{fileUploadName}"
+                    : $"{folder}/{subFolder}/_thumbnail/{fileType}.png",
                 CreatedById = _userSession.UserId
             };
 
-            await _context.AddAsync(document);
-
-            int saved = await _context.SaveChangesAsync();
-
-            if (saved > 0)
-                return new SuccessResult<DocumentView>(document.Adapt<DocumentView>());
-
-            return new ErrorResult<DocumentView>("Saving file failed");
+            return new SuccessResult<Document>(document);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error uploading file");
-            return new ErrorResult<DocumentView>("An unexpected error occurred while uploading your file(s)");
+            return new ErrorResult<Document>("An unexpected error occurred while uploading your file(s)");
         }
     }
 
-    public async Task<FileStreamResult> GetFileByPath(string folder, string fileName)
-    {
-        return await GetFile(folder.ToLower().Trim(), fileName);
-    }
-
-    //public async Task<FileStreamResult> GetDocumentById(int id)
-    //{
-    //    var document = await _context.Documents.FindAsync(id);
-    //    if (document == null) return null;
-
-    //    return await GetFile(document.Folder, $"{document.Name}.{document.Extension}");
-    //}
-
-    private static string CreateContainerNameFromProjectTitle(string projectTitle)
-    {
-        string result = projectTitle.ToLower().Trim().Replace(" ", "-");
-
-        // remove any duplicate hyphen in the string
-        while (result.Contains("--"))
-        {
-            result = result.Replace("--", "-");
-        }
-
-        // reduce the result if it's larger than 63 characters, result should not end with hypen
-        if (result.Length > 63)
-        {
-            result = result[..63];
-            if (result.EndsWith("-"))
-            {
-                // remove the last character
-                result = result[..^1];
-            }
-        }
-
-        return result;
-    }
-
-    private async Task<FileStreamResult> GetFile(string folder, string fileName)
+    private async Task<FileStreamResult?> GetFile(string folder, string subFolder, string fileName)
     {
         var blobContainer = _blobServiceClient.GetBlobContainerClient(folder);
 
-        var blobClient = blobContainer.GetBlobClient(fileName);
+        var blobClient = blobContainer.GetBlobClient($"{subFolder}/{fileName}");
 
         if (!await blobClient.ExistsAsync())
         {
@@ -144,14 +127,15 @@ public class FileService : IFileService
         }
 
         var stream = await blobClient.OpenReadAsync();
-        var contentType = blobClient.GetProperties().Value.ContentType;
+        string? contentType = blobClient.GetProperties().Value.ContentType;
         return new FileStreamResult(stream, contentType)
         {
             FileDownloadName = fileName
         };
     }
 
-    private static async Task<BlobClient> SaveImageAsync(BlobContainerClient containerClient, IFormFile image)
+    private static async Task<BlobClient> SaveImageAsync(BlobContainerClient containerClient, string subFolder,
+        string fileUploadName, IFormFile image)
     {
         using (var stream = new MemoryStream())
         {
@@ -162,22 +146,22 @@ public class FileService : IFileService
             var source = await TinifyAPI.Tinify.FromBuffer(stream.ToArray());
 
             // get thumbnail
-            var thumbnailFile = await source
+            byte[]? thumbnailFile = await source
                 .Preserve("copyright", "creation")
                 .Resize(new
-                    {
-                        method = "thumb",
-                        width = 150,
-                        height = 150
-                    }).ToBuffer();
+                {
+                    method = "thumb",
+                    width = 150,
+                    height = 150
+                }).ToBuffer();
 
             // compress original
             byte[] optimizedFile = await source
                 .Preserve("copyright", "creation")
                 .ToBuffer();
 
-            var thumbnailClient = containerClient.GetBlobClient($"thumbnails/{image.FileName}");
-            var imageClient = containerClient.GetBlobClient(image.FileName);
+            var thumbnailClient = containerClient.GetBlobClient($"{subFolder}/_thumbnail/{fileUploadName}");
+            var imageClient = containerClient.GetBlobClient($"{subFolder}/{fileUploadName}");
 
             // Upload data
             await thumbnailClient.UploadAsync(new MemoryStream(thumbnailFile), true);

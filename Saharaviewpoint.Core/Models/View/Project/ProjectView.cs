@@ -14,16 +14,9 @@ public class ProjectView
     public int Order { get; internal set; }
     public int? AssigneeId { get; set; }
 
-    public ProjectUserModel Assignee { get; set; }
-    public ProjectUserModel CreatedBy { get; set; }
+    public ReferenceUserView? Assignee { get; set; }
+    public ReferenceUserView? CreatedBy { get; set; }
 
     [JsonIgnore]
     public bool IsDeleted { get; internal set; }
-}
-
-public class ProjectUserModel
-{
-    public int Id { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
 }

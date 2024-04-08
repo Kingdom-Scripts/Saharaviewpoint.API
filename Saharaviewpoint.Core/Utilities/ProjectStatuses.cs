@@ -2,7 +2,8 @@
 
 public static class ProjectStatuses
 {
-    public static readonly string REQUESTED = "Requested";
-    public static readonly string IN_PROGRESS = "In Progress";
-    public static readonly string COMPLETED = "Completed";
+    public static readonly string Requested = "Requested";
+    public static readonly string InProgress = "In Progress";
+    public static readonly string Completed = "Completed";
+    public static readonly string Rejected = "Rejected";
 }

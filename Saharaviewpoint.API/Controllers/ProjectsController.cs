@@ -46,6 +46,15 @@ public class ProjectsController : BaseController
         return ProcessResponse(result);
     }
 
+    [HttpPost("{id:int}/approve/{assigneeUid}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> ApproveProject(int id, string assigneeUid)
+    {
+        var result = await _projectService.ApproveProject(id, assigneeUid);
+        return ProcessResponse(result);
+    }
+
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -96,7 +105,7 @@ public class ProjectsController : BaseController
 
     #region TYPES
     [HttpPost("types")]
-    public async Task<IActionResult> CreateType(TaskModel model)
+    public async Task<IActionResult> CreateType(ProjectTypeModel model)
     {
         var result = await _projectService.CreateType(model);
         return ProcessResponse(result);
