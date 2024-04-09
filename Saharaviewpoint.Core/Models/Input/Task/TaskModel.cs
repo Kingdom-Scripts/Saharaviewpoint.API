@@ -2,24 +2,24 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Saharaviewpoint.Core.Utilities;
 
-namespace Saharaviewpoint.Core.Models.Input.Task
+namespace Saharaviewpoint.Core.Models.Input.Task;
+
+public class TaskModel
 {
-    public class TaskModel
-    {
-        public int ProjectId { get; set; }
-        public required string Type { get; set; }
-        public required string Summary { get; set; }
-        public string? Description  { get; set; }
-        public DateTime ExpectedStartDate { get; set; }
-        public DateTime? DueDate { get; set; }
+    public int ProjectId { get; set; }
+    public required string Type { get; set; }
+    public required string Summary { get; set; }
+    public string? Description  { get; set; }
+    public DateTime ExpectedStartDate { get; set; }
+    public DateTime? DueDate { get; set; }
 
-        public List<IFormFile> Attachments { get; set; } = new();
-    }
+    public List<IFormFile> Attachments { get; set; } = new();
+}
 
-    public class TaskModelValidator : AbstractValidator<TaskModel>
+public class TaskModelValidator : AbstractValidator<TaskModel>
+{
+    public TaskModelValidator()
     {
-        public TaskModelValidator()
-        {
             RuleFor(model => model.ProjectId)
                 .NotEmpty().WithMessage("Project is required");
 
@@ -53,5 +53,4 @@ namespace Saharaviewpoint.Core.Models.Input.Task
                     }
                 });
         }
-    }
 }

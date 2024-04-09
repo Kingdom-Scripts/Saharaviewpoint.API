@@ -13,18 +13,18 @@ using Saharaviewpoint.Core.Models.Configurations;
 using Saharaviewpoint.Core.Models.Email;
 using Saharaviewpoint.Core.Models.Utilities;
 
-namespace Saharaviewpoint.Core.Services
-{
-    public class EmailService : IEmailService
-    {
-        private readonly ILogger<EmailService> _logger;
-        private readonly SmtpClient _smtpClient;
-        private readonly IWebHostEnvironment _hostingEnvironment;
-        private readonly AppConfig _appConfig;
+namespace Saharaviewpoint.Core.Services;
 
-        public EmailService(ILogger<EmailService> logger, IWebHostEnvironment hostingEnvironment,
-            IOptions<AppConfig> options)
-        {
+public class EmailService : IEmailService
+{
+    private readonly ILogger<EmailService> _logger;
+    private readonly SmtpClient _smtpClient;
+    private readonly IWebHostEnvironment _hostingEnvironment;
+    private readonly AppConfig _appConfig;
+
+    public EmailService(ILogger<EmailService> logger, IWebHostEnvironment hostingEnvironment,
+        IOptions<AppConfig> options)
+    {
             if (options is null) throw new ArgumentNullException(nameof(options));
 
             _appConfig = options.Value;
@@ -37,8 +37,8 @@ namespace Saharaviewpoint.Core.Services
             _smtpClient.EnableSsl = false;
         }
 
-        public Result SendMessage(string to, string subject, string body, Attachment? attachment = null)
-        {
+    public Result SendMessage(string to, string subject, string body, Attachment? attachment = null)
+    {
             var mail = new MailMessage();
             try
             {
@@ -62,8 +62,8 @@ namespace Saharaviewpoint.Core.Services
             }
         }
 
-        public async Task<Result> SendConfirmEmail(string to, string token)
-        {
+    public async Task<Result> SendConfirmEmail(string to, string token)
+    {
             // get template file
             string templatePath =
                 Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", "email-verify.html");
@@ -110,8 +110,8 @@ namespace Saharaviewpoint.Core.Services
             return SendMessage(to, "Confirm Your Email Address", output);
         }
 
-        public async Task<Result> SendInvitationEmail(InvitationEmailModel model)
-        {
+    public async Task<Result> SendInvitationEmail(InvitationEmailModel model)
+    {
             // get template file
             string templatePath =
                 Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", "invitation.html");
@@ -167,8 +167,8 @@ namespace Saharaviewpoint.Core.Services
         }
 
 
-        public bool TestAnother()
-        {
+    public bool TestAnother()
+    {
             try
             {
                 MailMessage mail = new MailMessage();
@@ -194,5 +194,4 @@ namespace Saharaviewpoint.Core.Services
                 return false;
             }
         }
-    }
 }

@@ -1,9 +1,8 @@
-namespace Saharaviewpoint.Core.Models.View
+namespace Saharaviewpoint.Core.Models.View;
+
+public class ReferenceUserView
 {
-    public class ReferenceUserView
-    {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-    }
+    public int Id { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
 }

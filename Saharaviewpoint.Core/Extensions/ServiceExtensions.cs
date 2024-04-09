@@ -20,6 +20,8 @@ using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using Saharaviewpoint.Core.Models.View;
+using Saharaviewpoint.Core.Models.View.Task;
 
 namespace Saharaviewpoint.Core.Extensions;
 
@@ -126,6 +128,15 @@ public static class ServiceExtensions
         // ignore converting Type property in project class
         TypeAdapterConfig<ProjectModel, Project>
             .NewConfig().Ignore(p => p.Type);
+
+        TypeAdapterConfig<SvpTask, TaskDetailView>
+            .NewConfig()
+            .Map(dest => dest.Attachments, src => src.TaskAttachments.Select(ta => ta.Document).Adapt<List<DocumentView>>()!);
+            // .Map(dest => dest.Id, src => src.DocumentId)
+            // .Map(dest => dest.Name, src => src.Document!.Name)
+            // .Map(dest => dest.Type, src => src.Document!.Type)
+            // .Map(dest => dest.Url, src => src.Document!.Url)
+            // .Map(dest => dest.ThumbnailUrl, src => src.Document!.ThumbnailUrl);
 
         services.AddSingleton<ICacheService, CacheService>();
 

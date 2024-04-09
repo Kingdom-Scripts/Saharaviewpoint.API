@@ -1,9 +1,9 @@
-namespace Saharaviewpoint.Core.Utilities
+namespace Saharaviewpoint.Core.Utilities;
+
+public static class FileUtil
 {
-    public static class FileUtil
+    public static string ToFolderName(this string value)
     {
-        public static string ToFolderName(this string value)
-        {
             string result = value.ToLower().Trim().Replace(" ", "-");
 
             // remove any duplicate hyphen in the string
@@ -25,5 +25,4 @@ namespace Saharaviewpoint.Core.Utilities
 
             return result;
         }
-    }
 }

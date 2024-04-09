@@ -8,4 +8,5 @@ public interface ITaskService
 {
     Task<Result> CreateTask(TaskModel model);
     Task<Result> ListTasks(TaskSearchModel request);
+    Task<Result> GetTask(int taskId);
 }

@@ -76,7 +76,7 @@ public class SaharaviewpointContext : DbContext
 
         builder.Entity<TaskAttachment>()
             .HasOne(ta => ta.Task)
-            .WithMany()
+            .WithMany(t => t.TaskAttachments)
             .HasForeignKey(ta => ta.TaskId)
             .OnDelete(DeleteBehavior.NoAction);
 
