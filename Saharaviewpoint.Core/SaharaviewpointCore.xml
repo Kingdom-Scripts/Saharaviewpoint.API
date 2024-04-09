@@ -62,11 +62,6 @@
             A foreign key to the role this user possess
             </summary>
         </member>
-        <member name="P:Saharaviewpoint.Core.Models.App.UserRole.DateCreated">
-            <summary>
-            The date this role was created for this user
-            </summary>
-        </member>
         <member name="P:Saharaviewpoint.Core.Models.App.UserRole.CreatedById">
             <summary>
             A foreign key to the user who assigned this role to this user
