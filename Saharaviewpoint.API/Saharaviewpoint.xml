@@ -240,5 +240,41 @@
         <member name="M:Saharaviewpoint.API.Migrations.Seven.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Eight">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Eight.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Eight.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Eight.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Nine">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Nine.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Nine.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Nine.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Ten">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Ten.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Ten.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Ten.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

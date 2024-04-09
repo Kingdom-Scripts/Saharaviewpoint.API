@@ -82,5 +82,11 @@ public class SaharaviewpointContext : DbContext
 
         builder.Entity<EpicTask>()
             .HasIndex(et => et.TaskId);
+
+        builder.Entity<EpicTask>()
+            .HasOne(ep => ep.CreatedBy)
+            .WithMany()
+            .HasForeignKey(ep => ep.CreatedById)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

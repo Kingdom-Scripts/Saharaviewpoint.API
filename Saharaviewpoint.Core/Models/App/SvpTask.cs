@@ -25,7 +25,6 @@ namespace Saharaviewpoint.Core.Models.App
         public SvpTask? Parent { get; set; }
         public User? CreatedBy { get; set; }
         public User? UpdatedBy { get; set; }
-        public User? Reporter { get; set; }
         public Project? Project { get; set; }
         public User? DeletedBy { get; set; }
         public List<TaskAttachment> Attachments { get; set; } = new();

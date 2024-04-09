@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Core.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Core.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240408205801_Nine")]
+    partial class Nine
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -438,7 +441,7 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.ToTable("Tasks", "dbo", t =>
                         {
-                            t.HasCheckConstraint("CK_Task_Status", "[Status] IN ('TO DO', 'IN PROGRESS', 'COMPLETED')");
+                            t.HasCheckConstraint("CK_Task_Status", "[Status] IN ('TODO', 'IN PROGRESS', 'COMPLETED')");
 
                             t.HasCheckConstraint("CK_Task_Type", "[Type] IN ('Epic', 'Task', 'Subtask')");
                         });

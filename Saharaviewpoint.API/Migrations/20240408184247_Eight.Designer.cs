@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Core.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Core.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240408184247_Eight")]
+    partial class Eight
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -400,6 +403,9 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ReporterId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -434,11 +440,13 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.HasIndex("ProjectId");
 
+                    b.HasIndex("ReporterId");
+
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("Tasks", "dbo", t =>
                         {
-                            t.HasCheckConstraint("CK_Task_Status", "[Status] IN ('TO DO', 'IN PROGRESS', 'COMPLETED')");
+                            t.HasCheckConstraint("CK_Task_Status", "[Status] IN ('TODO', 'IN PROGRESS', 'COMPLETED')");
 
                             t.HasCheckConstraint("CK_Task_Type", "[Type] IN ('Epic', 'Task', 'Subtask')");
                         });
@@ -542,6 +550,9 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.Property<int>("CreatedById")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Id")
                         .HasColumnType("int");
@@ -668,6 +679,10 @@ namespace Saharaviewpoint.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId");
+
                     b.HasOne("Saharaviewpoint.Core.Models.App.User", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById");
@@ -679,6 +694,8 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("Parent");
 
                     b.Navigation("Project");
+
+                    b.Navigation("Reporter");
 
                     b.Navigation("UpdatedBy");
                 });
