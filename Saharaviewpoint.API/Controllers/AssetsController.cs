@@ -8,7 +8,6 @@ namespace Saharaviewpoint.API.Controllers;
 [Route("api/v1/assets")]
 [ApiController]
 [AllowAnonymous] // TODO: remove this
-// [Authorize] TODO: activate this
 public class AssetsController : BaseController
 {
     private readonly IFileService _fileService;
@@ -27,7 +26,8 @@ public class AssetsController : BaseController
             : ProcessResponse(new ErrorResult(result.Status, result.Title, result.Message));
     }
 
-    [HttpGet("{folder}/{subfolder}/thumbnails/{fileName}")]
+    [HttpGet("{folder}/{subfolder}/_thumbnail/{fileName}")]
+    [AllowAnonymous] // TODO: remove this
     public async Task<IActionResult> GetThumbnail(string folder, string subFolder, string fileName)
     {
         var result = await _fileService.GetFileByPath(folder, $"{subFolder}/_thumbnail", fileName);
@@ -38,6 +38,7 @@ public class AssetsController : BaseController
     }
 
     [HttpGet("{folder}/{subFolder}/{fileName}")]
+    [AllowAnonymous] // TODO: remove this
     public async Task<IActionResult> GetAsset(string folder, string subFolder, string fileName)
     {
         var result = await _fileService.GetFileByPath(folder, subFolder, fileName);

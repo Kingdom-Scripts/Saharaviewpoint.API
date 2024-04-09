@@ -1,19 +1,19 @@
 ﻿using FluentValidation;
 
-namespace Saharaviewpoint.Core.Models.Input.User
-{
-    public class ProjectManagerModel
-    {
-        public required string FirstName { get; set; }
-        public required string LastName { get; set; }
-        public required string Email { get; set; }
-        public string? Phone { get; set; }
-    }
+namespace Saharaviewpoint.Core.Models.Input.User;
 
-    public class ProjectManagerModelValidator : AbstractValidator<ProjectManagerModel>
+public class ProjectManagerModel
+{
+    public required string FirstName { get; set; }
+    public required string LastName { get; set; }
+    public required string Email { get; set; }
+    public string? Phone { get; set; }
+}
+
+public class ProjectManagerModelValidator : AbstractValidator<ProjectManagerModel>
+{
+    public ProjectManagerModelValidator()
     {
-        public ProjectManagerModelValidator()
-        {
             RuleFor(model => model.FirstName)
                 .NotEmpty().WithMessage("First name cannot be empty.")
                 .MaximumLength(50).WithMessage("Maximum of 50 characters");
@@ -25,5 +25,4 @@ namespace Saharaviewpoint.Core.Models.Input.User
             RuleFor(model => model.Email)
                 .EmailAddress();
         }
-    }
 }

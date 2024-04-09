@@ -16,18 +16,18 @@ using System.Web;
 using Saharaviewpoint.Core.Models.Email;
 using Saharaviewpoint.Core.Models.Input.Auth;
 
-namespace Saharaviewpoint.Core.Services
-{
-    public class UserService : IUserService
-    {
-        private readonly SaharaviewpointContext _context;
-        private readonly AppConfig _appConfig;
-        private readonly IEmailService _emailService;
-        private readonly ITokenGenerator _tokenGenerator;
-        private readonly UserSession _userSession;
+namespace Saharaviewpoint.Core.Services;
 
-        public UserService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenGenerator tokenGenerator, UserSession userSession)
-        {
+public class UserService : IUserService
+{
+    private readonly SaharaviewpointContext _context;
+    private readonly AppConfig _appConfig;
+    private readonly IEmailService _emailService;
+    private readonly ITokenGenerator _tokenGenerator;
+    private readonly UserSession _userSession;
+
+    public UserService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenGenerator tokenGenerator, UserSession userSession)
+    {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _appConfig = appConfig.Value;
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
@@ -35,8 +35,8 @@ namespace Saharaviewpoint.Core.Services
             _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
         }
 
-        public async Task<Result> ListProjectManagersAsync(string? searchQuery, int pageIndex, int pageSize)
-        {
+    public async Task<Result> ListProjectManagersAsync(string? searchQuery, int pageIndex, int pageSize)
+    {
             var projectManagers = await _context.UserRoles
                 .Where(uRole => uRole.RoleId == (int)Roles.SvpManager)
                 .Where(uRole => string.IsNullOrEmpty(searchQuery)
@@ -65,8 +65,8 @@ namespace Saharaviewpoint.Core.Services
             return new SuccessResult(projectManagers);
         }
 
-        public async Task<Result> InviteProjectManagerAsync(ProjectManagerModel model)
-        {
+    public async Task<Result> InviteProjectManagerAsync(ProjectManagerModel model)
+    {
             // confirm email doesn't exist
             bool emailExist = await _context.Users
                 .AnyAsync(u => u.Email.ToLower().Trim() == model.Email.ToLower().Trim());
@@ -120,8 +120,8 @@ namespace Saharaviewpoint.Core.Services
                 : new ErrorResult("Failed to invite project manager");
         }
 
-        public async Task<Result> AcceptInvitation(AcceptInvitationModel model)
-        {
+    public async Task<Result> AcceptInvitation(AcceptInvitationModel model)
+    {
             var today = DateTime.UtcNow;
 
             // validate request
@@ -178,5 +178,4 @@ namespace Saharaviewpoint.Core.Services
 
             return new SuccessResult($"Welcome, {request.FirstName} {request.LastName}", authData.Content);
         }
-    }
 }

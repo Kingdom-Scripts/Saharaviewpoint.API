@@ -5,7 +5,6 @@ namespace Saharaviewpoint.Core.Models.View;
 
 public class DocumentView
 {
-    [JsonIgnore]
     public int Id { get; set; }
 
     public required string Name { get; set; }
@@ -15,4 +14,6 @@ public class DocumentView
     public required string Url { get; set; }
 
     public required string ThumbnailUrl { get; set; }
+
+    public DateTime CreatedAt { get; set; }
 }

@@ -1,20 +1,20 @@
 ﻿using FluentValidation;
 
-namespace Saharaviewpoint.Core.Models.Input.User
-{
-    public class AcceptInvitationModel
-    {
-        public required string Email { get; set; }
-        public required string Token { get; set; }
-        public required string Type { get; set; }
-                public string Password { get; set; }
-        public string ConfirmPassword { get; set; }
-    }
+namespace Saharaviewpoint.Core.Models.Input.User;
 
-    public class AcceptInvitationModelValidator : AbstractValidator<AcceptInvitationModel>
+public class AcceptInvitationModel
+{
+    public required string Email { get; set; }
+    public required string Token { get; set; }
+    public required string Type { get; set; }
+    public string Password { get; set; }
+    public string ConfirmPassword { get; set; }
+}
+
+public class AcceptInvitationModelValidator : AbstractValidator<AcceptInvitationModel>
+{
+    public AcceptInvitationModelValidator()
     {
-        public AcceptInvitationModelValidator()
-        {
             RuleFor(model => model.Email)
                 .EmailAddress();
 
@@ -35,5 +35,4 @@ namespace Saharaviewpoint.Core.Models.Input.User
                 .Matches(@"[0-9]+").WithMessage("Your password must contain at least one number.")
                 .Matches(@"[\!\?\*\.\#\$\(\)]+").WithMessage("Your password must contain at least one (!?#$ *.).");
         }
-    }
 }
