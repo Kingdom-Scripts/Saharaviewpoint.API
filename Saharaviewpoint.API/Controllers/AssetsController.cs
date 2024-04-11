@@ -26,7 +26,7 @@ public class AssetsController : BaseController
             : ProcessResponse(new ErrorResult(result.Status, result.Title, result.Message));
     }
 
-    [HttpGet("{folder}/{subfolder}/_thumbnail/{fileName}")]
+    [HttpGet("{folder}/{subFolder}/_thumbnail/{fileName}")]
     [AllowAnonymous] // TODO: remove this
     public async Task<IActionResult> GetThumbnail(string folder, string subFolder, string fileName)
     {

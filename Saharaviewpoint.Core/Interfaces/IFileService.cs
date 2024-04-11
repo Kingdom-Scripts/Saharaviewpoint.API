@@ -35,4 +35,16 @@ public interface IFileService
     /// <param name="fileName">The name of the file to be retrieved.</param>
     /// <returns></returns>
     Task<FileStreamResult?> GetFileByPath(string folder, string subFolder, string fileName);
+
+    /// <summary>
+    /// Deletes a file from azure blob storage
+    /// </summary>
+    /// <param name="folder">The folder name (typically the user's UID)</param>
+    /// <param name="subFolder">The sub folder (typically the project title or task name)</param>
+    /// <param name="fileName">The name of the file to be retrieved.</param>
+    /// <returns></returns>
+    Task<Result> DeleteFile(string folder, string subFolder, string fileName);
+
+    Task<Result<Document>> UploadTaskAttachment(string folder, string subFolder, IFormFile file,
+        IProgress<int> progress);
 }

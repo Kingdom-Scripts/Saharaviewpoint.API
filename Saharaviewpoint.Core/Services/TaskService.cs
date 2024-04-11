@@ -6,6 +6,7 @@ using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Models.App;
 using Saharaviewpoint.Core.Models.App.Constants;
+using Saharaviewpoint.Core.Models.Input;
 using Saharaviewpoint.Core.Models.Input.Auth;
 using Saharaviewpoint.Core.Models.Input.Project;
 using Saharaviewpoint.Core.Models.Input.Task;
@@ -117,5 +118,86 @@ public class TaskService : ITaskService
             return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
 
         return new SuccessResult(task);
+    }
+
+    public async Task<Result> ListAttachments(int taskId)
+    {
+        var attachments = await _context.TaskAttachments
+            .Where(ta => ta.TaskId == taskId)
+            .Select(ta => ta.Document)
+            .ProjectToType<DocumentView>()
+            .ToListAsync();
+
+        return new SuccessResult(attachments);
+    }
+
+    public async Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model, IProgress<int> progress)
+    {
+        var task = await _context.Tasks
+            .Where(t => t.Id == taskId)
+            .Select(t => new SvpTask
+            {
+                Id = t.Id,
+                ProjectId = t.ProjectId
+            }).FirstOrDefaultAsync();
+
+        if (task is null)
+            return new ErrorResult("Invalid task provided");
+
+        var projectFolders = await _context.Projects
+            .Where(p => p.Id == task.ProjectId)
+            .Select(p => p.FolderNames)
+            .FirstOrDefaultAsync();
+
+        // var uploaded = await _fileService.UploadFileInternal(projectFolders!.First(), projectFolders!.Last(), model.File);
+        var uploaded =
+            await _fileService.UploadTaskAttachment(projectFolders!.First(), projectFolders!.Last(), model.File, progress);
+
+        if (!uploaded.Success)
+            return new ErrorResult(uploaded.Message);
+
+        var attachment = new TaskAttachment
+        {
+            TaskId = taskId,
+            Document = uploaded.Content
+        };
+
+        await _context.AddAsync(attachment);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult(StatusCodes.Status201Created, attachment.Document.Adapt<DocumentView>())
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
+    public async Task<Result> RemoveAttachmentFromTask(int taskId, int documentId)
+    {
+        var attachment = await _context.TaskAttachments
+            .Include(ta => ta.Document)
+            .Where(ta => ta.TaskId == taskId && ta.DocumentId == documentId)
+            .FirstOrDefaultAsync();
+
+        if (attachment is null)
+            return new ErrorResult("Attachment not found");
+
+        // delete the file from azure
+        var projectFolders = await _context.TaskAttachments
+            .Where(ta => ta.TaskId == taskId && ta.DocumentId == documentId)
+            .Select(ta => ta.Task!.Project!.FolderNames)
+            .FirstOrDefaultAsync();
+
+        var deleted = await _fileService.DeleteFile(projectFolders!.First(), projectFolders!.Last(), attachment.Document!.Name);
+
+        if (!deleted.Success)
+            return new ErrorResult(deleted.Message);
+
+        _context.Remove(attachment);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult()
+            : new ErrorResult("Unable to save changes, please try again later.");
     }
 }
