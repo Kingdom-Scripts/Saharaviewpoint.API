@@ -61,13 +61,17 @@ public class TasksController : BaseController
     public async Task<IActionResult> UploadAttachment(int taskId, [FromForm] FileUploadModel file, [FromServices] IHttpContextAccessor accessor)
     {
         var response = accessor.HttpContext.Response;
+            response.ContentType = "application/json";
 
         var progress = new Progress<int>(percentage =>
         {
+            if (percentage > 90)
+            {
+                int wait = 2;
+            }
             // Send progress update to client
             var progressResponse = new SuccessResult(new { Percentage = percentage });
             string json = JsonConvert.SerializeObject(progressResponse);
-            response.ContentType = "application/json";
             response.WriteAsync(json);
             response.Body.FlushAsync(); // Ensure data is sent immediately
         });

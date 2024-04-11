@@ -30,13 +30,16 @@ public class FileService : IFileService
 
         if (keyVaultConfig == null) throw new ArgumentNullException(nameof(keyVaultConfig));
 
-        var keyVault = keyVaultConfig.Value;
-        var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
+        // TODO: remove this api call from here
+        //var keyVault = keyVaultConfig.Value;
+        //var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
 
-        var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
+        // var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
 
-        string connectionString = $"{client.GetSecret("StorageKey--Saharaviewpoint").Value.Value}";
+        // string connectionString = $"{client.GetSecret("StorageKey--Saharaviewpoint").Value.Value}";
 
+        string connectionString =
+            "DefaultEndpointsProtocol=https;AccountName=svpstoragedev;AccountKey=HGWzG6y5UG06ZnrauWD+fqkAVMcdyea/v4V8Q4qaA7MUvdjSvZe//K+Db4x7PWWw9JtyXkscC7Yj+AStRJ9Wug==;EndpointSuffix=core.windows.net";
         _blobServiceClient = new BlobServiceClient(connectionString);
         _userSession = userSession;
         _context = context;
