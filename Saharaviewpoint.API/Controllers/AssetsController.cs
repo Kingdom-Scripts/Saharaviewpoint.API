@@ -27,7 +27,7 @@ public class AssetsController : BaseController
     }
 
     [HttpGet("{folder}/{subFolder}/_thumbnail/{fileName}")]
-    [AllowAnonymous] // TODO: remove this
+    [AllowAnonymous]
     public async Task<IActionResult> GetThumbnail(string folder, string subFolder, string fileName)
     {
         var result = await _fileService.GetFileByPath(folder, $"{subFolder}/_thumbnail", fileName);
@@ -37,8 +37,19 @@ public class AssetsController : BaseController
         return NotFound(new ErrorResult(StatusCodes.Status404NotFound, "File not found."));
     }
 
+    [HttpGet("thumbnail/{fileName}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetThumbnail(string fileName)
+    {
+        var result = await _fileService.GetGenericThumbnail(fileName);
+        if (result != null)
+            return result;
+
+        return NotFound(new ErrorResult(StatusCodes.Status404NotFound, "File not found."));
+    }
+
     [HttpGet("{folder}/{subFolder}/{fileName}")]
-    [AllowAnonymous] // TODO: remove this
+    [AllowAnonymous]
     public async Task<IActionResult> GetAsset(string folder, string subFolder, string fileName)
     {
         var result = await _fileService.GetFileByPath(folder, subFolder, fileName);

@@ -73,6 +73,25 @@ public class FileService : IFileService
         return await GetFile(folder, subFolder, fileName);
     }
 
+    public async Task<FileStreamResult?> GetGenericThumbnail(string fileName)
+    {
+        var blobContainer = _blobServiceClient.GetBlobContainerClient("thumbnails");
+
+        var blobClient = blobContainer.GetBlobClient(fileName);
+
+        if (!await blobClient.ExistsAsync())
+        {
+            return null;
+        }
+
+        var stream = await blobClient.OpenReadAsync();
+        string? contentType = blobClient.GetProperties().Value.ContentType;
+        return new FileStreamResult(stream, contentType)
+        {
+            FileDownloadName = fileName
+        };
+    }
+
     public async Task<Result> DeleteFile(string folder, string subFolder, string fileName)
     {
         var blobContainer = _blobServiceClient.GetBlobContainerClient(folder);
@@ -177,6 +196,10 @@ public class FileService : IFileService
                     }
                 }
             }
+            else
+            {
+                await SaveImageAsync(containerClient, subFolder, fileUploadName, file);
+            }
 
             var document = new Document
             {
@@ -185,7 +208,7 @@ public class FileService : IFileService
                 Url = $"{folder}/{subFolder}/{fileUploadName}",
                 ThumbnailUrl = fileType == DocumentTypes.IMAGE
                     ? $"{folder}/{subFolder}/_thumbnail/{fileUploadName}"
-                    : $"{folder}/{subFolder}/_thumbnail/{fileType}.png",
+                    : $"thumbnail/{fileType}.png",
                 CreatedById = _userSession.UserId
             };
 

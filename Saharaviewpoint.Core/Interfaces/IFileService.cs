@@ -36,6 +36,8 @@ public interface IFileService
     /// <returns></returns>
     Task<FileStreamResult?> GetFileByPath(string folder, string subFolder, string fileName);
 
+    Task<FileStreamResult?> GetGenericThumbnail(string filename);
+
     /// <summary>
     /// Deletes a file from azure blob storage
     /// </summary>

@@ -181,18 +181,23 @@ public class TaskService : ITaskService
         if (attachment is null)
             return new ErrorResult("Attachment not found");
 
-        // delete the file from azure
+        // get the project folders
         var projectFolders = await _context.TaskAttachments
             .Where(ta => ta.TaskId == taskId && ta.DocumentId == documentId)
             .Select(ta => ta.Task!.Project!.FolderNames)
             .FirstOrDefaultAsync();
 
-        var deleted = await _fileService.DeleteFile(projectFolders!.First(), projectFolders!.Last(), attachment.Document!.Name);
+        // get the file name from the document url
+        string fileName = attachment.Document!.Url.Split('/').Last();
+
+        // delete the file from azure
+        var deleted = await _fileService.DeleteFile(projectFolders!.First(), projectFolders!.Last(), fileName);
 
         if (!deleted.Success)
             return new ErrorResult(deleted.Message);
 
         _context.Remove(attachment);
+        _context.Remove(attachment.Document);
 
         int saved = await _context.SaveChangesAsync();
 

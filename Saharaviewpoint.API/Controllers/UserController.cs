@@ -15,26 +15,26 @@ public class UserController : BaseController
 
     public UserController(IUserService userService)
     {
-            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
-        }
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+    }
 
     [HttpGet("project-managers")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<UserView>>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
     public async Task<IActionResult> ListProjectManagersAsync(string? searchQuery, int pageIndex, int pageSize)
     {
-            var res = await _userService.ListProjectManagersAsync(searchQuery, pageIndex, pageSize);
-            return ProcessResponse(res);
-        }
+        var res = await _userService.ListProjectManagersAsync(searchQuery, pageIndex, pageSize);
+        return ProcessResponse(res);
+    }
 
     [HttpPost("project-managers/invite")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
     public async Task<IActionResult> InviteProjectManagerAsync(ProjectManagerModel model)
     {
-            var res = await _userService.InviteProjectManagerAsync(model);
-            return ProcessResponse(res);
-        }
+        var res = await _userService.InviteProjectManagerAsync(model);
+        return ProcessResponse(res);
+    }
 
     [HttpPost("accept-invitation")]
     [AllowAnonymous]
@@ -42,7 +42,7 @@ public class UserController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
     public async Task<IActionResult> AcceptInvitation(AcceptInvitationModel model)
     {
-            var res = await _userService.AcceptInvitation(model);
-            return ProcessResponse(res);
-        }
+        var res = await _userService.AcceptInvitation(model);
+        return ProcessResponse(res);
+    }
 }

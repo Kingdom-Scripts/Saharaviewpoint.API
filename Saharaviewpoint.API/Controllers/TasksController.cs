@@ -56,6 +56,7 @@ public class TasksController : BaseController
         return ProcessResponse(result);
     }
 
+    // TODO: fix this for dynamic file upload
     [HttpPost("{taskId}/attachments")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<DocumentView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -93,6 +94,15 @@ public class TasksController : BaseController
         });
 
         var result = await _taskService.AddAttachmentToTask(taskId, file, progress);
+        return ProcessResponse(result);
+    }
+
+    [HttpDelete("{taskId}/attachments/{documentId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> RemoveAttachment(int taskId, int documentId)
+    {
+        var result = await _taskService.RemoveAttachmentFromTask(taskId, documentId);
         return ProcessResponse(result);
     }
 }
