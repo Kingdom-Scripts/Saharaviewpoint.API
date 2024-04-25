@@ -13,6 +13,7 @@ using Saharaviewpoint.Core.Models.Input.Task;
 using Saharaviewpoint.Core.Models.Utilities;
 using Saharaviewpoint.Core.Models.View;
 using Saharaviewpoint.Core.Models.View.Task;
+using System.Runtime.InteropServices;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -72,6 +73,11 @@ public class TaskService : ITaskService
 
         if (attachments.Any())
             await _context.AddRangeAsync(attachments);
+
+        // add log
+        AddTaskLog(mappedTask, $"Task created by {_userSession.Name}");
+
+        // add task
         await _context.AddAsync(mappedTask);
 
         int saved = await _context.SaveChangesAsync();
@@ -101,6 +107,7 @@ public class TaskService : ITaskService
             query = query.Where(t => t.Summary.Contains(request.SearchQuery));
 
         var tasks = await query
+            .OrderByDescending(t => t.CreatedAt)
             .ProjectToType<TaskView>()
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
 
@@ -162,6 +169,9 @@ public class TaskService : ITaskService
             Document = uploaded.Content
         };
 
+        // Add log
+        AddTaskLog(task, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
+
         await _context.AddAsync(attachment);
 
         int saved = await _context.SaveChangesAsync();
@@ -199,10 +209,106 @@ public class TaskService : ITaskService
         _context.Remove(attachment);
         _context.Remove(attachment.Document);
 
+        // add log
+        AddTaskLog(attachment.Task!, $"{_userSession.Name} removed an attachment", attachment.Document.Name);
+
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
             ? new SuccessResult()
             : new ErrorResult("Unable to save changes, please try again later.");
     }
+
+    public async Task<Result> ListLogs(int taskId, PagingOptionModel request) { 
+        var logs = await _context.TaskLogs
+            .Where(tl => tl.TaskId == taskId)
+            .OrderByDescending(tl => tl.CreatedAt)
+            .ProjectToType<TaskLogView>()
+            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+
+        return new SuccessResult(logs);
+    }
+
+    #region Comments
+
+    public async Task<Result> AddComment(int taskId, CommentModel model)
+    {
+        // validate task
+        var taskExist = await _context.Tasks
+            .AnyAsync(t => t.Id == taskId && !t.IsDeleted);
+
+        if (!taskExist)
+            return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
+
+        var comment = model.Adapt<TaskComment>();
+        comment.TaskId = taskId;
+        comment.CreatedById = _userSession.UserId;
+        comment.FullName = _userSession.Name;
+
+        await _context.AddAsync(comment);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult(StatusCodes.Status201Created, comment.Adapt<CommentView>())
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
+    public async Task<Result> RemoveComment(int taskId, int commentId)
+    {
+        var comment = await _context.TaskComments
+            .FirstOrDefaultAsync(tc => tc.Id == commentId && tc.TaskId == taskId);
+
+        if (comment is null)
+            return new ErrorResult(StatusCodes.Status404NotFound, "Comment does not exist.");
+
+        _context.Remove(comment);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult()
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
+    public async Task<Result> ListComments(int taskId, PagingOptionModel request)
+    {
+        var query = _context.TaskComments
+            .Where(tc => tc.TaskId == taskId && tc.ParentId == null)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(request.SearchQuery))
+            query = query.Where(tc => tc.Message.Contains(request.SearchQuery));
+
+        var comments = await query
+            .Include(tc => tc.CreatedBy)
+            .Include(tc => tc.Children.Take(2))
+            .OrderByDescending(tc => tc.CreatedAt)
+            .ProjectToType<CommentView>()
+            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+
+        return new SuccessResult(comments);
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    private async void AddTaskLog(SvpTask task, string description, string? previousState = null, string? currentState = null)
+    {
+        var log = new TaskLog
+        {
+            TaskId = task.Id,
+            Description = description,
+            PreviousState = previousState,
+            CurrentState = currentState,
+            CreatedById = _userSession.UserId
+        };
+
+        if (task.Id == 0) log.Task = task;
+
+        await _context.AddAsync(log);
+    }
+
+    #endregion
 }

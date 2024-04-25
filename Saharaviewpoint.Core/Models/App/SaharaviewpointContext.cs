@@ -28,6 +28,8 @@ public class SaharaviewpointContext : DbContext
     public required DbSet<SvpTask> Tasks { get; set; }
     public required DbSet<TaskAttachment> TaskAttachments { get; set; }
     public required DbSet<EpicTask> EpicTasks { get; set; }
+    public required DbSet<TaskLog> TaskLogs { get; set; }
+    public required DbSet<TaskComment> TaskComments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -87,6 +89,18 @@ public class SaharaviewpointContext : DbContext
             .HasOne(ep => ep.CreatedBy)
             .WithMany()
             .HasForeignKey(ep => ep.CreatedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<TaskLog>()
+            .HasOne(tl => tl.CreatedBy)
+            .WithMany()
+            .HasForeignKey(tl => tl.CreatedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<TaskComment>()
+            .HasOne(tl => tl.CreatedBy)
+            .WithMany()
+            .HasForeignKey(tl => tl.CreatedById)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

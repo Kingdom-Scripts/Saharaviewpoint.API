@@ -86,6 +86,11 @@
             The page size to return or how many items to return. Defaults to 15
             </summary>
         </member>
+        <member name="P:Saharaviewpoint.Core.Models.Input.PagingOptionModel.SearchQuery">
+            <summary>
+            The search query to filter the results
+            </summary>
+        </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.BadErrorResult">
             <summary>
             Represents an error result, derived from the <see cref="T:Saharaviewpoint.Core.Models.Utilities.Result"/> class.

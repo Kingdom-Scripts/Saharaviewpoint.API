@@ -105,4 +105,38 @@ public class TasksController : BaseController
         var result = await _taskService.RemoveAttachmentFromTask(taskId, documentId);
         return ProcessResponse(result);
     }
+
+    [HttpGet("{taskId}/logs")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<TaskLogView>>))]
+    public async Task<IActionResult> ListLogs(int taskId, [FromQuery] PagingOptionModel request)
+    {
+        var result = await _taskService.ListLogs(taskId, request);
+        return ProcessResponse(result);
+    }
+
+    [HttpPost("{taskId}/comments")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<TaskCommentView>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> AddComment(int taskId, [FromBody] CommentModel model)
+    {
+        var result = await _taskService.AddComment(taskId, model);
+        return ProcessResponse(result);
+    }
+
+    [HttpDelete("{taskId}/comments/{commentId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> RemoveComment(int taskId, int commentId)
+    {
+        var result = await _taskService.RemoveComment(taskId, commentId);
+        return ProcessResponse(result);
+    }
+
+    [HttpGet("{taskId}/comments")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<TaskCommentView>>))]
+    public async Task<IActionResult> ListComments(int taskId, [FromQuery] PagingOptionModel request)
+    {
+        var result = await _taskService.ListComments(taskId, request);
+        return ProcessResponse(result);
+    }
 }
