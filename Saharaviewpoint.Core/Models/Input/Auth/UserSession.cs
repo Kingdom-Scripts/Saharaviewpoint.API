@@ -5,9 +5,10 @@ namespace Saharaviewpoint.Core.Models.Input.Auth;
 public class UserSession
 {
     public int UserId { get; set; }
-    public string Uid { get; set; }
-    public string Type { get; set; }
-    public string BusinessCode { get; set; }
+    public string Uid { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Type { get; set; } = null!;
+    public string? BusinessCode { get; set; }
 
     private List<string> _roles = new();
 

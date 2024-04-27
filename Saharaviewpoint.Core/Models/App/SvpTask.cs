@@ -4,11 +4,11 @@ namespace Saharaviewpoint.Core.Models.App;
 
 public class SvpTask : BaseAppModel
 {
-    public required int ProjectId { get; set; }
+    [Required] public int ProjectId { get; set; }
     public int? ParentId { get; set; }
-    [MaxLength(15)] public required string Type { get; set; }
-    [MaxLength(15)] public required string Status { get; set; }
-    [MaxLength(255)] public required string Summary { get; set; }
+    [Required] [MaxLength(15)] public string Type { get; set; } = null!;
+    [Required] [MaxLength(15)] public string Status { get; set; } = null!;
+    [Required] [MaxLength(255)] public string Summary { get; set; } = null!;
     [MaxLength(5000)] public string? Description { get; set; }
     public int CreatedById { get; set; }
     public DateTime ExpectedStartDate { get; set; }

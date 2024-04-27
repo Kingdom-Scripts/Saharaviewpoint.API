@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Core.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Core.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240424211432_Twelve")]
+    partial class Twelve
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -470,46 +473,6 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("TaskAttachments", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CreatedById")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TaskId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedById");
-
-                    b.HasIndex("ParentId");
-
-                    b.HasIndex("TaskId");
-
-                    b.ToTable("TaskComments", "dbo");
-                });
-
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskLog", b =>
                 {
                     b.Property<int>("Id")
@@ -525,17 +488,14 @@ namespace Saharaviewpoint.API.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("CurrentState")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PreviousState")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
@@ -776,31 +736,6 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskComment", b =>
-                {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Saharaviewpoint.Core.Models.App.TaskComment", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId");
-
-                    b.HasOne("Saharaviewpoint.Core.Models.App.SvpTask", "Task")
-                        .WithMany()
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CreatedBy");
-
-                    b.Navigation("Parent");
-
-                    b.Navigation("Task");
-                });
-
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskLog", b =>
                 {
                     b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
@@ -847,11 +782,6 @@ namespace Saharaviewpoint.API.Migrations
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
                 {
                     b.Navigation("TaskAttachments");
-                });
-
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskComment", b =>
-                {
-                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>

@@ -52,6 +52,15 @@
             <param name="fileName">The name of the file to be retrieved.</param>
             <returns></returns>
         </member>
+        <member name="M:Saharaviewpoint.Core.Interfaces.IFileService.DeleteFile(System.String,System.String,System.String)">
+            <summary>
+            Deletes a file from azure blob storage
+            </summary>
+            <param name="folder">The folder name (typically the user's UID)</param>
+            <param name="subFolder">The sub folder (typically the project title or task name)</param>
+            <param name="fileName">The name of the file to be retrieved.</param>
+            <returns></returns>
+        </member>
         <member name="P:Saharaviewpoint.Core.Models.App.UserRole.UserId">
             <summary>
             A foreign key to the user this role is attached to
@@ -75,6 +84,11 @@
         <member name="P:Saharaviewpoint.Core.Models.Input.PagingOptionModel.PageSize">
             <summary>
             The page size to return or how many items to return. Defaults to 15
+            </summary>
+        </member>
+        <member name="P:Saharaviewpoint.Core.Models.Input.PagingOptionModel.SearchQuery">
+            <summary>
+            The search query to filter the results
             </summary>
         </member>
         <member name="T:Saharaviewpoint.Core.Models.Utilities.BadErrorResult">

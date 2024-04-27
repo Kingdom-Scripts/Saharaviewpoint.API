@@ -129,14 +129,9 @@ public static class ServiceExtensions
         TypeAdapterConfig<ProjectModel, Project>
             .NewConfig().Ignore(p => p.Type);
 
-        TypeAdapterConfig<SvpTask, TaskDetailView>
+        TypeAdapterConfig<TaskComment, TaskCommentView>
             .NewConfig()
-            .Map(dest => dest.Attachments, src => src.TaskAttachments.Select(ta => ta.Document).Adapt<List<DocumentView>>()!);
-            // .Map(dest => dest.Id, src => src.DocumentId)
-            // .Map(dest => dest.Name, src => src.Document!.Name)
-            // .Map(dest => dest.Type, src => src.Document!.Type)
-            // .Map(dest => dest.Url, src => src.Document!.Url)
-            // .Map(dest => dest.ThumbnailUrl, src => src.Document!.ThumbnailUrl);
+            .Map(dest => dest.Children, src => src.Children.Adapt<IEnumerable<TaskCommentView>>());
 
         services.AddSingleton<ICacheService, CacheService>();
 

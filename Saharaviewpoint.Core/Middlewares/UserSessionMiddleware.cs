@@ -22,6 +22,7 @@ public class UserSessionMiddleware
             session.UserId = UserId;
             session.Uid = context.User.Claims.SingleOrDefault(c => c.Type == "uid")?.Value;
             session.Type = context.User.Claims.SingleOrDefault(c => c.Type == "type")?.Value;
+            session.Name = context.User.Claims.SingleOrDefault(c => c.Type == "name")?.Value;
             session.Roles = context.User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToList();
         }
 

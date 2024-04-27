@@ -18,7 +18,7 @@ namespace Saharaviewpoint.Core.Services;
 
 public class FileService : IFileService
 {
-    private SaharaviewpointContext _context;
+    private readonly SaharaviewpointContext _context;
     private readonly BlobServiceClient _blobServiceClient;
     private readonly UserSession _userSession;
     private readonly ILogger<FileService> _logger;
@@ -30,13 +30,16 @@ public class FileService : IFileService
 
         if (keyVaultConfig == null) throw new ArgumentNullException(nameof(keyVaultConfig));
 
-        var keyVault = keyVaultConfig.Value;
-        var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
+        // TODO: remove this api call from here
+        //var keyVault = keyVaultConfig.Value;
+        //var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
 
-        var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
+        // var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
 
-        string connectionString = $"{client.GetSecret("StorageKey--Saharaviewpoint").Value.Value}";
+        // string connectionString = $"{client.GetSecret("StorageKey--Saharaviewpoint").Value.Value}";
 
+        string connectionString =
+            "DefaultEndpointsProtocol=https;AccountName=svpstoragedev;AccountKey=HGWzG6y5UG06ZnrauWD+fqkAVMcdyea/v4V8Q4qaA7MUvdjSvZe//K+Db4x7PWWw9JtyXkscC7Yj+AStRJ9Wug==;EndpointSuffix=core.windows.net";
         _blobServiceClient = new BlobServiceClient(connectionString);
         _userSession = userSession;
         _context = context;
@@ -70,6 +73,41 @@ public class FileService : IFileService
         return await GetFile(folder, subFolder, fileName);
     }
 
+    public async Task<FileStreamResult?> GetGenericThumbnail(string fileName)
+    {
+        var blobContainer = _blobServiceClient.GetBlobContainerClient("thumbnails");
+
+        var blobClient = blobContainer.GetBlobClient(fileName);
+
+        if (!await blobClient.ExistsAsync())
+        {
+            return null;
+        }
+
+        var stream = await blobClient.OpenReadAsync();
+        string? contentType = blobClient.GetProperties().Value.ContentType;
+        return new FileStreamResult(stream, contentType)
+        {
+            FileDownloadName = fileName
+        };
+    }
+
+    public async Task<Result> DeleteFile(string folder, string subFolder, string fileName)
+    {
+        var blobContainer = _blobServiceClient.GetBlobContainerClient(folder);
+
+        var blobClient = blobContainer.GetBlobClient($"{subFolder}/{fileName}");
+
+        if (!await blobClient.ExistsAsync())
+        {
+            return new ErrorResult("File not found");
+        }
+
+        bool deleted = await blobClient.DeleteIfExistsAsync();
+
+        return deleted ? new SuccessResult() : new ErrorResult("Failed to delete file");
+    }
+
     private async Task<Result<Document>> Upload(string folder, string subFolder, IFormFile file)
     {
         try
@@ -77,7 +115,6 @@ public class FileService : IFileService
             string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             string fileType = GetDocumentType(ext);
 
-            // string containerName = CreateContainerNameFromProjectTitle(subFolder);
             var containerClient = _blobServiceClient.GetBlobContainerClient(folder);
 
             await containerClient.CreateIfNotExistsAsync();
@@ -103,6 +140,75 @@ public class FileService : IFileService
                 ThumbnailUrl = fileType == DocumentTypes.IMAGE
                     ? $"{folder}/{subFolder}/_thumbnail/{fileUploadName}"
                     : $"{folder}/{subFolder}/_thumbnail/{fileType}.png",
+                CreatedById = _userSession.UserId
+            };
+
+            return new SuccessResult<Document>(document);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading file");
+            return new ErrorResult<Document>("An unexpected error occurred while uploading your file(s)");
+        }
+    }
+
+    public async Task<Result<Document>> UploadTaskAttachment(string folder, string subFolder, IFormFile file, IProgress<int> progress)
+    {
+        try
+        {
+            string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            string fileType = GetDocumentType(ext);
+
+            var containerClient = _blobServiceClient.GetBlobContainerClient(folder);
+
+            await containerClient.CreateIfNotExistsAsync();
+
+            string fileUploadName = $"{Guid.NewGuid()}{ext}";
+            if (fileType != DocumentTypes.IMAGE)
+            {
+                var blobClient = containerClient.GetBlobClient($"{subFolder}/{fileUploadName}");
+
+                // Upload data
+                // await blobClient.UploadAsync(file.OpenReadStream(), true);
+
+                // Get the length of the file
+                long fileLength = file.Length;
+
+                // Progress reporting variables
+                long bytesUploaded = 0;
+                const int bufferSize = 4096;
+                byte[] buffer = new byte[bufferSize];
+                int bytesRead;
+
+                // Upload data
+                using (var stream = file.OpenReadStream())
+                {
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await blobClient.UploadAsync(new MemoryStream(buffer, 0, bytesRead), true);
+
+                        bytesUploaded += bytesRead;
+                        // Calculate progress percentage
+                        int progressPercentage = (int)((bytesUploaded * 100) / fileLength);
+                        Console.WriteLine($"Bytes uploaded: {bytesUploaded}, Progress: {progressPercentage}%");
+                        // Report progress
+                        progress?.Report(progressPercentage);
+                    }
+                }
+            }
+            else
+            {
+                await SaveImageAsync(containerClient, subFolder, fileUploadName, file);
+            }
+
+            var document = new Document
+            {
+                Name = file.FileName,
+                Type = fileType,
+                Url = $"{folder}/{subFolder}/{fileUploadName}",
+                ThumbnailUrl = fileType == DocumentTypes.IMAGE
+                    ? $"{folder}/{subFolder}/_thumbnail/{fileUploadName}"
+                    : $"thumbnail/{fileType}.png",
                 CreatedById = _userSession.UserId
             };
 
