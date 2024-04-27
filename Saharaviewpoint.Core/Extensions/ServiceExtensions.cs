@@ -129,6 +129,10 @@ public static class ServiceExtensions
         TypeAdapterConfig<ProjectModel, Project>
             .NewConfig().Ignore(p => p.Type);
 
+        TypeAdapterConfig<TaskComment, TaskCommentView>
+            .NewConfig()
+            .Map(dest => dest.Children, src => src.Children.Adapt<IEnumerable<TaskCommentView>>());
+
         services.AddSingleton<ICacheService, CacheService>();
 
         services.TryAddScoped<UserSession>();

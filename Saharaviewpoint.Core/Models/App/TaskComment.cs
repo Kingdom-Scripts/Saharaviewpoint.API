@@ -23,6 +23,6 @@ namespace Saharaviewpoint.Core.Models.App
         public TaskComment? Parent { get; set; }
         public SvpTask? Task { get; set; }
         public User? CreatedBy { get; set; }
-        public ICollection<TaskComment> Children { get; set; }
+        public ICollection<TaskComment> Children { get; set; } = new List<TaskComment>();
     }
 }

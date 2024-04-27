@@ -250,7 +250,7 @@ public class TaskService : ITaskService
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
-            ? new SuccessResult(StatusCodes.Status201Created, comment.Adapt<CommentView>())
+            ? new SuccessResult(StatusCodes.Status201Created, comment.Adapt<TaskCommentView>())
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
@@ -284,7 +284,7 @@ public class TaskService : ITaskService
             .Include(tc => tc.CreatedBy)
             .Include(tc => tc.Children.Take(2))
             .OrderByDescending(tc => tc.CreatedAt)
-            .ProjectToType<CommentView>()
+            .ProjectToType<TaskCommentView>()
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
 
         return new SuccessResult(comments);
