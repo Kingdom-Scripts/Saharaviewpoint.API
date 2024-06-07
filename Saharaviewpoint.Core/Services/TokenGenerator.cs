@@ -35,7 +35,7 @@ public class TokenGenerator : ITokenGenerator
     {
         DateTime expiresAt = DateTime.UtcNow.AddDays(_jwtConfig.Expires);
 
-        // get the request domain 
+        // get the request domain
         string? requestDomain = _httpContextAccessor.HttpContext!.Request.Headers["Origin"].ToString();
 
         string? token = GenerateAccessToken(user, requestDomain, expiresAt);
@@ -84,6 +84,12 @@ public class TokenGenerator : ITokenGenerator
 
     private string GenerateAccessToken(User user, string requestDomain, DateTime expiresAt)
     {
+        // validate domain
+        string[]? domains = _jwtConfig.AllowedDomains.Split(",");
+        // TODO: uncomment the code below for live
+        // if (!domains.Contains(requestDomain))
+        //     throw new Exception("Unable to process request");
+
         // generate token that is valid for 7 days
         var tokenHandler = new JwtSecurityTokenHandler();
         var claimIdentity = new ClaimsIdentity();
@@ -98,11 +104,6 @@ public class TokenGenerator : ITokenGenerator
             new Claim(ClaimTypes.Role, role.Role.Name)));
 
         byte[]? key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
-
-        // validate domain
-        string[]? domains = _jwtConfig.AllowedDomains.Split(",");
-        if (!domains.Contains(requestDomain))
-            throw new Exception("Unable to process request");
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
