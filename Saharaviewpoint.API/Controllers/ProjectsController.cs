@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.Input.Project;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View.Project;
+using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View.Project;
 
 namespace Saharaviewpoint.API.Controllers;
 

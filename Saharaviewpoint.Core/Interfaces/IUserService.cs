@@ -1,5 +1,5 @@
-using Saharaviewpoint.Core.Models.Input.User;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Input.User;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

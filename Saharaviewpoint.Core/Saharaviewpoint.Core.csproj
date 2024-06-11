@@ -68,6 +68,11 @@
 
   <ItemGroup>
     <Folder Include="Enums\" />
+    <Folder Include="Models\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Saharaviewpoint.Models\Saharaviewpoint.Models.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Utilities;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Results;
 
 namespace Saharaviewpoint.Core.Extensions;

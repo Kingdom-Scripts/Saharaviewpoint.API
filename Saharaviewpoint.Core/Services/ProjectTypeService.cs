@@ -1,10 +1,10 @@
 ﻿using Mapster;
 using Microsoft.AspNetCore.Http;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Input.Auth;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View.Project;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View.Project;
 using Microsoft.EntityFrameworkCore;
 
 namespace Saharaviewpoint.Core.Services;

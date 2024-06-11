@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

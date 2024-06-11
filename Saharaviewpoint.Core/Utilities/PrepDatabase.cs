@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.App.Constants;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.App.Constants;
 using Serilog;
 
 namespace Saharaviewpoint.Core.Utilities;

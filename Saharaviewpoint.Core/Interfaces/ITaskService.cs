@@ -1,7 +1,7 @@
-﻿using Saharaviewpoint.Core.Models.Input;
-using Saharaviewpoint.Core.Models.Input.Project;
-using Saharaviewpoint.Core.Models.Input.Task;
-using Saharaviewpoint.Core.Models.Utilities;
+﻿using Saharaviewpoint.Models.Input;
+using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Input.Task;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

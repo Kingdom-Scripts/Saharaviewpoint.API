@@ -46,6 +46,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Saharaviewpoint.Core\Saharaviewpoint.Core.csproj" />
+    <ProjectReference Include="..\Saharaviewpoint.Models\Saharaviewpoint.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>

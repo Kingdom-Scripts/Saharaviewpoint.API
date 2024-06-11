@@ -1,5 +1,5 @@
-﻿using Saharaviewpoint.Core.Models.Input.Project;
-using Saharaviewpoint.Core.Models.Utilities;
+﻿using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Saharaviewpoint.Core.Models.App;
+using Saharaviewpoint.Models.App;
 
 #nullable disable
 
@@ -26,7 +26,7 @@ partial class ProjectStatus_Two
 
         SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.Project", b =>
             {
                 b.Property<int>("Id")
                     .ValueGeneratedOnAdd()
@@ -89,7 +89,7 @@ partial class ProjectStatus_Two
                     });
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.RefreshToken", b =>
             {
                 b.Property<int>("Id")
                     .ValueGeneratedOnAdd()
@@ -115,7 +115,7 @@ partial class ProjectStatus_Two
                 b.ToTable("RefreshTokens", "dbo");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.Role", b =>
             {
                 b.Property<int>("Id")
                     .ValueGeneratedOnAdd()
@@ -132,7 +132,7 @@ partial class ProjectStatus_Two
                 b.ToTable("Roles", "dbo");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.User", b =>
             {
                 b.Property<int>("Id")
                     .ValueGeneratedOnAdd()
@@ -184,7 +184,7 @@ partial class ProjectStatus_Two
                 b.ToTable("Users", "dbo");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.UserRole", b =>
             {
                 b.Property<int>("RoleId")
                     .HasColumnType("int");
@@ -208,19 +208,19 @@ partial class ProjectStatus_Two
                 b.ToTable("UserRoles", "dbo");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.Project", b =>
             {
-                b.HasOne("Saharaviewpoint.Core.Models.App.User", "Assignee")
+                b.HasOne("Saharaviewpoint.Models.App.User", "Assignee")
                     .WithMany()
                     .HasForeignKey("AssigneeId");
 
-                b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                b.HasOne("Saharaviewpoint.Models.App.User", "CreatedBy")
                     .WithMany()
                     .HasForeignKey("CreatedById")
                     .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
 
-                b.HasOne("Saharaviewpoint.Core.Models.App.User", "DeletedBy")
+                b.HasOne("Saharaviewpoint.Models.App.User", "DeletedBy")
                     .WithMany()
                     .HasForeignKey("DeletedById");
 
@@ -231,9 +231,9 @@ partial class ProjectStatus_Two
                 b.Navigation("DeletedBy");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.RefreshToken", b =>
             {
-                b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
+                b.HasOne("Saharaviewpoint.Models.App.User", "User")
                     .WithMany()
                     .HasForeignKey("UserId")
                     .OnDelete(DeleteBehavior.Cascade)
@@ -242,15 +242,15 @@ partial class ProjectStatus_Two
                 b.Navigation("User");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.UserRole", b =>
             {
-                b.HasOne("Saharaviewpoint.Core.Models.App.Role", "Role")
+                b.HasOne("Saharaviewpoint.Models.App.Role", "Role")
                     .WithMany("UserRoles")
                     .HasForeignKey("RoleId")
                     .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
 
-                b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
+                b.HasOne("Saharaviewpoint.Models.App.User", "User")
                     .WithMany("UserRoles")
                     .HasForeignKey("UserId")
                     .OnDelete(DeleteBehavior.Cascade)
@@ -261,12 +261,12 @@ partial class ProjectStatus_Two
                 b.Navigation("User");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.Role", b =>
             {
                 b.Navigation("UserRoles");
             });
 
-        modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
+        modelBuilder.Entity("Saharaviewpoint.Models.App.User", b =>
             {
                 b.Navigation("UserRoles");
             });

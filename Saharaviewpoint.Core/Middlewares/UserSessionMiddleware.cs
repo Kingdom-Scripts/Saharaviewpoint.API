@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using Saharaviewpoint.Core.Models.Input.Auth;
+using Saharaviewpoint.Models.Input.Auth;
 
 namespace Saharaviewpoint.Core.Middlewares;
 

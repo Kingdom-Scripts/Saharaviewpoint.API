@@ -3,18 +3,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.App.Constants;
-using Saharaviewpoint.Core.Models.Configurations;
-using Saharaviewpoint.Core.Models.Input.User;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View.Auth;
-using Saharaviewpoint.Core.Models.View.User;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Input.User;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View.Auth;
+using Saharaviewpoint.Models.View.User;
 using Saharaviewpoint.Core.Utilities;
 using System.Text;
 using System.Web;
-using Saharaviewpoint.Core.Models.Email;
-using Saharaviewpoint.Core.Models.Input.Auth;
+using Saharaviewpoint.Models.Email;
+using Saharaviewpoint.Models.Input.Auth;
 
 namespace Saharaviewpoint.Core.Services;
 

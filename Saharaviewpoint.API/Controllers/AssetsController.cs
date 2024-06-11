@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.API.Controllers;
 

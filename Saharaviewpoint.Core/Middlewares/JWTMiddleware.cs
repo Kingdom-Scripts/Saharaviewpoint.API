@@ -7,14 +7,14 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.Configurations;
-using Saharaviewpoint.Core.Models.View.Auth;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.View.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using Saharaviewpoint.Core.Models.Input.Auth;
+using Saharaviewpoint.Models.Input.Auth;
 
 namespace Saharaviewpoint.Core.Middlewares;
 

@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Http;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Input.Auth;
-using Saharaviewpoint.Core.Models.Input.Project;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View.Project;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View.Project;
 using Microsoft.EntityFrameworkCore;
 using Saharaviewpoint.Core.Utilities;
 

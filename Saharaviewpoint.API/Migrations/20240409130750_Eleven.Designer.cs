@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Saharaviewpoint.Core.Models.App;
+using Saharaviewpoint.Models.App;
 
 #nullable disable
 
@@ -26,7 +26,7 @@ namespace Saharaviewpoint.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Code", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Code", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,7 +63,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("Codes", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Document", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Document", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,7 +106,7 @@ namespace Saharaviewpoint.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.EpicTask", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.EpicTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -132,7 +132,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("EpicTasks", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.PMInvitation", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.PMInvitation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -182,7 +182,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("PMInvitations", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Project", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -286,7 +286,7 @@ namespace Saharaviewpoint.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.ProjectType", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.ProjectType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -318,7 +318,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("ProjectTypes", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -344,7 +344,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("RefreshTokens", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -361,7 +361,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("Roles", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.SvpTask", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -447,7 +447,7 @@ namespace Saharaviewpoint.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskAttachment", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.TaskAttachment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -473,7 +473,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("TaskAttachments", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -527,7 +527,7 @@ namespace Saharaviewpoint.API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.UserRole", b =>
                 {
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
@@ -551,9 +551,9 @@ namespace Saharaviewpoint.API.Migrations
                     b.ToTable("UserRoles", "dbo");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Document", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Document", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -562,15 +562,15 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("CreatedBy");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.EpicTask", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.EpicTask", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.SvpTask", "Task")
+                    b.HasOne("Saharaviewpoint.Models.App.SvpTask", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -581,42 +581,42 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.PMInvitation", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.PMInvitation", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById");
 
                     b.Navigation("CreatedBy");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Project", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Project", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "Assignee")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "Assignee")
                         .WithMany("Projects")
                         .HasForeignKey("AssigneeId");
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "DeletedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "DeletedBy")
                         .WithMany()
                         .HasForeignKey("DeletedById");
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.Document", "Design")
+                    b.HasOne("Saharaviewpoint.Models.App.Document", "Design")
                         .WithMany()
                         .HasForeignKey("DesignId");
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.ProjectType", "Type")
+                    b.HasOne("Saharaviewpoint.Models.App.ProjectType", "Type")
                         .WithMany()
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "UpdatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById");
 
@@ -633,9 +633,9 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.RefreshToken", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.RefreshToken", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -644,29 +644,29 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.SvpTask", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "CreatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "DeletedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "DeletedBy")
                         .WithMany()
                         .HasForeignKey("DeletedById");
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.SvpTask", "Parent")
+                    b.HasOne("Saharaviewpoint.Models.App.SvpTask", "Parent")
                         .WithMany()
                         .HasForeignKey("ParentId");
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.Project", "Project")
+                    b.HasOne("Saharaviewpoint.Models.App.Project", "Project")
                         .WithMany()
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "UpdatedBy")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "UpdatedBy")
                         .WithMany()
                         .HasForeignKey("UpdatedById");
 
@@ -681,15 +681,15 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.TaskAttachment", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.TaskAttachment", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.Document", "Document")
+                    b.HasOne("Saharaviewpoint.Models.App.Document", "Document")
                         .WithMany()
                         .HasForeignKey("DocumentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.SvpTask", "Task")
+                    b.HasOne("Saharaviewpoint.Models.App.SvpTask", "Task")
                         .WithMany("TaskAttachments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -700,15 +700,15 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.UserRole", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.UserRole", b =>
                 {
-                    b.HasOne("Saharaviewpoint.Core.Models.App.Role", "Role")
+                    b.HasOne("Saharaviewpoint.Models.App.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Saharaviewpoint.Core.Models.App.User", "User")
+                    b.HasOne("Saharaviewpoint.Models.App.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -719,17 +719,17 @@ namespace Saharaviewpoint.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.Role", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.SvpTask", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.SvpTask", b =>
                 {
                     b.Navigation("TaskAttachments");
                 });
 
-            modelBuilder.Entity("Saharaviewpoint.Core.Models.App.User", b =>
+            modelBuilder.Entity("Saharaviewpoint.Models.App.User", b =>
                 {
                     b.Navigation("Projects");
 

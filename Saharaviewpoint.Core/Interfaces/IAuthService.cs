@@ -1,5 +1,5 @@
-using Saharaviewpoint.Core.Models.Input.Auth;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

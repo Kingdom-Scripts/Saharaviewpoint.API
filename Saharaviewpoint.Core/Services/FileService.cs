@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.App.Constants;
-using Saharaviewpoint.Core.Models.Configurations;
-using Saharaviewpoint.Core.Models.Input.Auth;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View;
 
 namespace Saharaviewpoint.Core.Services;
 

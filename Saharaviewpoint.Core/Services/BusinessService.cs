@@ -1,6 +1,6 @@
-﻿using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Input.Auth;
-using Saharaviewpoint.Core.Models.Utilities;
+﻿using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Services;
 

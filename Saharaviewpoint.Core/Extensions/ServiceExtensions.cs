@@ -11,17 +11,17 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Configurations;
-using Saharaviewpoint.Core.Models.Input.Auth;
-using Saharaviewpoint.Core.Models.Input.Project;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Core.Services;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
-using Saharaviewpoint.Core.Models.View;
-using Saharaviewpoint.Core.Models.View.Task;
+using Saharaviewpoint.Models.View;
+using Saharaviewpoint.Models.View.Task;
 
 namespace Saharaviewpoint.Core.Extensions;
 

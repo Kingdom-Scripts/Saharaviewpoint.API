@@ -1,5 +1,5 @@
-using Saharaviewpoint.Core.Models.App;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

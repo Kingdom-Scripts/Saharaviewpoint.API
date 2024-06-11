@@ -8,10 +8,10 @@ using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
-using Saharaviewpoint.Core.Models.App.Constants;
-using Saharaviewpoint.Core.Models.Configurations;
-using Saharaviewpoint.Core.Models.Email;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Email;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Services;
 

@@ -1,7 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Core.Models.Configurations;
+using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
 using Serilog;
 

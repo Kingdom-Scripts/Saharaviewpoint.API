@@ -1,6 +1,6 @@
 ﻿using System.Net.Mail;
-using Saharaviewpoint.Core.Models.Email;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Email;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
 

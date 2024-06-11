@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Utilities;
 using System.Net;
 
 namespace Saharaviewpoint.API.Controllers;

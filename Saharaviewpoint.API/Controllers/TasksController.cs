@@ -2,12 +2,12 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Saharaviewpoint.Core.Interfaces;
-using Saharaviewpoint.Core.Models.Input;
-using Saharaviewpoint.Core.Models.Input.Project;
-using Saharaviewpoint.Core.Models.Input.Task;
-using Saharaviewpoint.Core.Models.Utilities;
-using Saharaviewpoint.Core.Models.View;
-using Saharaviewpoint.Core.Models.View.Task;
+using Saharaviewpoint.Models.Input;
+using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Input.Task;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View;
+using Saharaviewpoint.Models.View.Task;
 
 namespace Saharaviewpoint.API.Controllers;
 

@@ -4,7 +4,7 @@
         <name>Saharaviewpoint.API</name>
     </assembly>
     <members>
-        <member name="M:Saharaviewpoint.API.Controllers.BaseController.ProcessResponse(Saharaviewpoint.Core.Models.Utilities.Result)">
+        <member name="M:Saharaviewpoint.API.Controllers.BaseController.ProcessResponse(Saharaviewpoint.Models.Utilities.Result)">
             <summary>
             Returns the appropriate HTTP Response.
             </summary>

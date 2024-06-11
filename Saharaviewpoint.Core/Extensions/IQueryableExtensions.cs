@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Saharaviewpoint.Core.Models.Utilities;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Extensions;
 
