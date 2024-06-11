@@ -1,7 +1,7 @@
 
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Saharaviewpoint.Models.Utilities;
+using Serilog;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -10,7 +10,6 @@ namespace Saharaviewpoint.Core.Middlewares;
 public class ErrorHandlerMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ErrorHandlerMiddleware> _logger;
 
     private readonly JsonSerializerOptions _options = new()
     {
@@ -18,10 +17,9 @@ public class ErrorHandlerMiddleware
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
+    public ErrorHandlerMiddleware(RequestDelegate next)
     {
         _next = next ?? throw new ArgumentNullException(nameof(next));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task Invoke(HttpContext context)
@@ -35,7 +33,7 @@ public class ErrorHandlerMiddleware
             var response = context.Response;
             response.ContentType = "application/json";
 
-            _logger.LogError("Actual Error: {Error}", error);
+            Log.Error("Actual Error: {Error}", error);
 
             response.StatusCode = error switch
             {
@@ -54,7 +52,7 @@ public class ErrorHandlerMiddleware
                 TraceInfo = GetErrorTraceInfo(error),
             }, _options);
 
-            _logger.LogError("Error: {@result}", result);
+            Log.Error("Error: {@result}", result);
 
             await response.WriteAsync(result);
         }
@@ -92,7 +90,7 @@ public class ErrorHandlerMiddleware
         }
     }
 
-    private TraceInfo GetErrorTraceInfo(Exception ex)
+    private static TraceInfo GetErrorTraceInfo(Exception ex)
     {
         //Get a StackTrace object for the exception
         StackTrace st = new StackTrace(ex, true);

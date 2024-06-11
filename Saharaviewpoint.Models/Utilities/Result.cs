@@ -1,6 +1,5 @@
 // ReSharper disable once RedundantUsingDirective
 using Newtonsoft.Json;
-using Saharaviewpoint.Core.Interfaces;
 
 namespace Saharaviewpoint.Models.Utilities;
 

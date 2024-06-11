@@ -1,4 +1,4 @@
-﻿namespace Saharaviewpoint.Core.Constants;
+﻿namespace Saharaviewpoint.Models.Constants;
 
 public static class AuthKeys
 {

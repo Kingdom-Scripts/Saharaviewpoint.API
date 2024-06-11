@@ -1,4 +1,4 @@
-namespace Saharaviewpoint.Core.Interfaces;
+namespace Saharaviewpoint.Models.Utilities;
 
 public interface IPagedList
 {

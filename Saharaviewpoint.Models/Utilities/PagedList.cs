@@ -1,6 +1,4 @@
-﻿using Saharaviewpoint.Core.Interfaces;
-
-namespace Saharaviewpoint.Models.Utilities;
+﻿namespace Saharaviewpoint.Models.Utilities;
 
 public class PagedList<TDestination> : List<TDestination>, IPagedList
 {

@@ -1,10 +1,7 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;
@@ -13,6 +10,7 @@ using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
+using Serilog;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -21,13 +19,10 @@ public class FileService : IFileService
     private readonly SaharaviewpointContext _context;
     private readonly BlobServiceClient _blobServiceClient;
     private readonly UserSession _userSession;
-    private readonly ILogger<FileService> _logger;
 
     public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession,
-        SaharaviewpointContext context, ILogger<FileService> logger)
+        SaharaviewpointContext context)
     {
-        _logger = logger;
-
         if (keyVaultConfig == null) throw new ArgumentNullException(nameof(keyVaultConfig));
 
         // TODO: remove this api call from here
@@ -147,7 +142,7 @@ public class FileService : IFileService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading file");
+            Log.Error(ex, "Error uploading file");
             return new ErrorResult<Document>("An unexpected error occurred while uploading your file(s)");
         }
     }
@@ -216,7 +211,7 @@ public class FileService : IFileService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading file");
+            Log.Error(ex, "Error uploading file");
             return new ErrorResult<Document>("An unexpected error occurred while uploading your file(s)");
         }
     }

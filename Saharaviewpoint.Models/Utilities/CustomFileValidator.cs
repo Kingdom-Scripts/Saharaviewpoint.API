@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Saharaviewpoint.Core.Utilities;
+namespace Saharaviewpoint.Models.Utilities;
 
 public static class CustomFileValidator
 {

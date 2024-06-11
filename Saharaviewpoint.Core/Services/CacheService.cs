@@ -1,6 +1,6 @@
 using LazyCache;
-using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Core.Services;
 

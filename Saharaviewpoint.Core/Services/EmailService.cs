@@ -1,8 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Saharaviewpoint.Core.Interfaces;
+﻿using Saharaviewpoint.Core.Interfaces;
 using System.Net.Mail;
-using System.Text;
 using System.Web;
 using Fluid;
 using Fluid.Values;
@@ -12,23 +9,22 @@ using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Utilities;
+using Serilog;
 
 namespace Saharaviewpoint.Core.Services;
 
 public class EmailService : IEmailService
 {
-    private readonly ILogger<EmailService> _logger;
     private readonly SmtpClient _smtpClient;
     private readonly IWebHostEnvironment _hostingEnvironment;
     private readonly AppConfig _appConfig;
 
-    public EmailService(ILogger<EmailService> logger, IWebHostEnvironment hostingEnvironment,
+    public EmailService(IWebHostEnvironment hostingEnvironment,
         IOptions<AppConfig> options)
     {
             if (options is null) throw new ArgumentNullException(nameof(options));
 
             _appConfig = options.Value;
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
 
             _smtpClient = new SmtpClient("plesk6700.is.cc");
@@ -37,30 +33,37 @@ public class EmailService : IEmailService
             _smtpClient.EnableSsl = false;
         }
 
-    public Result SendMessage(string to, string subject, string body, Attachment? attachment = null)
+    private Result SendMessage(string to, string subject, string body, Attachment? attachment = null)
     {
-            var mail = new MailMessage();
-            try
-            {
-                mail.From = new MailAddress("test@kingdomscripts.com");
-                mail.To.Add(to);
-                mail.Subject = subject;
-                mail.Body = body;
-                mail.IsBodyHtml = true;
+        var mail = new MailMessage();
 
-                _smtpClient.Send(mail);
-                return new SuccessResult(true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error sending email");
-                return new ErrorResult(ex.Message);
-            }
-            finally
-            {
-                mail.Dispose();
-            }
+        //var mail = new MailMessage("Opabid Farms Ltd opabidfarmsltd@no-reply.com", to, subject, body)
+        //{
+        //    DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure,
+        //    IsBodyHtml = true,
+        //    BodyEncoding = UTF8Encoding.UTF8
+        //};
+        try
+        {
+            mail.From = new MailAddress("test@kingdomscripts.com", "Saharaviewpoint");
+            mail.To.Add(to);
+            mail.Subject = subject;
+            mail.Body = body;
+            mail.IsBodyHtml = true;
+
+            _smtpClient.Send(mail);
+            return new SuccessResult(true);
         }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error sending email");
+            return new ErrorResult(ex.Message);
+        }
+        finally
+        {
+            mail.Dispose();
+        }
+    }
 
     public async Task<Result> SendConfirmEmail(string to, string token)
     {
@@ -71,7 +74,7 @@ public class EmailService : IEmailService
             // validate file
             if (!File.Exists(templatePath))
             {
-                _logger.LogError("Email template file not found");
+                Log.Error("Email template file not found");
                 return new ErrorResult("Email template file not found");
             }
 
@@ -82,7 +85,7 @@ public class EmailService : IEmailService
             // return error on failure to parse input
             if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
             {
-                _logger.LogError("Error in parsing template: {FluidError}", fluidError);
+                Log.Error("Error in parsing template: {FluidError}", fluidError);
                 return new ErrorResult($"Error in parsing template: {fluidError}");
             }
 
@@ -119,7 +122,7 @@ public class EmailService : IEmailService
             // validate file
             if (!File.Exists(templatePath))
             {
-                _logger.LogError("Email template file not found");
+                Log.Error("Email template file not found");
                 return new ErrorResult("Email template file not found");
             }
 
@@ -130,7 +133,7 @@ public class EmailService : IEmailService
             // return error on failure to parse input
             if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
             {
-                _logger.LogError("Error in parsing template: {FluidError}", fluidError);
+                Log.Error("Error in parsing template: {FluidError}", fluidError);
                 return new ErrorResult($"Error in parsing template: {fluidError}");
             }
 
@@ -140,9 +143,9 @@ public class EmailService : IEmailService
                 : _appConfig.BaseURLs.Client;
 
             string url = $"{baseUrl}/auth/accept-invitation" +
-                         $"/{model.RecipientEmail}" +
-                         $"/{HttpUtility.UrlPathEncode(model.UserType)}" +
-                         $"/{model.Token}";
+                         $"?email={model.RecipientEmail}" +
+                         $"&type={HttpUtility.UrlPathEncode(model.UserType)}" +
+                         $"&token={model.Token}";
 
             // parse template using Fluid
             var context = new TemplateContext
@@ -166,32 +169,49 @@ public class EmailService : IEmailService
             return SendMessage(model.RecipientEmail, "Invitation to Join Team - Saharaviewpoint", output);
         }
 
-
-    public bool TestAnother()
+    public async Task<Result> SendEmail(string to, string subject, string template,
+        Dictionary<string, string?>? args = null)
     {
-            try
-            {
-                MailMessage mail = new MailMessage();
-                SmtpClient SmtpServer = new SmtpClient("plesk6700.is.cc");
+        // get template file
+        string templatePath = Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", template);
 
-                mail.From = new MailAddress(
-                    "test@kingdomscripts.com"); //you have to provide your gmail address as from address
-                mail.To.Add("mordecai@kingdomscripts.com");
-                mail.Subject = "Test Subject";
-                mail.Body = "Test Email Body";
-
-                SmtpServer.Port = 587;
-                SmtpServer.Credentials =
-                    new System.Net.NetworkCredential("test@kingdomscripts.com",
-                        "p6kIv33^4"); //you have to provide you gamil username and password
-                SmtpServer.EnableSsl = false;
-
-                SmtpServer.Send(mail);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
+        // validate file
+        if (!File.Exists(templatePath))
+        {
+            Log.Error("Email template file not found");
+            return new ErrorResult("Email template file not found");
         }
+
+        // read template file as string
+        string sourceString = await File.ReadAllTextAsync(templatePath);
+
+        var fluidParser = new FluidParser();
+        // return error on failure to parse input
+        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+        {
+            Log.Error("Error in parsing template: {FluidError}", fluidError);
+            return new ErrorResult($"Error in parsing template: {fluidError}");
+        }
+
+        // parse template using Fluid
+        var context = new TemplateContext
+        {
+            Options = { MemberAccessStrategy = new UnsafeMemberAccessStrategy() }
+        };
+
+        context.Options.Filters.AddFilter("to_comma_separated", (input, arguments, ctx)
+            => new StringValue($"{input.ToObjectValue():n}"));
+
+        args ??= new Dictionary<string, string?>();
+        foreach (var value in args)
+        {
+            context.SetValue(value.Key, value.Value ?? string.Empty);
+        }
+
+        // compute output
+        string output = await fluidTemplate.RenderAsync(context);
+
+        // send email
+        return SendMessage(to, subject, output);
+    }
 }

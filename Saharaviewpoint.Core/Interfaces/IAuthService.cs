@@ -14,4 +14,6 @@ public interface IAuthService
     Task<Result> Logout(string userReference);
 
     Task<Result> UserProfile();
+    Task<Result> ForgotPassword(ForgotPasswordModel model);
+    Task<Result> ResetPassword(ResetPasswordModel model);
 }

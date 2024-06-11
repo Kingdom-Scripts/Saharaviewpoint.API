@@ -4,6 +4,20 @@
         <name>Saharaviewpoint.API</name>
     </assembly>
     <members>
+        <member name="M:Saharaviewpoint.API.Controllers.AuthController.RequestPasswordReset(Saharaviewpoint.Models.Input.Auth.ForgotPasswordModel)">
+            <summary>
+            Request password reset email
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Saharaviewpoint.API.Controllers.AuthController.ResetPassword(Saharaviewpoint.Models.Input.Auth.ResetPasswordModel)">
+            <summary>
+            Reset password
+            </summary>
+            <param name="model"></param>
+            <returns></returns>
+        </member>
         <member name="M:Saharaviewpoint.API.Controllers.BaseController.ProcessResponse(Saharaviewpoint.Models.Utilities.Result)">
             <summary>
             Returns the appropriate HTTP Response.
@@ -334,6 +348,18 @@
             <inheritdoc />
         </member>
         <member name="M:Saharaviewpoint.API.Migrations.Fifteen.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Sixteen">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Sixteen.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Sixteen.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Sixteen.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

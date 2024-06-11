@@ -1,4 +1,4 @@
-﻿namespace Saharaviewpoint.Core.Utilities;
+﻿namespace Saharaviewpoint.Models.Constants;
 
 public static class ProjectStatuses
 {

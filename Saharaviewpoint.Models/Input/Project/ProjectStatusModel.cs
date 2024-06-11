@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Saharaviewpoint.Core.Utilities;
+using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Models.Input.Project;
 

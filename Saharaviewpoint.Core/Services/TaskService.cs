@@ -1,36 +1,25 @@
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Auth;
-using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.Input.Task;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
 using Saharaviewpoint.Models.View.Task;
-using System.Runtime.InteropServices;
+using Serilog;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class TaskService : ITaskService
+public class TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService) : ITaskService
 {
-    private readonly SaharaviewpointContext _context;
-    private readonly UserSession _userSession;
-    private readonly IFileService _fileService;
-    private readonly ILogger<TaskService> _logger;
-
-    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, ILogger<TaskService> logger)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-        _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
+    private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
 
     public async Task<Result> CreateTask(TaskModel model)
     {
@@ -67,7 +56,7 @@ public class TaskService : ITaskService
             }
             else
             {
-                _logger.LogError(uploaded.Message);
+                Log.Error(uploaded.Message);
             }
         }
 

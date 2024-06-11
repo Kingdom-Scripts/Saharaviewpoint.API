@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
-using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Models.App;
 
