@@ -136,7 +136,7 @@ public static class ServiceExtensions
         services.AddSingleton<ICacheService, CacheService>();
 
         services.TryAddScoped<UserSession>();
-        services.TryAddScoped<ITokenGenerator, TokenGenerator>();
+        services.TryAddScoped<ITokenHandler, Services.TokenHandler>();
         services.TryAddScoped<IFileService, FileService>();
         services.TryAddScoped<IEmailService, EmailService>();
 

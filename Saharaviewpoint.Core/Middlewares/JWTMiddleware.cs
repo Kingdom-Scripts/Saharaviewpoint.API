@@ -5,33 +5,25 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.Configurations;
-using Saharaviewpoint.Models.View.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Extensions.Logging;
-using Saharaviewpoint.Models.Input.Auth;
+using Serilog;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
-public class JWTMiddleware
+public class JWTMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-    private readonly ICacheService _cacheService;
-    private readonly ILogger<JWTMiddleware> _logger;
+    private readonly RequestDelegate _next = next;
+    private ITokenHandler? _tokenHandler;
 
-    public JWTMiddleware(RequestDelegate next, ICacheService cacheService)
+    public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig, ITokenHandler tokenHandler)
     {
-        _next = next;
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    }
+        _tokenHandler = tokenHandler ?? throw new ArgumentNullException(nameof(tokenHandler));
 
-    public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig)
-    {
         // continue if action called is anonymous.
         if (IsAnonymous(context))
         {
@@ -104,9 +96,9 @@ public class JWTMiddleware
             // get request domain
             string? domain = context.Request.Headers["Origin"].ToString();
 
-            //check if token is string in the cache
-            string sToken = await _cacheService.GetToken($"{AuthKeys.TokenCacheKey}:{domain}:{uid}");
-            if (string.IsNullOrEmpty(sToken) || sToken != token)
+            //check if token is valid
+            bool isValid = await _tokenHandler!.ValidateToken(uid, token, domain);
+            if (!isValid)
             {
                 context.Items["User"] = null;
                 context.User = null;
@@ -129,6 +121,7 @@ public class JWTMiddleware
         {
             // do nothing if jwt validation fails
             // account is not attached to context so request won't have access to secure routes
+            Log.Error(ex, "JWT validation failed.");
         }
 
         return false;

@@ -17,12 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Models\Enums\**" />
-    <EmbeddedResource Remove="Models\Enums\**" />
-    <None Remove="Models\Enums\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="SaharaviewpointCore.xml" />
   </ItemGroup>
 
@@ -68,7 +62,6 @@
 
   <ItemGroup>
     <Folder Include="Enums\" />
-    <Folder Include="Models\" />
   </ItemGroup>
 
   <ItemGroup>

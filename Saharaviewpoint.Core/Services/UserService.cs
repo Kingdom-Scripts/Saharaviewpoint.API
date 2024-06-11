@@ -23,10 +23,10 @@ public class UserService : IUserService
     private readonly SaharaviewpointContext _context;
     private readonly AppConfig _appConfig;
     private readonly IEmailService _emailService;
-    private readonly ITokenGenerator _tokenGenerator;
+    private readonly ITokenHandler _tokenGenerator;
     private readonly UserSession _userSession;
 
-    public UserService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenGenerator tokenGenerator, UserSession userSession)
+    public UserService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession)
     {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _appConfig = appConfig.Value;

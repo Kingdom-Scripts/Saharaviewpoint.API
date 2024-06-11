@@ -14,10 +14,10 @@ namespace Saharaviewpoint.Core.Services;
 public class AuthService : IAuthService
 {
     private readonly SaharaviewpointContext _context;
-    private readonly ITokenGenerator _tokenGenerator;
+    private readonly ITokenHandler _tokenGenerator;
     private readonly UserSession _userSession;
 
-    public AuthService(SaharaviewpointContext context, ITokenGenerator tokenGenerator, UserSession userSession)
+    public AuthService(SaharaviewpointContext context, ITokenHandler tokenGenerator, UserSession userSession)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));

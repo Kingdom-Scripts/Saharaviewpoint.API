@@ -30,6 +30,7 @@ public class SaharaviewpointContext : DbContext
     public required DbSet<EpicTask> EpicTasks { get; set; }
     public required DbSet<TaskLog> TaskLogs { get; set; }
     public required DbSet<TaskComment> TaskComments { get; set; }
+    public required DbSet<Login> Logins { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

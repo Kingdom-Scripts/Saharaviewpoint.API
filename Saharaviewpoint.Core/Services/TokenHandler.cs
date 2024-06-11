@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Saharaviewpoint.Core.Constants;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Utilities;
@@ -16,17 +16,15 @@ using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class TokenGenerator : ITokenGenerator
+public class TokenHandler : ITokenHandler
 {
     private readonly JwtConfig _jwtConfig;
-    private readonly ICacheService _cacheService;
     private readonly SaharaviewpointContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public TokenGenerator(IOptions<JwtConfig> jwtConfig, ICacheService cacheService, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor)
+    public TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor)
     {
         _jwtConfig = jwtConfig.Value;
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
@@ -40,8 +38,27 @@ public class TokenGenerator : ITokenGenerator
 
         string? token = GenerateAccessToken(user, requestDomain, expiresAt);
 
-        //cache the token
-        _cacheService.AddToken($"{AuthKeys.TokenCacheKey}:{requestDomain}:{user.Uid}", token, expiresAt);
+        // store the token
+        var encryptedToken = token.HashPassword();
+        var login = await _context.Logins.FirstOrDefaultAsync(l => l.UserId == user.Id);
+        if (login != null)
+        {
+            login.HashedToken = encryptedToken;
+            login.ExpiresAt = DateTime.UtcNow.AddDays(30);
+
+            _context.Logins.Update(login);
+        } else {
+            login = new Login
+            {
+                UserId = user.Id,
+                HashedToken = encryptedToken,
+                Domain = requestDomain,
+                ExpiresAt = DateTime.UtcNow.AddDays(30)
+            };
+
+            await _context.Logins.AddAsync(login);
+        }
+        await _context.SaveChangesAsync();
 
         var result = new AuthDataView
         {
@@ -70,7 +87,17 @@ public class TokenGenerator : ITokenGenerator
 
     public async Task InvalidateToken(string userReference)
     {
-        _cacheService.RemoveToken($"{AuthKeys.TokenCacheKey}{userReference}");
+        var login = await _context.Logins
+            .FirstOrDefaultAsync(l => l.User!.Uid.ToString() == userReference);
+
+        if (login != null)
+        {
+            login.HashedToken = string.Empty;
+            login.ExpiresAt = DateTime.UtcNow;
+
+            _context.Logins.Update(login);
+            await _context.SaveChangesAsync();
+        }
 
         var refreshToken = await _context.RefreshTokens
             .FirstOrDefaultAsync(r => r.User.Uid.ToString() == userReference);
@@ -80,6 +107,19 @@ public class TokenGenerator : ITokenGenerator
             _context.Remove(refreshToken);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<bool> ValidateToken(string uid, string token, string domain)
+    {
+        var today = DateTime.UtcNow;
+        var hashedToken = await _context.Logins
+            .Where(l => l.User!.Uid.ToString() == uid && l.Domain == domain && l.ExpiresAt > today)
+            .Select(l => l.HashedToken)
+            .FirstOrDefaultAsync();
+
+        if (hashedToken is null) return false;
+
+        return hashedToken.VerifyPassword(token);
     }
 
     private string GenerateAccessToken(User user, string requestDomain, DateTime expiresAt)
