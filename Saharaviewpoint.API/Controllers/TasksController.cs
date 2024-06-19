@@ -114,6 +114,23 @@ public class TasksController : BaseController
         return ProcessResponse(result);
     }
 
+    [HttpGet("{projectId}/board")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<BoardTaskView>>))]
+    public async Task<IActionResult> ListBoardTasks(int projectId)
+    {
+        var result = await _taskService.ListBoardTasks(projectId);
+        return ProcessResponse(result);
+    }
+
+    [HttpPatch("{taskId}/status")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> ChangeTaskStatus(int taskId, [FromBody] TaskStatusModel model)
+    {
+        var result = await _taskService.ChangeTaskStatus(taskId, model);
+        return ProcessResponse(result);
+    }
+
     [HttpPost("{taskId}/comments")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<TaskCommentView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]

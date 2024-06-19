@@ -37,7 +37,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         var mappedTask = model.Adapt<SvpTask>();
         mappedTask.Status = TaskStatusEnum.TODO;
         mappedTask.CreatedById = _userSession.UserId;
-        mappedTask.TaskAttachments = new(); // remove the default empty attachment
+        mappedTask.TaskAttachments = []; // remove the default empty attachment
 
         // upload attachments if any
         string folder = project.FolderNames.First();
@@ -218,6 +218,102 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         return new SuccessResult(logs);
     }
 
+    public async Task<Result> ListBoardTasks(int projectId)
+    {
+        //var tasks = await _context.Tasks
+        //    .Where(t => t.ProjectId == projectId && !t.IsDeleted)
+        //    .Where(t => _userSession.IsAnyAdmin || t.Project!.AssigneeId == _userSession.UserId || t.CreatedById == _userSession.UserId)
+        //    .Select(t => new
+        //    {
+        //        Task = t,
+        //        Parent = t.Parent
+        //    })
+        //    .AsNoTracking()
+        //    .OrderBy(t => t.Task.Order)
+        //    .Select(t => new BoardTaskView
+        //    {
+        //        Id = t.Task.Id,
+        //        Epic = t.Parent != null && t.Parent.Type == TaskTypeEnum.EPIC ? t.Parent.Summary : null,
+        //        Type = t.Task.Type,
+        //        Status = t.Task.Status,
+        //        Summary = t.Task.Summary,
+        //        CreatedAt = t.Task.CreatedAt,
+        //        DueDate = t.Task.DueDate,
+        //        Order = t.Task.Order
+        //    })
+        //    .ToListAsync();
+
+        //return new SuccessResult(tasks);
+
+        var query = from task in _context.Tasks
+                    where !task.IsDeleted && task.ProjectId == projectId
+                    where _userSession.IsAnyAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
+                    where task.Type != TaskTypeEnum.EPIC
+                    select new
+                    {
+                        task,
+                        task.Parent
+                    };
+
+        var results = await query
+            .AsNoTracking()
+            .OrderBy(t => t.task.Order)
+            .ToListAsync();
+
+        var boardTaskViews = results.Select(t => new BoardTaskView
+        {
+            Id = t.task.Id,
+            Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
+            Type = t.task.Type,
+            Status = t.task.Status,
+            Summary = t.task.Summary,
+            CreatedAt = t.task.CreatedAt,
+            DueDate = t.task.DueDate,
+            Order = t.task.Order
+        }).ToList();
+
+        return new SuccessResult(boardTaskViews);
+    }
+
+    public async Task<Result> ChangeTaskStatus(int taskId, TaskStatusModel model)
+    {
+        var task = await _context.Tasks
+            .Where(t => t.Id == taskId)
+            .FirstOrDefaultAsync();
+
+        if (task is null)
+            return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
+
+        if (task.Status == model.Status)
+            return new ErrorResult("Task is already in the selected status");
+
+        // make sure task is not jumping a status
+        if (!TaskStatusEnum.IsValidTransition(task.Status, model.Status))
+            return new ErrorResult("Invalid status transition");
+
+        string previousState = task.Status;
+        task.Status = model.Status;
+
+        // check if status is going back and check for reasons
+        if (TaskStatusEnum.IsGoingBack(previousState, model.Status))
+        {
+            if (string.IsNullOrEmpty(model.Reason))
+                return new ErrorResult("Reason is required when going back to previous status");
+        }
+
+        if (task.Status == TaskStatusEnum.COMPLETED) 
+            task.DateCompleted = DateTime.UtcNow;
+
+        // add log
+        AddTaskLog(task, $"{_userSession.Name} changed task status to {model.Status}", previousState, model.Status, model.Reason);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult()
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
     #region Comments
 
     public async Task<Result> AddComment(int taskId, CommentModel model)
@@ -283,12 +379,13 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
     #region Private Methods
 
-    private async void AddTaskLog(SvpTask task, string description, string? previousState = null, string? currentState = null)
+    private async void AddTaskLog(SvpTask task, string description, string? previousState = null, string? currentState = null, string? remark = null)
     {
         var log = new TaskLog
         {
             TaskId = task.Id,
             Description = description,
+            Remark = remark,
             PreviousState = previousState,
             CurrentState = currentState,
             CreatedById = _userSession.UserId

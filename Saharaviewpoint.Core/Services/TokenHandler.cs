@@ -9,6 +9,7 @@ using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Auth;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -111,15 +112,23 @@ public class TokenHandler : ITokenHandler
 
     public async Task<bool> ValidateToken(string uid, string token, string domain)
     {
-        var today = DateTime.UtcNow;
-        var hashedToken = await _context.Logins
-            .Where(l => l.User!.Uid.ToString() == uid && l.Domain == domain && l.ExpiresAt > today)
-            .Select(l => l.HashedToken)
-            .FirstOrDefaultAsync();
+        try
+        {
+            var today = DateTime.UtcNow;
+            var hashedToken = await _context.Logins
+                .Where(l => l.User!.Uid.ToString() == uid && l.Domain == domain && l.ExpiresAt > today)
+                .Select(l => l.HashedToken)
+                .FirstOrDefaultAsync();
 
-        if (hashedToken is null) return false;
+            if (hashedToken is null) return false;
 
-        return hashedToken.VerifyPassword(token);
+            return hashedToken.VerifyPassword(token);
+        }
+        catch(Exception ex)
+        {
+            Log.Error(ex, "Error validating token");
+            return false;
+        }
     }
 
     private string GenerateAccessToken(User user, string requestDomain, DateTime expiresAt)

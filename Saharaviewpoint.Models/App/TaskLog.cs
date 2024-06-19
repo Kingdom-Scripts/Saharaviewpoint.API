@@ -22,5 +22,8 @@ namespace Saharaviewpoint.Models.App
 
         public SvpTask? Task { get; set; }
         public User? CreatedBy { get; set; }
+
+        [StringLength(5000)]
+        public string? Remark { get; set; }
     }
 }

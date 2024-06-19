@@ -12,17 +12,19 @@ using System.Net;
 using System.Security.Claims;
 using System.Text;
 using Serilog;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
-public class JWTMiddleware(RequestDelegate next)
+public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
 {
     private readonly RequestDelegate _next = next;
-    private ITokenHandler? _tokenHandler;
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
+    //private ITokenHandler? _tokenHandler;
 
-    public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig, ITokenHandler tokenHandler)
+    public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig)
     {
-        _tokenHandler = tokenHandler ?? throw new ArgumentNullException(nameof(tokenHandler));
+        //_tokenHandler = tokenHandler ?? throw new ArgumentNullException(nameof(tokenHandler));
 
         // continue if action called is anonymous.
         if (IsAnonymous(context))
@@ -73,9 +75,9 @@ public class JWTMiddleware(RequestDelegate next)
     {
         try
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtHandler = new JwtSecurityTokenHandler();
             byte[]? key = Encoding.ASCII.GetBytes(jwtConfig.Secret);
-            tokenHandler.ValidateToken(token, new TokenValidationParameters
+            jwtHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
@@ -96,26 +98,31 @@ public class JWTMiddleware(RequestDelegate next)
             // get request domain
             string? domain = context.Request.Headers["Origin"].ToString();
 
-            //check if token is valid
-            bool isValid = await _tokenHandler!.ValidateToken(uid, token, domain);
-            if (!isValid)
+            using (var scope = _scopeFactory.CreateScope())
             {
-                context.Items["User"] = null;
-                context.User = null;
-                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                return false;
-            };
+                var tokenHandler = scope.ServiceProvider.GetRequiredService<ITokenHandler>();
 
-            // attach account to context on successful jwt validation
-            context.Items["User"] = new
-            {
-                Uid = uid,
-                Id = int.Parse(id),
-                Type = type,
-                Roles = jwtToken.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToList()
-            };
+                //check if token is valid
+                bool isValid = await tokenHandler!.ValidateToken(uid, token, domain);
+                if (!isValid)
+                {
+                    context.Items["User"] = null;
+                    context.User = null;
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    return false;
+                };
 
-            return true;
+                // attach account to context on successful jwt validation
+                context.Items["User"] = new
+                {
+                    Uid = uid,
+                    Id = int.Parse(id),
+                    Type = type,
+                    Roles = jwtToken.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToList()
+                };
+
+                return true;
+            }
         }
         catch (Exception ex)
         {

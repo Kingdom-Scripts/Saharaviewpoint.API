@@ -14,6 +14,7 @@ public class SvpTask : BaseAppModel
     public DateTime ExpectedStartDate { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime DueDate { get; set; }
+    public DateTime DateCompleted { get; set; }
     public int? UpdatedById { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int Order { get; set; }
