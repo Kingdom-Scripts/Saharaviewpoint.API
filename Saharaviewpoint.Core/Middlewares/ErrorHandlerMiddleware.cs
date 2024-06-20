@@ -24,9 +24,9 @@ public class ErrorHandlerMiddleware
 
     public async Task Invoke(HttpContext context)
     {
+            await _next(context);
         try
         {
-            await _next(context);
         }
         catch (Exception error)
         {
