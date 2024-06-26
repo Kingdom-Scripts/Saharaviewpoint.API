@@ -8,14 +8,9 @@ namespace Saharaviewpoint.API.Controllers;
 [Route("api/v1/assets")]
 [ApiController]
 [AllowAnonymous] // TODO: remove this
-public class AssetsController : BaseController
+public class AssetsController(IFileService fileService) : BaseController
 {
-    private readonly IFileService _fileService;
-
-    public AssetsController(IFileService fileService)
-    {
-        _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-    }
+    private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
 
     [HttpPost("{folder}/{subFolder}")]
     public async Task<IActionResult> UploadAsset(string folder, string subFolder, IFormFile file)

@@ -386,5 +386,41 @@
         <member name="M:Saharaviewpoint.API.Migrations.Eighteen.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Nineteen">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Nineteen.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Nineteen.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Nineteen.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.Twenty">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Twenty.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Twenty.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.Twenty.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:Saharaviewpoint.API.Migrations.TwentyOne">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.TwentyOne.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.TwentyOne.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.TwentyOne.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

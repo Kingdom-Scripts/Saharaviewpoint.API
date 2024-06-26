@@ -1,4 +1,6 @@
-﻿namespace Saharaviewpoint.Models.View.Project;
+﻿using Newtonsoft.Json;
+
+namespace Saharaviewpoint.Models.View.Project;
 
 public class ProjectDetailView : ProjectView
 {
@@ -17,4 +19,7 @@ public class ProjectDetailView : ProjectView
     public string? SiteCondition { get; set; }
 
     public DocumentView? Design { get; set; }
+
+    [JsonIgnore]
+    public int CreatedById { get; set; }
 }

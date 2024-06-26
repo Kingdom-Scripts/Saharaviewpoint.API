@@ -9,16 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class ProjectTypeService : IProjectTypeService
+public class ProjectTypeService(SaharaviewpointContext context, UserSession userSession) : IProjectTypeService
 {
-    private readonly SaharaviewpointContext _context;
-    private readonly UserSession _userSession;
-
-    public ProjectTypeService(SaharaviewpointContext context, UserSession userSession)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-    }
+    private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
 
     public async Task<Result> CreateType(string name)
     {

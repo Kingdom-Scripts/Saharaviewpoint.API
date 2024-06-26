@@ -30,37 +30,31 @@ public static class ServiceExtensions
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
         // TODO: uncomment the code below to use Azure Key Vault to retrieve secrets
-        // set up database
-        // var keyVault = new KeyVaultConfig
-        // {
-        //     KeyVaultURL = configuration.GetSection("KeyVault:KeyVaultURL").Value,
-        //     ClientId = configuration.GetSection("KeyVault:ClientId").Value,
-        //     ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
-        //     DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
-        // };
-        //
-        // var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
-        //
-        // var keyVaultClient = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
+        //// set up database
+        //var keyVault = new KeyVaultConfig
+        //{
+        //    KeyVaultURL = configuration.GetSection("KeyVault:KeyVaultURL").Value,
+        //    ClientId = configuration.GetSection("KeyVault:ClientId").Value,
+        //    ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
+        //    DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
+        //};
 
-        // TODO: uncomment the code below to use connection string form Azure keyvauOylt
-        // services.AddDbContext<SaharaviewpointContext>(opt =>
-        // {
-        //     opt.UseSqlServer(keyVaultClient.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value,
-        //         b => b.MigrationsAssembly("Saharaviewpoint.API"));
-        //     opt.LogTo(Console.WriteLine, LogLevel.Information);
-        // });
+        //var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
 
-        // TODO: remove the block of code below
-        {
-            string connectionString = configuration.GetConnectionString("Saharaviewpoint") ?? string.Empty;
-            services.AddDbContext<SaharaviewpointContext>(opt =>
+        //var keyVaultClient = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
+
+        //string connectionString = keyVaultClient.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value;
+
+        // TODO: remove the connectionString variable below
+        string connectionString = configuration.GetConnectionString("Saharaviewpoint") ?? string.Empty;
+
+        services.AddDbContext<SaharaviewpointContext>((sp, opt) =>
             {
                 opt.UseSqlServer(connectionString,
                     b => b.MigrationsAssembly("Saharaviewpoint.API"));
+                opt.AddInterceptors(sp.GetRequiredService<SoftDeleteInterceptor>());
                 opt.LogTo(Console.WriteLine, LogLevel.Information);
             });
-        }
 
         // Add fluent validation.
         services.AddValidatorsFromAssembly(Assembly.Load("Saharaviewpoint.Core"));
@@ -135,6 +129,7 @@ public static class ServiceExtensions
 
         services.AddSingleton<ICacheService, CacheService>();
 
+        services.TryAddScoped<SoftDeleteInterceptor>();
         services.TryAddScoped<UserSession>();
         services.TryAddScoped<ITokenHandler, Services.TokenHandler>();
         services.TryAddScoped<IFileService, FileService>();

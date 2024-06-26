@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240623005943_Nineteen")]
+    partial class Nineteen
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +44,7 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("OwnerId")
+                    b.Property<int>("OwnerId")
                         .HasColumnType("int");
 
                     b.Property<string>("Purpose")
@@ -411,11 +414,11 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<DateTime>("DateCompleted")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("DeletedById")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasMaxLength(5000)
@@ -674,7 +677,9 @@ namespace Saharaviewpoint.API.Migrations
                 {
                     b.HasOne("Saharaviewpoint.Models.App.User", "Owner")
                         .WithMany()
-                        .HasForeignKey("OwnerId");
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Owner");
                 });

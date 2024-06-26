@@ -9,14 +9,9 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/users")]
-public class UserController : BaseController
+public class UserController(IUserService userService) : BaseController
 {
-    private readonly IUserService _userService;
-
-    public UserController(IUserService userService)
-    {
-        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
-    }
+    private readonly IUserService _userService = userService ?? throw new ArgumentNullException(nameof(userService));
 
     [HttpGet("project-managers")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<UserView>>))]
@@ -43,6 +38,33 @@ public class UserController : BaseController
     public async Task<IActionResult> AcceptInvitation(AcceptInvitationModel model)
     {
         var res = await _userService.AcceptInvitation(model);
+        return ProcessResponse(res);
+    }
+
+    [HttpPatch("{userUid}/suspend")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> SuspendUser(string userUid)
+    {
+        var res = await _userService.SuspendUser(userUid);
+        return ProcessResponse(res);
+    }
+
+    [HttpPatch("{userUid}/activate")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> ActivateUser(string userUid)
+    {
+        var res = await _userService.ActivateUser(userUid);
+        return ProcessResponse(res);
+    }
+
+    [HttpGet("check-email")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<bool>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> CheckIfEmailExist(string email)
+    {
+        var res = await _userService.CheckIfEmailExist(email);
         return ProcessResponse(res);
     }
 }

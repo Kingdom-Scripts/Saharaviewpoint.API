@@ -13,21 +13,13 @@ using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class ProjectService : IProjectService
+public class ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
+    IEmailService emailService) : IProjectService
 {
-    private readonly SaharaviewpointContext _context;
-    private readonly UserSession _userSession;
-    private readonly IFileService _fileService;
-    private readonly IEmailService _emailService;
-
-    public ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
-        IEmailService emailService)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-        _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
-    }
+    private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
+    private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
+    private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
 
     #region PROJECTS
 
@@ -143,6 +135,11 @@ public class ProjectService : IProjectService
 
         if (project == null)
             return new BadErrorResult("Project does not exist");
+
+        // return forbidden if it's client and not the owner
+        if (_userSession.AppType == AppTypes.Client 
+            && project.CreatedById != _userSession.UserId)
+            return new ForbiddenResult();
 
         var mappedProject = project.Adapt<ProjectDetailView>();
 

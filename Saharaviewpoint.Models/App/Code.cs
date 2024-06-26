@@ -20,8 +20,7 @@ public class Code : BaseAppModel
 
     public bool Used { get; set; } = false;
 
-    [Required]
-    public int OwnerId { get; set; }
+    public int? OwnerId { get; set; }
 
-    public User Owner { get; set; } = null!;
+    public User? Owner { get; set; }
 }

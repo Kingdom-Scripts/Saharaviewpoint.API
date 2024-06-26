@@ -20,12 +20,9 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
 {
     private readonly RequestDelegate _next = next;
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
-    //private ITokenHandler? _tokenHandler;
 
     public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig)
     {
-        //_tokenHandler = tokenHandler ?? throw new ArgumentNullException(nameof(tokenHandler));
-
         // continue if action called is anonymous.
         if (IsAnonymous(context))
         {

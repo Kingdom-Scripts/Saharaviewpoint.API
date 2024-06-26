@@ -1,17 +1,13 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Saharaviewpoint.Models.Constants;
 using Saharaviewpoint.Models.Input.Auth;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
-public class UserSessionMiddleware
+public class UserSessionMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public UserSessionMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
+    private readonly RequestDelegate _next = next;
 
     public async Task InvokeAsync(HttpContext context, UserSession session)
     {
@@ -24,6 +20,13 @@ public class UserSessionMiddleware
             session.Type = context.User.Claims.SingleOrDefault(c => c.Type == "type")?.Value;
             session.Name = context.User.Claims.SingleOrDefault(c => c.Type == "name")?.Value;
             session.Roles = context.User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToList();
+        }
+
+        // get the app type
+        string? token = context.Request.Headers["AppType"];
+        if (token is not null)
+        {
+            session.AppType = token == "Client" ? AppTypes.Client : AppTypes.Admin;
         }
 
         // Call the next delegate/middleware in the pipeline

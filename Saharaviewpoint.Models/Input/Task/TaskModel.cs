@@ -7,6 +7,7 @@ namespace Saharaviewpoint.Models.Input.Task;
 public class TaskModel
 {
     public int ProjectId { get; set; }
+    public int? ParentId { get; set; }
     public required string Type { get; set; }
     public required string Summary { get; set; }
     public string? Description { get; set; }
@@ -22,6 +23,10 @@ public class TaskModelValidator : AbstractValidator<TaskModel>
     {
         RuleFor(model => model.ProjectId)
             .NotEmpty().WithMessage("Project is required");
+
+        // ParentId should be required if Type is SubTask
+        RuleFor(model => model.ParentId)
+            .NotEmpty().When(model => model.Type == "SubTask").WithMessage("Which task does this task belong to?");
 
         RuleFor(model => model.Type)
             .NotEmpty().WithMessage("Type is required")

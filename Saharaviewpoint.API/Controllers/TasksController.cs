@@ -13,12 +13,9 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/tasks")]
-public class TasksController : BaseController
+public class TasksController(ITaskService taskService) : BaseController
 {
-    private readonly ITaskService _taskService;
-
-    public TasksController(ITaskService taskService) =>
-        _taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
+    private readonly ITaskService _taskService = taskService ?? throw new ArgumentNullException(nameof(taskService));
 
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<TaskDetailView>))]
@@ -44,6 +41,15 @@ public class TasksController : BaseController
     public async Task<IActionResult> GetTask(int taskId)
     {
         var result = await _taskService.GetTask(taskId);
+        return ProcessResponse(result);
+    }
+
+    [HttpDelete("{taskId}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> DeleteTask(int taskId)
+    {
+        var result = await _taskService.DeleteTask(taskId);
         return ProcessResponse(result);
     }
 

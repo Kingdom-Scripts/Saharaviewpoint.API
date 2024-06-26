@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240623010731_Twenty")]
+    partial class Twenty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,11 +414,11 @@ namespace Saharaviewpoint.API.Migrations
                     b.Property<DateTime>("DateCompleted")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("DeletedById")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("DeletedOnUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasMaxLength(5000)

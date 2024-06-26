@@ -4,16 +4,10 @@ using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class BusinessService
+public class BusinessService(UserSession userSession, SaharaviewpointContext context)
 {
-    private readonly SaharaviewpointContext _context;
-    private readonly UserSession _userSession;
-
-    public BusinessService(UserSession userSession, SaharaviewpointContext context)
-    {
-            _userSession = userSession;
-            _context = context;
-        }
+    private readonly SaharaviewpointContext _context = context;
+    private readonly UserSession _userSession = userSession;
 
     public Task<Result> CreateBusiness()
     {

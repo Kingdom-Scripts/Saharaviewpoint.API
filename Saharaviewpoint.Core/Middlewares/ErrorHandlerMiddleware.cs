@@ -7,20 +7,15 @@ using System.Text.Json;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
-public class ErrorHandlerMiddleware
+public class ErrorHandlerMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
+    private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
 
     private readonly JsonSerializerOptions _options = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
-
-    public ErrorHandlerMiddleware(RequestDelegate next)
-    {
-        _next = next ?? throw new ArgumentNullException(nameof(next));
-    }
 
     public async Task Invoke(HttpContext context)
     {
@@ -68,22 +63,8 @@ public class ErrorHandlerMiddleware
             }, _options);
 
             // Set the response content type to JSON
-            context.Response.ContentType = "application/json";
-
-            // Write the JSON response
-            await context.Response.WriteAsync(result);
-        } 
-        else if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
-        {
-            string? result = JsonSerializer.Serialize(new ErrorResult
-            {
-                Success = false,
-                Message = "You are not authorized to access this resource.",
-                Status = StatusCodes.Status403Forbidden
-            }, _options);
-
-            // Set the response content type to JSON
-            context.Response.ContentType = "application/json";
+            if (!context.Response.HasStarted)
+                context.Response.ContentType = "application/json";
 
             // Write the JSON response
             await context.Response.WriteAsync(result);

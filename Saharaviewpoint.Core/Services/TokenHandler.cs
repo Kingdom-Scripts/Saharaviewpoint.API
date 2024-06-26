@@ -17,18 +17,11 @@ using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class TokenHandler : ITokenHandler
+public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor) : ITokenHandler
 {
-    private readonly JwtConfig _jwtConfig;
-    private readonly SaharaviewpointContext _context;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor)
-    {
-        _jwtConfig = jwtConfig.Value;
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-    }
+    private readonly JwtConfig _jwtConfig = jwtConfig.Value;
+    private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
 
     public async Task<Result> GenerateJwtToken(User user)
     {

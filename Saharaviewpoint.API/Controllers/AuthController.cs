@@ -10,14 +10,9 @@ namespace Saharaviewpoint.API.Controllers;
 [ApiController]
 [Route("api/v1/auth")]
 [Authorize]
-public class AuthController : BaseController
+public class AuthController(IAuthService authService) : BaseController
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-    }
+    private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
     [HttpPost("sign-up")]
     [AllowAnonymous]

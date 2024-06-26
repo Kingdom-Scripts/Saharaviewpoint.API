@@ -1,4 +1,5 @@
 ﻿using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Models.Input.Auth;
 
@@ -10,7 +11,7 @@ public class UserSession
     public string Type { get; set; } = null!;
     public string? BusinessCode { get; set; }
 
-    private List<string> _roles = new();
+    private List<string> _roles = [];
 
     public List<string> Roles
     {
@@ -26,4 +27,6 @@ public class UserSession
     public bool IsClient => InRole(RolesConstants.Client);
     public bool IsSuperAdmin => InRole(RolesConstants.SuperAdmin);
     public bool IsSvpAdmin => InRole(RolesConstants.SvpAdmin);
+
+    public AppTypes? AppType { get; set; }
 }

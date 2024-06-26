@@ -9,14 +9,9 @@ namespace Saharaviewpoint.API.Controllers;
 
 [ApiController]
 [Route("api/v1/projects")]
-public class ProjectsController : BaseController
+public class ProjectsController(IProjectService projectService) : BaseController
 {
-    private readonly IProjectService _projectService;
-
-    public ProjectsController(IProjectService projectService)
-    {
-        _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
-    }
+    private readonly IProjectService _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
 
     #region PROJECTS
     [HttpGet]

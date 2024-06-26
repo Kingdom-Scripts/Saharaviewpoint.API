@@ -4,14 +4,9 @@ using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class CacheService : ICacheService
+public class CacheService(IAppCache cache) : ICacheService
 {
-    private readonly IAppCache _cache;
-
-    public CacheService(IAppCache cache)
-    {
-        _cache = cache;
-    }
+    private readonly IAppCache _cache = cache;
 
     public void AddToken(string key, string token, DateTime expiresAt)
         => _cache.Add($"{AuthKeys.CacheKey}:{key}", token, expiresAt);

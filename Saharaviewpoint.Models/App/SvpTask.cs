@@ -1,8 +1,9 @@
+using Saharaviewpoint.Models.Interfaces;
 using System.ComponentModel.DataAnnotations;
 
 namespace Saharaviewpoint.Models.App;
 
-public class SvpTask : BaseAppModel
+public class SvpTask : BaseAppModel, ISoftDeletable
 {
     [Required] public int ProjectId { get; set; }
     public int? ParentId { get; set; }
@@ -19,9 +20,9 @@ public class SvpTask : BaseAppModel
     public DateTime? UpdatedAt { get; set; }
     public int Order { get; set; }
 
-    [Required] public bool IsDeleted { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
     public int? DeletedById { get; set; }
-    public DateTime? DateDeleted { get; set; }
+    public DateTime? DeletedOnUtc { get; set; }
 
     public SvpTask? Parent { get; set; }
     public User? CreatedBy { get; set; }

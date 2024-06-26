@@ -87,10 +87,16 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         var query = _context.Tasks
             .Where(t => t.ProjectId == request.ProjectId)
+            .Where(t => !t.IsDeleted)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(request.Status))
-            query = query.Where(t => t.Status == request.Status);
+        // filter by status
+        query = query.Where(t => !request.Statuses.Any()
+                    || request.Statuses.Contains(t.Status));
+
+        // filter by type
+        query = query.Where(t => !request.Types.Any()
+                   || request.Types.Contains(t.Type));
 
         if (!string.IsNullOrEmpty(request.SearchQuery))
             query = query.Where(t => t.Summary.Contains(request.SearchQuery));
@@ -106,7 +112,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
     public async Task<Result> GetTask(int taskId)
     {
         var task = await _context.Tasks
-            .Where(t => t.Id == taskId)
+            .Where(t => t.Id == taskId && !t.IsDeleted)
             .ProjectToType<TaskDetailView>()
             .FirstOrDefaultAsync();
 
@@ -114,6 +120,24 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
             return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
 
         return new SuccessResult(task);
+    }
+
+    public async Task<Result> DeleteTask(int taskId)
+    {
+        var task = await _context.Tasks.FindAsync(taskId);
+        if (task is not null)
+        {
+            // TODO: fix this
+            //_context.Remove(task);
+
+
+            task.IsDeleted = true;
+            task.DeletedById = _userSession.UserId;
+            task.DeletedOnUtc = DateTime.UtcNow;
+        }
+        await _context.SaveChangesAsync();
+
+        return new SuccessResult();
     }
 
     public async Task<Result> ListAttachments(int taskId)
@@ -208,7 +232,8 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
-    public async Task<Result> ListLogs(int taskId, PagingOptionModel request) { 
+    public async Task<Result> ListLogs(int taskId, PagingOptionModel request)
+    {
         var logs = await _context.TaskLogs
             .Where(tl => tl.TaskId == taskId)
             .OrderByDescending(tl => tl.CreatedAt)
@@ -279,6 +304,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
     {
         var task = await _context.Tasks
             .Where(t => t.Id == taskId)
+            .Include(t => t.Parent)
             .FirstOrDefaultAsync();
 
         if (task is null)
@@ -301,11 +327,21 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
                 return new ErrorResult("Reason is required when going back to previous status");
         }
 
-        if (task.Status == TaskStatusEnum.COMPLETED) 
+        if (task.Status == TaskStatusEnum.COMPLETED)
             task.DateCompleted = DateTime.UtcNow;
+
+        // move epic if task belongs to an epic
+        if (task.Status == TaskStatusEnum.IN_PROGRESS && task.Parent != null && task.Parent.Type == TaskTypeEnum.EPIC && task.Parent.Status != TaskStatusEnum.IN_PROGRESS)
+        {
+            task.Parent.Status = TaskStatusEnum.IN_PROGRESS;
+            AddTaskLog(task.Parent, $"{_userSession.Name} changed task status to {TaskStatusEnum.IN_PROGRESS}");
+        }
 
         // add log
         AddTaskLog(task, $"{_userSession.Name} changed task status to {model.Status}", previousState, model.Status, model.Reason);
+
+        task.UpdatedAt = DateTime.UtcNow;
+        task.UpdatedById = _userSession.UserId;
 
         int saved = await _context.SaveChangesAsync();
 

@@ -29,7 +29,7 @@ public class BaseController : ControllerBase
         }
         else if (result.Status == StatusCodes.Status403Forbidden)
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, result);
+            return StatusCode(StatusCodes.Status403Forbidden, result);
         }
         else if (result.Status == StatusCodes.Status404NotFound)
         {

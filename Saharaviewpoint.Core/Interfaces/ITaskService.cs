@@ -10,6 +10,7 @@ public interface ITaskService
     Task<Result> CreateTask(TaskModel model);
     Task<Result> ListTasks(TaskSearchModel request);
     Task<Result> GetTask(int taskId);
+    Task<Result> DeleteTask(int taskId);
     Task<Result> ListAttachments(int taskId);
     Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model, IProgress<int> progress);
     Task<Result> RemoveAttachmentFromTask(int taskId, int documentId);
