@@ -346,7 +346,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
-            ? new SuccessResult()
+            ? new SuccessResult(task.Adapt<TaskView>())
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
