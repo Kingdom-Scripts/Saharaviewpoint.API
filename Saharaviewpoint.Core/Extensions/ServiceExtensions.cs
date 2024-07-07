@@ -137,7 +137,7 @@ public static class ServiceExtensions
 
         services.TryAddTransient<IAuthService, AuthService>();
         services.TryAddTransient<IProjectService, ProjectService>();
-        services.TryAddTransient<IUserService, UserService>();
+        services.TryAddTransient<IProjectManagerService, ProjectManagerService>();
         services.TryAddTransient<ITaskService, TaskService>();
         services.TryAddTransient<IClientService, ClientService>();
 

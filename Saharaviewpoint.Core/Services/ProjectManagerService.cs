@@ -8,34 +8,36 @@ using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input.User;
 using Saharaviewpoint.Models.Utilities;
-using Saharaviewpoint.Models.View.Auth;
 using Saharaviewpoint.Models.View.User;
 using Saharaviewpoint.Core.Utilities;
-using System.Text;
-using System.Web;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Input.ProjectManager;
 
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: write an endpoint to return pending invitations
 
-public class UserService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession) : IUserService
+public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession) : IProjectManagerService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     private readonly ITokenHandler _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
 
-    public async Task<Result> ListProjectManagersAsync(string? searchQuery, int pageIndex, int pageSize)
+    public async Task<Result> ListProjectManagers(ProjectManagerSearchModel request)
     {
         var projectManagers = await _context.UserRoles
             .Where(uRole => uRole.RoleId == (int)Roles.SvpManager)
-            .Where(uRole => string.IsNullOrEmpty(searchQuery)
-                            || uRole.User.Email.Contains(searchQuery)
-                            || (uRole.User.FirstName!.Contains(searchQuery))
-                            || (uRole.User.LastName!.Contains(searchQuery)))
-            .SelectMany(uRole => uRole.User.Projects.DefaultIfEmpty(), (userRole, project) => new
+            .Where(uRole => string.IsNullOrEmpty(request.SearchQuery)
+                            || uRole.User!.Email.Contains(request.SearchQuery)
+                            || (uRole.User.FirstName!.Contains(request.SearchQuery))
+                            || (uRole.User.LastName!.Contains(request.SearchQuery)))
+            .Where(u => !request.DateJoinedStart.HasValue || u.User!.CreatedAt >= request.DateJoinedStart.Value.ToUniversalTime())
+            .Where(u => !request.DateJoinedEnd.HasValue || u.User!.CreatedAt <= request.DateJoinedEnd.Value.ToUniversalTime())
+            .Where(u => !request.IsActiveOnly || u.User!.IsActive == true)
+            .Where(u => !request.IsInactiveOnly || u.User!.IsActive == false)
+            .SelectMany(uRole => uRole.User!.Projects.DefaultIfEmpty(), (userRole, project) => new
             {
                 User = userRole.User,
                 Project = project
@@ -43,7 +45,7 @@ public class UserService(SaharaviewpointContext context, IOptions<AppConfig> app
             .GroupBy(x => x.User)
             .Select(g => new ProjectManagerView
             {
-                Id = g.Key.Id,
+                Id = g.Key!.Id,
                 Uid = g.Key.Uid,
                 FirstName = g.Key.FirstName,
                 LastName = g.Key.LastName,
@@ -52,12 +54,12 @@ public class UserService(SaharaviewpointContext context, IOptions<AppConfig> app
                 IsActive = g.Key.IsActive
             })
             .OrderBy(u => u.FirstName)
-            .ToPaginatedListAsync(pageIndex, pageSize);
+            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
 
         return new SuccessResult(projectManagers);
     }
 
-    public async Task<Result> InviteProjectManagerAsync(ProjectManagerModel model)
+    public async Task<Result> InviteProjectManager(ProjectManagerModel model)
     {
         // confirm email doesn't exist
         bool emailExist = await _context.Users
