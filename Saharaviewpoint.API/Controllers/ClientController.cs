@@ -19,4 +19,22 @@ public class ClientController(IClientService clientService) : BaseController
         var result = await _clientService.ListClients(paging);
         return ProcessResponse(result);
     }
+
+    [HttpPatch("{uid}/deactivate")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> DeactivateClient(string uid)
+    {
+        var result = await _clientService.DeactivateClient(uid);
+        return ProcessResponse(result);
+    }
+
+    [HttpPatch("{uid}/activate")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> ActivateClient(string uid)
+    {
+        var result = await _clientService.ActivateClient(uid);
+        return ProcessResponse(result);
+    }
 }

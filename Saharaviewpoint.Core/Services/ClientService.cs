@@ -1,4 +1,5 @@
-﻿using Saharaviewpoint.Core.Extensions;
+﻿using Microsoft.EntityFrameworkCore;
+using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
@@ -38,5 +39,29 @@ public class ClientService(SaharaviewpointContext context, UserSession userSessi
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
 
         return new SuccessResult(clients);
+    }
+
+    public async Task<Result> DeactivateClient(string uid)
+    {
+        var client = await _context.Users.FirstOrDefaultAsync(u => u.Uid.ToString() == uid);
+        if (client == null)
+            return new ErrorResult("Client not found");
+
+        client.IsActive = false;
+        await _context.SaveChangesAsync();
+
+        return new SuccessResult();
+    }
+
+    public async Task<Result> ActivateClient(string uid)
+    {
+        var client = await _context.Users.FirstOrDefaultAsync(u => u.Uid.ToString() == uid);
+        if (client == null)
+            return new ErrorResult("Client not found");
+
+        client.IsActive = true;
+        await _context.SaveChangesAsync();
+
+        return new SuccessResult();
     }
 }
