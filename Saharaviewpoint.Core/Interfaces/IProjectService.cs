@@ -1,4 +1,5 @@
-﻿using Saharaviewpoint.Models.Input.Project;
+﻿using Saharaviewpoint.Models.Input;
+using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Interfaces;
@@ -24,6 +25,8 @@ public interface IProjectService
     Task<Result> ReassignProject(int id, ReassignProjectModel model);
 
     Task<Result> UpdateProjectStatus(int id, ProjectStatusModel model);
+
+    Task<Result> ListProjectLogs(int id, PagingOptionModel request);
 
     #endregion PROJECTS
 

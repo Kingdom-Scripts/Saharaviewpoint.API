@@ -17,6 +17,7 @@ public interface ITaskService
     Task<Result> ListLogs(int taskId, PagingOptionModel request);
     Task<Result> ListBoardTasks(int projectId);
     Task<Result> ChangeTaskStatus(int taskId, TaskStatusModel model);
+    Task<Result> ChangeDueDate(int taskId, TaskDueDateModel model);
     Task<Result> AddComment(int taskId, CommentModel model);
     Task<Result> RemoveComment(int taskId, int commentId);
     Task<Result> ListComments(int taskId, PagingOptionModel request);

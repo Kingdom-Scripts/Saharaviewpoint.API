@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Project;
@@ -85,6 +86,15 @@ public class ProjectsController(IProjectService projectService) : BaseController
     public async Task<IActionResult> UpdateProjectStatus(int id, [FromBody] ProjectStatusModel model)
     {
         var result = await _projectService.UpdateProjectStatus(id, model);
+        return ProcessResponse(result);
+    }
+
+    [HttpGet("{id:int}/logs")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<PtojectLogView>>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> ListProjectLogs(int id, [FromQuery] PagingOptionModel request)
+    {
+        var result = await _projectService.ListProjectLogs(id, request);
         return ProcessResponse(result);
     }
 

@@ -10,6 +10,8 @@ using Saharaviewpoint.Models.View.Project;
 using Microsoft.EntityFrameworkCore;
 using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.Constants;
+using Saharaviewpoint.Models.Input;
+using Saharaviewpoint.Models.View.Task;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -267,6 +269,17 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         return saved > 0
             ? new SuccessResult()
             : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
+    public async Task<Result> ListProjectLogs(int id, PagingOptionModel request)
+    {
+        var logs = await _context.TaskLogs
+            .Where(tl => tl.Task!.ProjectId == id)
+            .OrderByDescending(tl => tl.CreatedAt)
+            .ProjectToType<PtojectLogView>()
+            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+
+        return new SuccessResult(logs);
     }
 
     #endregion

@@ -350,6 +350,33 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
+    public async Task<Result> ChangeDueDate(int taskId, TaskDueDateModel model)
+    {
+        var task = await _context.Tasks
+            .Where(t => t.Id == taskId)
+            .FirstOrDefaultAsync();
+
+        if (task is null)
+            return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
+
+        if (task.DueDate == model.DueDate)
+            return new ErrorResult("Task is already due on the selected date");
+
+        var previousDue = task.DueDate;
+        task.DueDate = model.DueDate;
+        task.UpdatedAt = DateTime.UtcNow;
+        task.UpdatedById = _userSession.UserId;
+
+        // add log
+        AddTaskLog(task, $"{_userSession.Name} changed due date to {model.DueDate}", previousDue.ToString("MMM dd, yyyy"), task.DueDate.ToString("MMM dd, yyyy"), model.Reason);
+
+        int saved = await _context.SaveChangesAsync();
+
+        return saved > 0
+            ? new SuccessResult(task.Adapt<TaskView>())
+            : new ErrorResult("Unable to save changes, please try again later.");
+    }
+
     #region Comments
 
     public async Task<Result> AddComment(int taskId, CommentModel model)

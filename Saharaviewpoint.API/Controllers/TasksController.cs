@@ -137,6 +137,15 @@ public class TasksController(ITaskService taskService) : BaseController
         return ProcessResponse(result);
     }
 
+    [HttpPatch("{taskId}/due-date")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<TaskView>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> ChangeDueDate(int taskId, [FromBody] TaskDueDateModel model)
+    {
+        var result = await _taskService.ChangeDueDate(taskId, model);
+        return ProcessResponse(result);
+    }
+
     [HttpPost("{taskId}/comments")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<TaskCommentView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
