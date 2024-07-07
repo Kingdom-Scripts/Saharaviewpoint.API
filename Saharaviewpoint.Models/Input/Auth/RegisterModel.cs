@@ -15,8 +15,12 @@ public class RegisterModelValidation : AbstractValidator<RegisterModel>
 {
     public RegisterModelValidation()
     {
-        RuleFor(x => x.FirstName).Length(2, 20);
-        RuleFor(x => x.LastName).Length(2, 20);
+        RuleFor(x => x.FirstName)
+            .NotEmpty().WithMessage("Your first name is required.")
+            .Length(2, 20).WithMessage("Your first name must be between 2 and 20 characters.");
+        RuleFor(x => x.LastName)
+            .NotEmpty().WithMessage("Your last name is required.")
+            .Length(2, 20).WithMessage("Your last name must be between 2 and 20 characters.");
         RuleFor(x => x.Email).EmailAddress();
         RuleFor(x => x.ConfirmPassword).Equal(p => p.Password);
         RuleFor(x => x.Password)

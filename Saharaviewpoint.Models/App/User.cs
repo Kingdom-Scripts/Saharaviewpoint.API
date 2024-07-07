@@ -14,10 +14,10 @@ public class User : BaseAppModel
     public required string Type { get; set; }
 
     [MaxLength(50)]
-    public string? FirstName { get; set; }
+    public required string FirstName { get; set; }
 
     [MaxLength(50)]
-    public string? LastName { get; set; }
+    public required string LastName { get; set; }
 
     [MaxLength(25)]
     public string? Phone { get; set; }
@@ -32,7 +32,7 @@ public class User : BaseAppModel
     [Required]
     public DateTime LastLoginDate { get; set; } = DateTime.UtcNow;
 
-    public ICollection<UserRole>? UserRoles { get; set; }
+    public ICollection<UserRole> UserRoles { get; set; } = [];
 
-    public ICollection<Project> Projects { get; set; } = new List<Project>();
+    public ICollection<Project> Projects { get; set; } = [];
 }

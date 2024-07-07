@@ -23,7 +23,6 @@ namespace Saharaviewpoint.Core.Services;
 public class UserService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession) : IUserService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
-    private readonly AppConfig _appConfig = appConfig.Value;
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     private readonly ITokenHandler _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));

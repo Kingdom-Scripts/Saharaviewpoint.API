@@ -8,7 +8,7 @@ public class Project : BaseAppModel
 {
     [Required]
     [MaxLength(50)]
-    public string Title { get; set; }
+    public string Title { get; set; } = null!;
 
     [MaxLength(5000)]
     public string? Description { get; set; }

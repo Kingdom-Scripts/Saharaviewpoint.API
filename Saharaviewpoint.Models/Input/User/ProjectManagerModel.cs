@@ -16,11 +16,11 @@ public class ProjectManagerModelValidator : AbstractValidator<ProjectManagerMode
     {
         RuleFor(model => model.FirstName)
             .NotEmpty().WithMessage("First name cannot be empty.")
-            .MaximumLength(50).WithMessage("Maximum of 50 characters");
+            .Length(2, 20).WithMessage("First name must be between 2 and 20 characters.");
 
         RuleFor(model => model.LastName)
             .NotEmpty().WithMessage("Last name cannot be empty.")
-            .MaximumLength(50).WithMessage("Maximum of 50 characters");
+            .Length(2, 20).WithMessage("Last name must be between 2 and 20 characters.");
 
         RuleFor(model => model.Email)
             .EmailAddress();

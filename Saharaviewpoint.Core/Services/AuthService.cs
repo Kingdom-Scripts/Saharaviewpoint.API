@@ -40,13 +40,14 @@ public class AuthService : IAuthService
     {
         // validate user with email doesn't exist
         bool userExist = await _context.Users
-            .AnyAsync(u => u.Email.ToLower().Trim() == model.Email.ToLower().Trim());
+            .AnyAsync(u => u.Email == model.Email.ToLower().Trim());
 
         if (userExist)
             return new ErrorResult("An account with this email already exist. Please log in instead.");
 
         // create user object
         var user = model.Adapt<User>();
+        user.Email = user.Email.ToLower().Trim();
         user.Type = UserTypes.CLIENT;
         user.HashedPassword = model.Password.HashPassword();
 
@@ -75,9 +76,9 @@ public class AuthService : IAuthService
     public async Task<Result> AuthenticateUser(LoginModel model)
     {
         model.Email = model.Email.ToLower().Trim();
-        User user = await _context.Users
+        User? user = await _context.Users
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == model.Email);
+            .FirstOrDefaultAsync(u => u.Email == model.Email);
 
         if (user == null)
             return new ErrorResult("Login Failed:", "Invalid credentials.");

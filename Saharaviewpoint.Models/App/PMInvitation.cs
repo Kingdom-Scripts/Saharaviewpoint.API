@@ -9,10 +9,10 @@ public class PMInvitation : BaseAppModel
     public required string Email { get; set; }
 
     [MaxLength(50)]
-    public string? FirstName { get; set; }
+    public required string FirstName { get; set; }
 
     [MaxLength(50)]
-    public string? LastName { get; set; }
+    public required string LastName { get; set; }
 
     [MaxLength(25)]
     public string? Phone { get; set; }

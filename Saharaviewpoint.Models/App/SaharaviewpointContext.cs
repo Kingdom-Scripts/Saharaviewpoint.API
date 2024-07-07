@@ -57,11 +57,27 @@ public class SaharaviewpointContext : DbContext
             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
             c => c.ToList());
 
+        // Configure the FolderNames property to use the value comparer
         builder
             .Entity<Project>()
             .Property(e => e.FolderNames)
             .Metadata
             .SetValueComparer(valueComparer);
+
+        builder.Entity<Project>()
+            .HasOne(p => p.CreatedBy)
+            .WithMany()
+            .HasForeignKey(p => p.CreatedById);
+
+        builder.Entity<Project>()
+            .HasOne(p => p.UpdatedBy)
+            .WithMany()
+            .HasForeignKey(p => p.UpdatedById);
+
+        builder.Entity<Project>()
+            .HasOne(p => p.DeletedBy)
+            .WithMany()
+            .HasForeignKey(p => p.DeletedById);
 
         builder.Entity<Document>()
             .ToTable(p =>
