@@ -13,4 +13,5 @@ public class ProjectManagerView
     public required string Email { get; set; }
     public int NoOfProjects { get; set; } = 0;
     public bool IsActive { get; set; }
+    public DateTime DateJoined { get; set; }
 }

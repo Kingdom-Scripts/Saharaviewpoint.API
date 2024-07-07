@@ -51,7 +51,8 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
                 LastName = g.Key.LastName,
                 Email = g.Key.Email,
                 NoOfProjects = g.Count(p => p.Project != null),
-                IsActive = g.Key.IsActive
+                IsActive = g.Key.IsActive,
+                DateJoined = g.Key.CreatedAt
             })
             .OrderBy(u => u.FirstName)
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
