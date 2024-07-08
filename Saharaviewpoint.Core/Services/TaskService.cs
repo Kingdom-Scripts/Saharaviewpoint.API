@@ -359,6 +359,9 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         if (task is null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
 
+        if (task.Status == TaskStatusEnum.COMPLETED) 
+            return new ErrorResult("Task is already completed, cannot change due date.");
+
         if (task.DueDate == model.DueDate)
             return new ErrorResult("Task is already due on the selected date");
 
