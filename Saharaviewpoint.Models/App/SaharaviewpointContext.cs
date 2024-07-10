@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Constants;
+using System.Reflection.Emit;
 
 namespace Saharaviewpoint.Models.App;
 
@@ -21,7 +22,9 @@ public class SaharaviewpointContext : DbContext
     public required DbSet<UserRole> UserRoles { get; set; }
     public required DbSet<RefreshToken> RefreshTokens { get; set; }
     public required DbSet<Project> Projects { get; set; }
+    public required DbSet<ProjectLog> ProjectLogs { get; set; }
     public required DbSet<ProjectType> ProjectTypes { get; set; }
+    public required DbSet<ProjectTaskApproval> ProjectTaskApprovals { get; set; }
     public required DbSet<Document> Documents { get; set; }
     public required DbSet<PMInvitation> PMInvitations { get; set; }
     public required DbSet<Code> Codes { get; set; }
@@ -78,6 +81,27 @@ public class SaharaviewpointContext : DbContext
             .HasOne(p => p.DeletedBy)
             .WithMany()
             .HasForeignKey(p => p.DeletedById);
+
+        builder.Entity<ProjectLog>()
+            .ToTable(pl => pl.HasCheckConstraint("CK_Project_Log", $"[Type] IN ('{ProjectLogTypes.Create}', '{ProjectLogTypes.Update}', '{ProjectLogTypes.Delete}', '{ProjectLogTypes.Assignment}', '{ProjectLogTypes.StatusChange}', '{ProjectLogTypes.Approvals}')"))
+             .HasOne(t => t.CreatedBy)
+            .WithMany()
+            .HasForeignKey(t => t.CreatedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // Configure the foreign key for Requester
+        builder.Entity<ProjectTaskApproval>()
+            .HasOne(pta => pta.Requester)
+            .WithMany()
+            .HasForeignKey(pta => pta.RequesterId)
+            .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete
+
+        // Configure the foreign key for FulfilledBy
+        builder.Entity<ProjectTaskApproval>()
+            .HasOne(pta => pta.FulfilledBy)
+            .WithMany()
+            .HasForeignKey(pta => pta.FulfilledById)
+            .OnDelete(DeleteBehavior.Restrict); // Prevent cascading
 
         builder.Entity<Document>()
             .ToTable(p =>

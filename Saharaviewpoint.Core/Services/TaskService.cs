@@ -371,7 +371,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         task.UpdatedById = _userSession.UserId;
 
         // add log
-        AddTaskLog(task, $"{_userSession.Name} changed due date to {model.DueDate}", previousDue.ToString("MMM dd, yyyy"), task.DueDate.ToString("MMM dd, yyyy"), model.Reason);
+        AddTaskLog(task, $"{_userSession.Name} changed due date to {model.DueDate.ToString("MMM dd, yyyy")}", previousDue.ToString("MMM dd, yyyy"), task.DueDate.ToString("MMM dd, yyyy"), model.Reason);
 
         int saved = await _context.SaveChangesAsync();
 

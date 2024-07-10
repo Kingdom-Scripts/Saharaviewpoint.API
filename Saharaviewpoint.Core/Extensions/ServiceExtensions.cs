@@ -1,5 +1,3 @@
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,16 +10,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Core.Services;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
-using Saharaviewpoint.Models.View;
 using Saharaviewpoint.Models.View.Task;
+using Saharaviewpoint.Models.View.Project;
 
 namespace Saharaviewpoint.Core.Extensions;
 
@@ -127,6 +123,13 @@ public static class ServiceExtensions
             .NewConfig()
             .Map(dest => dest.Children, src => src.Children.Adapt<IEnumerable<TaskCommentView>>());
 
+        TypeAdapterConfig<ProjectTaskApproval, ProjectTaskApprovalView>
+            .NewConfig()
+            .Map(dest => dest.ProjectTitle, src => src.Project != null ? src.Project.Title : "")
+            .Map(dest => dest.RequesterName, src => src.Requester != null ? $"{src.Requester!.FirstName} {src.Requester.LastName}" : "")
+            .Map(dest => dest.RequestedOn, src => src.CreatedAt)
+            .Map(dest => dest.FulfilledByName, src => src.FulfilledBy != null ? $"{src.FulfilledBy.FirstName} {src.FulfilledBy.LastName}" : null);
+
         services.AddSingleton<ICacheService, CacheService>();
 
         services.TryAddScoped<SoftDeleteInterceptor>();
@@ -140,6 +143,7 @@ public static class ServiceExtensions
         services.TryAddTransient<IProjectManagerService, ProjectManagerService>();
         services.TryAddTransient<ITaskService, TaskService>();
         services.TryAddTransient<IClientService, ClientService>();
+        services.TryAddTransient<IApprovalService, ApprovalService>();
 
         return services;
     }

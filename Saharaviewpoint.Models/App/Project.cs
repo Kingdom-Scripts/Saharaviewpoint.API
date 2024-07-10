@@ -56,12 +56,12 @@ public class Project : BaseAppModel
 
     public DateTime? DateDeleted { get; set; }
 
-    public ProjectType Type { get; set; }
+    public string? RejectionReason { get; set; }
 
-    // TODO, make this required
     [MaxLength(255)]
     public List<string> FolderNames { get; set; } = new();
 
+    public ProjectType? Type { get; set; }
     public User? Assignee { get; set; }
     public Document? Design { get; set; }
 

@@ -12,6 +12,7 @@ using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.Constants;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.View.Task;
+using Saharaviewpoint.Models.App.Constants;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -60,6 +61,10 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             mappedProject.Design = designUpload.Content;
         }
 
+        // add log
+        AddProjectLog(mappedProject, ProjectLogTypes.Create, $"Project created {_userSession.Name}");
+
+        // save project to databse
         await _context.AddAsync(mappedProject);
 
         int saved = await _context.SaveChangesAsync();
@@ -85,7 +90,13 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         project.AssigneeId = assignee.Id;
         project.Status = ProjectStatuses.InProgress;
+        project.UpdatedById = _userSession.UserId;
+        project.UpdatedOn = DateTime.UtcNow;
 
+        // add log
+        AddProjectLog(project, ProjectLogTypes.Assignment, $"Project assigned to {assignee.FirstName} {assignee.LastName}");
+
+        // save changes to the database
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
@@ -102,7 +113,12 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             return new BadErrorResult("Project does not exist");
 
         project.Status = ProjectStatuses.Rejected;
-        // project.RejectionReason = model.Reason; TODO: finish this and test
+        project.RejectionReason = model.Reason;  // TODO: test this
+        project.UpdatedById = _userSession.UserId;
+        project.UpdatedOn = DateTime.UtcNow;
+
+        // add log
+        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project rejected by {_userSession.Name}", remark: model.Reason);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -118,9 +134,16 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (project == null)
             return new BadErrorResult("Project does not exist");
 
+        // user can only delete their own project
+        if (project.CreatedById != _userSession.UserId)
+            return new ErrorResult(StatusCodes.Status403Forbidden, "You are not authorized to delete this project.");
+
         project.IsDeleted = true;
         project.DeletedById = _userSession.UserId;
         project.DateDeleted = DateTime.UtcNow;
+
+        // add log
+        AddProjectLog(project, ProjectLogTypes.Delete, $"Project deleted by {_userSession.Name}");
 
         int saved = await _context.SaveChangesAsync();
 
@@ -139,7 +162,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             return new BadErrorResult("Project does not exist");
 
         // return forbidden if it's client and not the owner
-        if (_userSession.AppType == AppTypes.Client 
+        if (_userSession.AppType == AppTypes.Client
             && project.CreatedById != _userSession.UserId)
             return new ForbiddenResult();
 
@@ -200,24 +223,35 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ReassignProject(int id, ReassignProjectModel model)
     {
-        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+        var project = await _context.Projects.Where(p => p.Id == id && !p.IsDeleted)
+            .Include(p => p.Assignee)
+            .FirstOrDefaultAsync();
 
         if (project == null)
             return new BadErrorResult("Project does not exist");
 
-        bool? userActive = await _context.Users
+        var newAssignee = await _context.Users
             .Where(u => u.Id == model.AssigneeId)
-            .Select(u => u.IsActive)
+            .Select(u => new
+            {
+                u.FirstName,
+                u.LastName,
+                u.IsActive
+            })
             .FirstOrDefaultAsync();
 
-        if (userActive == null)
+        if (newAssignee == null)
             return new BadErrorResult("Invalid user");
 
-        if (!userActive.HasValue)
+        if (!newAssignee.IsActive)
             return new BadErrorResult("User has been deactivated");
 
         project.AssigneeId = model.AssigneeId;
 
+        // add log
+        AddProjectLog(project, ProjectLogTypes.Assignment, $"Project reassigned to {model.AssigneeId}", previousState: $"{project.Assignee!.FirstName} {project.Assignee.LastName}", currentState: $"{newAssignee.FirstName} {newAssignee.LastName}");
+
+        // save changes to the database
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
@@ -248,6 +282,12 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         model.Adapt(project);
 
+        project.UpdatedById = _userSession.UserId;
+        project.UpdatedOn = DateTime.UtcNow;
+
+        // add log
+        AddProjectLog(project, ProjectLogTypes.Update, $"Project updated by {_userSession.Name}");
+
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
@@ -262,8 +302,13 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (project == null)
             return new BadErrorResult("Project does not exist");
 
+        string previousStatus = project.Status;
         project.Status = model.Status;
 
+        // add log
+        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project status changed by {_userSession.Name}", previousState: previousStatus, currentState: model.Status);
+
+        // save changes to the database
         int saved = await _context.SaveChangesAsync();
 
         return saved > 0
@@ -345,6 +390,28 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             .ToListAsync();
 
         return new SuccessResult(allTypes);
+    }
+
+    #endregion
+
+    #region PRIVATE METHODS
+
+    private async void AddProjectLog(Project project, ProjectLogTypes type, string description, string? previousState = null, string? currentState = null, string? remark = null)
+    {
+        var log = new ProjectLog
+        {
+            ProjectId = project.Id,
+            Type = type.ToString(),
+            Description = description,
+            Remark = remark,
+            PreviousState = previousState,
+            CurrentState = currentState,
+            CreatedById = _userSession.UserId
+        };
+
+        if (project.Id == 0) log.Project = project;
+
+        await _context.ProjectLogs.AddAsync(log);
     }
 
     #endregion

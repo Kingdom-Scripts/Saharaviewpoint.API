@@ -36,6 +36,7 @@ public class SuccessResult : Result
     public SuccessResult(string message) : base(true, message)
     {
         Status = StatusCodes.Status200OK;
+        Message = message;
     }
 
     /// <summary>
@@ -47,6 +48,7 @@ public class SuccessResult : Result
     {
         Status = StatusCodes.Status200OK;
         Title = "Operation Successful";
+        Message = message;
         Content = content;
         AddPaging(content);
     }
@@ -59,6 +61,7 @@ public class SuccessResult : Result
     public SuccessResult(int status, string message) : base(true, message)
     {
         Status = status;
+        Message = message;
     }
 
     /// <summary>
