@@ -17,6 +17,7 @@ using Saharaviewpoint.Models.Input.ProjectManager;
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: write an endpoint to return pending invitations
+// TODO: add caching
 
 public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession) : IProjectManagerService
 {

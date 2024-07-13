@@ -11,6 +11,8 @@ public class ProjectView
     public DateTime CreatedAt { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime DueDate { get; set; }
+    public DateTime? UpdatedOn { get; set; }
+    public DateTime? CompletedOn { get; set; }
     public bool IsPriority { get; set; }
     public int Order { get; set; }
     public int? AssigneeId { get; set; }

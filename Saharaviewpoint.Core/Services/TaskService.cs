@@ -15,6 +15,7 @@ using Serilog;
 
 namespace Saharaviewpoint.Core.Services;
 
+// TODO: add caching
 public class TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService) : ITaskService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));

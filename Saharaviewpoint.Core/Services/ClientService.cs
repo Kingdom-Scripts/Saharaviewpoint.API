@@ -10,6 +10,7 @@ using Saharaviewpoint.Models.View.Client;
 
 namespace Saharaviewpoint.Core.Services;
 
+// TODO: add caching
 public class ClientService(SaharaviewpointContext context, UserSession userSession) : IClientService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));

@@ -105,6 +105,15 @@ public class ProjectsController(IProjectService projectService) : BaseController
         var result = await _projectService.CountProjects();
         return ProcessResponse(result);
     }
+
+    [HttpPatch("{id:int}/complete")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ProjectDetailView>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> CompleteProject(int id)
+    {
+        var result = await _projectService.CompleteProject(id);
+        return ProcessResponse(result);
+    }
     #endregion
 
     #region TYPES

@@ -49,6 +49,9 @@ public class Project : BaseAppModel
     public int? UpdatedById { get; set; }
     public DateTime? UpdatedOn { get; set; }
 
+    public int? CompletedById { get; set; }
+    public DateTime? CompletedOn { get; set; }
+
     [Required]
     public bool IsDeleted { get; set; } = false;
 

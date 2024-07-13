@@ -27,6 +27,7 @@ public interface IProjectService
     Task<Result> UpdateProjectStatus(int id, ProjectStatusModel model);
 
     Task<Result> ListProjectLogs(int id, PagingOptionModel request);
+    Task<Result> CompleteProject(int id);
 
     #endregion PROJECTS
 

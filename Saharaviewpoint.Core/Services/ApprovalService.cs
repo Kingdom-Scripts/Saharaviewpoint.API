@@ -12,10 +12,11 @@ using Mapster;
 using Saharaviewpoint.Core.Interfaces;
 using Azure.Core;
 using LazyCache;
+using Saharaviewpoint.Core.Utilities;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class ApprovalService(SaharaviewpointContext context, UserSession userSession, IAppCache cache) : IApprovalService
+public class ApprovalService(SaharaviewpointContext context, UserSession userSession, IAppCache cache) : BaseService, IApprovalService
 {
 
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -69,7 +70,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(TaskApprovalRequestCacheKeys);
+        _cache.ClearListCache(TaskApprovalRequestCacheKeys);
 
         return new SuccessResult(approval.Adapt<ProjectTaskApprovalView>());
     }
@@ -169,7 +170,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
             ? "Task setup approved successfully."
             : "Task setup approval request declined.";
 
-        _cache.Remove(TaskApprovalRequestCacheKeys);
+        _cache.ClearListCache(TaskApprovalRequestCacheKeys);
         _cache.Remove($"Approval-TaskSetupApproval-{projectId}");
 
         return new SuccessResult(message, approval.Adapt<ProjectTaskApprovalView>());
@@ -177,15 +178,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
     public async Task<Result> ListApprovalRequests(PagingOptionModel request)
     {
-        // Define a unique cache key based on request parameters
-        var properties = new List<string?>
-        {
-            request.SearchQuery,
-            request.PageIndex.ToString(),
-            request.PageSize.ToString()
-        };
-
-        var cacheKey = string.Join("-", properties.Where(p => p != null));
+        var cacheKey = GenerateCacheKey(request);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(TaskApprovalRequestCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));

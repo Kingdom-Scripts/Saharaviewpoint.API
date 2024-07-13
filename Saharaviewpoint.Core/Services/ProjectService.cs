@@ -18,7 +18,7 @@ using LazyCache;
 namespace Saharaviewpoint.Core.Services;
 
 public class ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
-    IEmailService emailService, IAppCache cache) : IProjectService
+    IEmailService emailService, IAppCache cache) : BaseService, IProjectService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
@@ -77,7 +77,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
 
         return new SuccessResult(StatusCodes.Status201Created, mappedProject);
     }
@@ -110,7 +110,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
 
         return new SuccessResult();
@@ -137,7 +137,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
 
         return new SuccessResult();
@@ -166,7 +166,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
 
         return new SuccessResult();
@@ -193,23 +193,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        // Define a unique cache key based on the request parameters
-        var properties = new List<string?>
-        {
-            request.SearchQuery,
-            request.Status,
-            request.StartDueDate?.ToString("o"), // Using a round-trip date/time pattern
-            request.EndDueDate?.ToString("o"),
-            request.PageIndex.ToString(),
-            request.PageSize.ToString(),
-            _userSession.UserId.ToString(), // Include user session details if they affect the result
-            _userSession.FilterByAnyClient.ToString(),
-            _userSession.FilterByBusinessAdmin.ToString(),
-            _userSession.FilterBySvpManager.ToString(),
-            request.PriorityOnly.ToString()
-        };
-
-        var cacheKey = string.Join("-", properties.Where(p => p != null));
+        var cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient, _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(ListProjectsCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));
@@ -315,7 +299,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
 
         return new SuccessResult();
@@ -355,7 +339,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
 
         return new SuccessResult();
@@ -380,7 +364,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
 
         return new SuccessResult();
@@ -388,15 +372,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjectLogs(int id, PagingOptionModel request)
     {
-        // Define a unique cache key based on request parameters
-        var properties = new List<string?>
-        {
-            id.ToString(),
-            request.PageIndex.ToString(),
-            request.PageSize.ToString()
-        };
-
-        var cacheKey = string.Join("-", properties.Where(p => p != null));
+        var cacheKey = GenerateCacheKey(request, id);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(ProjectLogsCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));
@@ -409,14 +385,53 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         // Try to get the cached result
         var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
         {
-            return await _context.TaskLogs
-                .Where(tl => tl.Task!.ProjectId == id)
+            return await _context.ProjectLogs
+                .Where(p => p.Id == id)
                 .OrderByDescending(tl => tl.CreatedAt)
                 .ProjectToType<PtojectLogView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
         }, TimeSpan.FromHours(2));
 
         return new SuccessResult(cachedResult);
+    }
+
+    public async Task<Result> CompleteProject(int id)
+    {
+        var project = await _context.Projects
+            .Where(p => p.Id == id && !p.IsDeleted)
+            .FirstOrDefaultAsync();
+
+        if (project == null)
+            return new BadErrorResult("Project does not exist");
+        //if (project.Status == ProjectStatuses.Completed)
+        //    return new BadErrorResult("Project is already completed");
+
+        // validate there are no pending task for this project
+        bool hasPendingTask = await _context.Tasks
+            .AnyAsync(t => t.ProjectId == id && t.Status != TaskStatusEnum.COMPLETED);
+        if (hasPendingTask)
+            return new BadErrorResult("Project has pending tasks");
+
+        project.Status = ProjectStatuses.Completed;
+        project.CompletedById = _userSession.UserId;
+        project.CompletedOn = DateTime.UtcNow;
+        project.UpdatedById = _userSession.UserId;
+        project.UpdatedOn = DateTime.UtcNow;
+
+        // add log
+        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project marked as completed by {_userSession.Name}");
+
+        int saved = await _context.SaveChangesAsync();
+
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // TODO: send email to client and admin
+
+        _cache.ClearListCache(ListProjectsCacheKeys, ProjectLogsCacheKeys);
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult("Project is now completed.", project.Adapt<ProjectDetailView>());
     }
 
     #endregion
