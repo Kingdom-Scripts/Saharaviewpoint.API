@@ -80,7 +80,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
     {
         bool projectExistAndHaveAccess = await _context.Projects
             .Where(p => p.Id == request.ProjectId)
-            .AnyAsync(p => _userSession.IsAnyAdmin || p.AssigneeId == _userSession.UserId || p.CreatedById == _userSession.UserId);
+            .AnyAsync(p => _userSession.IsAnySvpAdmin || p.AssigneeId == _userSession.UserId || p.CreatedById == _userSession.UserId);
 
         if (!projectExistAndHaveAccess)
             return new ErrorResult("Project not found or you do not have access to view tasks in this project");
@@ -272,7 +272,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         var query = from task in _context.Tasks
                     where !task.IsDeleted && task.ProjectId == projectId
-                    where _userSession.IsAnyAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
+                    where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
                     where task.Type != TaskTypeEnum.EPIC
                     select new
                     {

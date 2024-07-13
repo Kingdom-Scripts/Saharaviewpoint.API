@@ -23,10 +23,20 @@ public class UserSession
         return roles.Any(role => _roles.Contains(role));
     }
 
-    public bool IsAnyAdmin => InRole(RolesConstants.SuperAdmin, RolesConstants.SvpAdmin);
     public bool IsClient => InRole(RolesConstants.Client);
+    public bool IsBusinessAdmin => InRole(RolesConstants.BusinessAdmin);
+    public bool IsBusinessClient => InRole(RolesConstants.BusinessClient);
+    public bool IsAnySvpAdmin => InRole(RolesConstants.SuperAdmin, RolesConstants.SvpAdmin);
     public bool IsSuperAdmin => InRole(RolesConstants.SuperAdmin);
     public bool IsSvpAdmin => InRole(RolesConstants.SvpAdmin);
+    public bool IsProjectManager => InRole(RolesConstants.SvpManager);
 
     public AppTypes? AppType { get; set; }
+
+    public bool FilterByClient => AppType == AppTypes.Client && IsClient;
+    public bool FilterByBusinessAdmin => AppType == AppTypes.Client && IsBusinessAdmin;
+    public bool FilterByBusinessClient => AppType == AppTypes.Client && IsBusinessClient;
+    public bool FilterByAnyClient => AppType == AppTypes.Client && (IsClient || IsBusinessClient);
+
+    public bool FilterBySvpManager => AppType == AppTypes.Admin && IsProjectManager;
 }

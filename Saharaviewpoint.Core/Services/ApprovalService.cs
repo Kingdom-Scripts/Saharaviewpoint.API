@@ -10,15 +10,18 @@ using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Core.Extensions;
 using Mapster;
 using Saharaviewpoint.Core.Interfaces;
-using Microsoft.AspNetCore.Diagnostics;
+using Azure.Core;
+using LazyCache;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class ApprovalService(SaharaviewpointContext context, UserSession userSession) : IApprovalService
+public class ApprovalService(SaharaviewpointContext context, UserSession userSession, IAppCache cache) : IApprovalService
 {
 
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
+    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+    private const string TaskApprovalRequestCacheKeys = "TaskApprovalRequest-CacheKeys";
 
     public async Task<Result> SendTaskSetupForApproval(int projectId)
     {
@@ -63,9 +66,12 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
         // TODO: send an email notifying the client and admin about the request.
 
-        return saved > 0
-            ? new SuccessResult(approval.Adapt<ProjectTaskApprovalView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(TaskApprovalRequestCacheKeys);
+
+        return new SuccessResult(approval.Adapt<ProjectTaskApprovalView>());
     }
 
     public async Task<Result> SendTaskSetupApprovalReminder(int projectId, int id)
@@ -97,11 +103,14 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
     public async Task<Result> GetTaskSetupApproval(int projectId)
     {
-        var approval = await _context.ProjectTaskApprovals
-            .Where(pta => pta.ProjectId == projectId)
-            .OrderByDescending(pta => pta.CreatedAt)
-            .ProjectToType<ProjectTaskApprovalView>()
-            .LastOrDefaultAsync();
+        var approval = await _cache.GetOrAddAsync($"Approval-TaskSetupApproval-{projectId}", async () =>
+        {
+            return await _context.ProjectTaskApprovals
+                .Where(pta => pta.ProjectId == projectId)
+                .OrderByDescending(pta => pta.CreatedAt)
+                .ProjectToType<ProjectTaskApprovalView>()
+                .LastOrDefaultAsync();
+        }, TimeSpan.FromHours(2));
 
         return approval is not null
             ? new SuccessResult(approval)
@@ -153,39 +162,65 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
         // save the changes
         int saved = await _context.SaveChangesAsync();
 
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
         string message = model.Status
             ? "Task setup approved successfully."
             : "Task setup approval request declined.";
 
-        return saved > 0
-        ? new SuccessResult(message, approval.Adapt<ProjectTaskApprovalView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        _cache.Remove(TaskApprovalRequestCacheKeys);
+        _cache.Remove($"Approval-TaskSetupApproval-{projectId}");
+
+        return new SuccessResult(message, approval.Adapt<ProjectTaskApprovalView>());
     }
 
-    public async Task<Result> ListApprovalRequests(PagingOptionModel model)
+    public async Task<Result> ListApprovalRequests(PagingOptionModel request)
     {
-        if (!string.IsNullOrEmpty(model.SearchQuery))
-            model.SearchQuery = model.SearchQuery.ToLower().Trim();
-
-        var approvalsQuery = _context.ProjectTaskApprovals
-            .AsQueryable();
-
-        if (!string.IsNullOrEmpty(model.SearchQuery))
+        // Define a unique cache key based on request parameters
+        var properties = new List<string?>
         {
-            string searchLike = $"%{model.SearchQuery}%";
-            approvalsQuery = approvalsQuery.Where(pta =>
-                EF.Functions.Like(pta.Project!.Title, searchLike) ||
-                EF.Functions.Like(pta.Requester!.FirstName, searchLike) ||
-                EF.Functions.Like(pta.Requester.LastName, searchLike) ||
-                EF.Functions.Like(pta.Project!.CreatedBy!.FirstName, searchLike) ||
-                EF.Functions.Like(pta.Project.CreatedBy.LastName, searchLike));
+            request.SearchQuery,
+            request.PageIndex.ToString(),
+            request.PageSize.ToString()
+        };
+
+        var cacheKey = string.Join("-", properties.Where(p => p != null));
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(TaskApprovalRequestCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(TaskApprovalRequestCacheKeys, cacheKeys);
         }
 
-        var approvals = await approvalsQuery
-            .OrderByDescending(pta => pta.CreatedAt)
-            .ProjectToType<ProjectTaskApprovalView>()
-            .ToPaginatedListAsync(model.PageIndex, model.PageSize);
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            if (!string.IsNullOrEmpty(request.SearchQuery))
+                request.SearchQuery = request.SearchQuery.ToLower().Trim();
 
-        return new SuccessResult(approvals);
+            var approvalsQuery = _context.ProjectTaskApprovals
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(request.SearchQuery))
+            {
+                string searchLike = $"%{request.SearchQuery}%";
+                approvalsQuery = approvalsQuery.Where(pta =>
+                    EF.Functions.Like(pta.Project!.Title, searchLike) ||
+                    EF.Functions.Like(pta.Requester!.FirstName, searchLike) ||
+                    EF.Functions.Like(pta.Requester.LastName, searchLike) ||
+                    EF.Functions.Like(pta.Project!.CreatedBy!.FirstName, searchLike) ||
+                    EF.Functions.Like(pta.Project.CreatedBy.LastName, searchLike));
+            }
+
+            return await approvalsQuery
+                .OrderByDescending(pta => pta.CreatedAt)
+                .ProjectToType<ProjectTaskApprovalView>()
+                .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, TimeSpan.FromHours(2));
+
+        return new SuccessResult(cachedResult);
     }
 }

@@ -1,3 +1,4 @@
+using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +18,12 @@ using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor) : ITokenHandler
+public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor, IAppCache cache) : ITokenHandler
 {
     private readonly JwtConfig _jwtConfig = jwtConfig.Value;
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
     public async Task<Result> GenerateJwtToken(User user)
     {
@@ -34,14 +36,16 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
 
         // store the token
         var encryptedToken = token.HashPassword();
-        var login = await _context.Logins.FirstOrDefaultAsync(l => l.UserId == user.Id);
+        var login = await _context.Logins.FirstOrDefaultAsync(l => l.UserId == user.Id && l.Domain == requestDomain);
         if (login != null)
         {
             login.HashedToken = encryptedToken;
             login.ExpiresAt = DateTime.UtcNow.AddDays(30);
 
             _context.Logins.Update(login);
-        } else {
+        }
+        else
+        {
             login = new Login
             {
                 UserId = user.Id,
@@ -53,6 +57,9 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
             await _context.Logins.AddAsync(login);
         }
         await _context.SaveChangesAsync();
+
+        // clear any previous token from cache
+        _cache.Remove($"ValidateToken-{user.Uid}-{requestDomain}");
 
         var result = new AuthDataView
         {
@@ -89,6 +96,9 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
             login.HashedToken = string.Empty;
             login.ExpiresAt = DateTime.UtcNow;
 
+            // clear the token from cache
+            _cache.Remove($"ValidateToken-{userReference}-{login.Domain}");
+
             _context.Logins.Update(login);
             await _context.SaveChangesAsync();
         }
@@ -107,17 +117,41 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
     {
         try
         {
-            var today = DateTime.UtcNow;
-            var hashedToken = await _context.Logins
-                .Where(l => l.User!.Uid.ToString() == uid && l.Domain == domain && l.ExpiresAt > today)
-                .Select(l => l.HashedToken)
-                .FirstOrDefaultAsync();
+            string cacheKey = $"ValidateToken-{uid}-{domain}";
+            var cachedData = await _cache.GetAsync<(string HashedToken, DateTime ExpiresAt)>(cacheKey);
 
-            if (hashedToken is null) return false;
+            if (cachedData != default)
+            {
+                // Check if the cached token is expired
+                if (DateTime.UtcNow > cachedData.ExpiresAt)
+                {
+                    // Token is expired, remove it from cache
+                    _cache.Remove(cacheKey);
+                    return false;
+                }
 
-            return hashedToken.VerifyPassword(token);
+                // Validate the token using the cached hashed token
+                return cachedData.HashedToken.VerifyPassword(token);
+            }
+            else
+            {
+                // Token not in cache, perform database lookup
+                var login = await _context.Logins
+                    .Where(l => l.User!.Uid.ToString() == uid && l.Domain == domain && l.ExpiresAt > DateTime.UtcNow)
+                    .Select(l => new { l.HashedToken, l.ExpiresAt })
+                    .FirstOrDefaultAsync();
+
+                if (login is null)
+                    return false;
+
+                // Cache the hashed token and its expiration time
+                _cache.Add(cacheKey, (login.HashedToken, login.ExpiresAt), login.ExpiresAt - DateTime.UtcNow);
+
+                // Validate the token
+                return login.HashedToken.VerifyPassword(token);
+            }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Log.Error(ex, "Error validating token");
             return false;
@@ -136,11 +170,11 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
         var tokenHandler = new JwtSecurityTokenHandler();
         var claimIdentity = new ClaimsIdentity();
 
-        claimIdentity.AddClaims(new[] { new Claim("uid", user.Uid.ToString()) });
-        claimIdentity.AddClaims(new[] { new Claim("sid", user.Id.ToString()) });
-        claimIdentity.AddClaims(new []{ new Claim("name", $"{user.FirstName} {user.LastName}") });
-        claimIdentity.AddClaims(new[] { new Claim("Type", user.Type) });
-        claimIdentity.AddClaims(new[] { new Claim("SubscriptionPlan", "Basic") }); // TODO: use this for subscription plans
+        claimIdentity.AddClaims([new Claim("uid", user.Uid.ToString())]);
+        claimIdentity.AddClaims([new Claim("sid", user.Id.ToString())]);
+        claimIdentity.AddClaims([new Claim("name", $"{user.FirstName} {user.LastName}")]);
+        claimIdentity.AddClaims([new Claim("Type", user.Type)]);
+        claimIdentity.AddClaims([new Claim("SubscriptionPlan", "Basic")]); // TODO: use this for subscription plans
 
         claimIdentity.AddClaims(user.UserRoles.Select(role =>
             new Claim(ClaimTypes.Role, role.Role.Name)));

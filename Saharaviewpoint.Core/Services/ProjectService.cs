@@ -13,16 +13,21 @@ using Saharaviewpoint.Models.Constants;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.View.Task;
 using Saharaviewpoint.Models.App.Constants;
+using LazyCache;
 
 namespace Saharaviewpoint.Core.Services;
 
 public class ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
-    IEmailService emailService) : IProjectService
+    IEmailService emailService, IAppCache cache) : IProjectService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+
+    private const string ListProjectsCacheKeys = "ProjectService-ListProjects-CacheKeys";
+    private const string ProjectLogsCacheKeys = "ProjectLogs-CacheKeys";
 
     #region PROJECTS
 
@@ -69,9 +74,12 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult(StatusCodes.Status201Created, mappedProject)
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+
+        return new SuccessResult(StatusCodes.Status201Created, mappedProject);
     }
 
     public async Task<Result> ApproveProject(int id, string assigneeUid)
@@ -99,15 +107,19 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         // save changes to the database
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult();
     }
 
-    public async Task<Result> RejectProject(RejectProjectModel model)
+    public async Task<Result> RejectProject(int id, RejectProjectModel model)
     {
         var project = await _context.Projects
-            .FirstOrDefaultAsync(p => p.Id == model.ProjectId && !p.IsDeleted);
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
         if (project == null)
             return new BadErrorResult("Project does not exist");
@@ -122,9 +134,13 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult();
     }
 
     public async Task<Result> DeleteProject(int id)
@@ -147,16 +163,20 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult();
     }
 
     public async Task<Result> GetProject(int id)
     {
-        var project = await _context.Projects
+        var project = await _cache.GetOrAddAsync($"project-details-{id}", () => _context.Projects
             .ProjectToType<ProjectDetailView>()
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted), TimeSpan.FromHours(2));
 
         if (project == null)
             return new BadErrorResult("Project does not exist");
@@ -173,43 +193,81 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        bool shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
+        // Define a unique cache key based on the request parameters
+        var properties = new List<string?>
+        {
+            request.SearchQuery,
+            request.Status,
+            request.StartDueDate?.ToString("o"), // Using a round-trip date/time pattern
+            request.EndDueDate?.ToString("o"),
+            request.PageIndex.ToString(),
+            request.PageSize.ToString(),
+            _userSession.UserId.ToString(), // Include user session details if they affect the result
+            _userSession.FilterByAnyClient.ToString(),
+            _userSession.FilterByBusinessAdmin.ToString(),
+            _userSession.FilterBySvpManager.ToString(),
+            request.PriorityOnly.ToString()
+        };
+
+        var cacheKey = string.Join("-", properties.Where(p => p != null));
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(ListProjectsCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(ListProjectsCacheKeys, cacheKeys);
+        }
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            bool shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
                             && string.IsNullOrEmpty(request.Status)
                             && !request.StartDueDate.HasValue
                             && !request.EndDueDate.HasValue;
 
-        if (shouldGetAll)
-        {
-            var allProjects = await _context.Projects
+            var projectsQuery = _context.Projects
                 .Where(prd => !prd.IsDeleted)
+                .AsQueryable();
+
+            // Apply filters based on the user session
+            if (_userSession.FilterByAnyClient)
+                projectsQuery = projectsQuery.Where(prd => prd.CreatedById == _userSession.UserId);
+            if (_userSession.FilterByBusinessAdmin)
+                projectsQuery = projectsQuery.Where(prd => prd.CreatedById == _userSession.UserId);
+            if (_userSession.FilterBySvpManager)
+                projectsQuery = projectsQuery.Where(prd => prd.AssigneeId == _userSession.UserId);
+
+            if (shouldGetAll)
+            {
+                return await projectsQuery
+                    .OrderBy(prd => prd.Order)
+                    .ThenByDescending(prd => prd.StartDate)
+                    .ProjectToType<ProjectView>()
+                    .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+            }
+
+            string? searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
+                ? request.SearchQuery.Trim().ToLower()
+                : null;
+
+            return await projectsQuery
+                // search by title, description, or status
+                .Where(prd => searchTerm == null || (prd.Title.ToLower().Contains(searchTerm) ||
+                                                     (prd.Description == null ||
+                                                      prd.Description.ToLower().Contains(searchTerm))))
+                .Where(prd => string.IsNullOrEmpty(request.Status) || prd.Status == request.Status)
+                // filter by due date
+                .Where(prd => !request.StartDueDate.HasValue || prd.DueDate >= request.StartDueDate)
+                .Where(prd => !request.EndDueDate.HasValue || prd.DueDate <= request.EndDueDate)
+                .Where(prd => !request.PriorityOnly || prd.IsPriority)
                 .OrderBy(prd => prd.Order)
-                .ThenByDescending(prd => prd.StartDate)
                 .ProjectToType<ProjectView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, TimeSpan.FromHours(2));
 
-            return new SuccessResult(allProjects);
-        }
-
-        string? searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
-            ? request.SearchQuery.Trim().ToLower()
-            : null;
-
-        var filteredProjects = await _context.Projects
-            .Where(prd => !prd.IsDeleted)
-            // search by title, description, or status
-            .Where(prd => searchTerm == null || (prd.Title.ToLower().Contains(searchTerm) ||
-                                                 (prd.Description == null ||
-                                                  prd.Description.ToLower().Contains(searchTerm))))
-            .Where(prd => string.IsNullOrEmpty(request.Status) || prd.Status == request.Status)
-            // filter by due date
-            .Where(prd => !request.StartDueDate.HasValue || prd.DueDate >= request.StartDueDate)
-            .Where(prd => !request.EndDueDate.HasValue || prd.DueDate <= request.EndDueDate)
-            .Where(prd => !request.PriorityOnly || prd.IsPriority)
-            .OrderBy(prd => prd.Order)
-            .ProjectToType<ProjectView>()
-            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
-
-        return new SuccessResult(filteredProjects);
+        return new SuccessResult(cachedResult);
     }
 
     public async Task<Result> CountProjects()
@@ -254,9 +312,13 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         // save changes to the database
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult();
     }
 
     public async Task<Result> UpdateProject(int id, ProjectModel model)
@@ -290,9 +352,13 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult();
     }
 
     public async Task<Result> UpdateProjectStatus(int id, ProjectStatusModel model)
@@ -311,20 +377,46 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         // save changes to the database
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        _cache.Remove(ListProjectsCacheKeys);;
+        _cache.Remove($"project-details-{id}");
+
+        return new SuccessResult();
     }
 
     public async Task<Result> ListProjectLogs(int id, PagingOptionModel request)
     {
-        var logs = await _context.TaskLogs
-            .Where(tl => tl.Task!.ProjectId == id)
-            .OrderByDescending(tl => tl.CreatedAt)
-            .ProjectToType<PtojectLogView>()
-            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        // Define a unique cache key based on request parameters
+        var properties = new List<string?>
+        {
+            id.ToString(),
+            request.PageIndex.ToString(),
+            request.PageSize.ToString()
+        };
 
-        return new SuccessResult(logs);
+        var cacheKey = string.Join("-", properties.Where(p => p != null));
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(ProjectLogsCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(ProjectLogsCacheKeys, cacheKeys);
+        }
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            return await _context.TaskLogs
+                .Where(tl => tl.Task!.ProjectId == id)
+                .OrderByDescending(tl => tl.CreatedAt)
+                .ProjectToType<PtojectLogView>()
+                .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, TimeSpan.FromHours(2));
+
+        return new SuccessResult(cachedResult);
     }
 
     #endregion
@@ -412,6 +504,8 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (project.Id == 0) log.Project = project;
 
         await _context.ProjectLogs.AddAsync(log);
+
+        _cache.Remove(ProjectLogsCacheKeys);
     }
 
     #endregion
