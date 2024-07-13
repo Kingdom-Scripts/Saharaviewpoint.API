@@ -53,4 +53,15 @@ public class AssetsController(IFileService fileService) : BaseController
 
         return NotFound(new ErrorResult(StatusCodes.Status404NotFound, "File not found."));
     }
+
+    [HttpGet("svp-logo")]
+    [AllowAnonymous]
+    public IActionResult GetSvpLogo()
+    {
+        var result = _fileService.GetSvpLogo();
+        if (result != null)
+            return result;
+
+        return NotFound(new ErrorResult(StatusCodes.Status404NotFound, "File not found."));
+    }
 }

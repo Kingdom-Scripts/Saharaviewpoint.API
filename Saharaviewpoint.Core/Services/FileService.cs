@@ -1,5 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Mapster;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -20,12 +21,14 @@ public class FileService : IFileService
     private readonly SaharaviewpointContext _context;
     private readonly BlobServiceClient _blobServiceClient;
     private readonly UserSession _userSession;
+    private readonly IWebHostEnvironment _hostEnvironment;
 
     // TODO: add caching
     public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession,
-        SaharaviewpointContext context)
+        SaharaviewpointContext context, IWebHostEnvironment hostEnvironment)
     {
-        if (keyVaultConfig == null) throw new ArgumentNullException(nameof(keyVaultConfig));
+        _hostEnvironment = hostEnvironment ?? throw new ArgumentNullException(nameof(hostEnvironment));
+        ArgumentNullException.ThrowIfNull(keyVaultConfig); 
 
         // TODO: remove this api call from here
         //var keyVault = keyVaultConfig.Value;
@@ -216,6 +219,25 @@ public class FileService : IFileService
             Log.Error(ex, "Error uploading file");
             return new ErrorResult<Document>("An unexpected error occurred while uploading your file(s)");
         }
+    }
+
+
+    public FileStreamResult? GetSvpLogo()
+    {
+        // get logo from file storage
+        string filePath = Path.Combine(_hostEnvironment.WebRootPath, "images", "svp-logo.svg");
+
+        if (!File.Exists(filePath))
+        {
+            return null;
+        }
+
+        var stream = new FileStream(filePath, FileMode.Open);
+
+        return new FileStreamResult(stream, "image/svg+xml")
+        {
+            FileDownloadName = "svp-logo.svg"
+        };
     }
 
     private async Task<FileStreamResult?> GetFile(string folder, string subFolder, string fileName)

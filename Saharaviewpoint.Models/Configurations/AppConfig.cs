@@ -2,13 +2,14 @@
 
 public class AppConfig
 {
-    public string TinifyKey { get; set; }
-    public FileSettings FileSettings { get; set; }
-    public BaseURLs BaseURLs { get; set; }
+    public string TinifyKey { get; set; } = null!;
+    public FileSettings FileSettings { get; set; } = null!;
+    public BaseURLs BaseURLs { get; set; } = null!;
 }
 
 public class BaseURLs
 {
-    public string Admin { get; set; }
-    public string Client { get; set; }
+    public string Api { get; set; } = null!;
+    public string Admin { get; set; } = null!;
+    public string Client { get; set; } = null!;
 }

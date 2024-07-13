@@ -38,6 +38,8 @@ public interface IFileService
 
     Task<FileStreamResult?> GetGenericThumbnail(string filename);
 
+    FileStreamResult? GetSvpLogo();
+
     /// <summary>
     /// Deletes a file from azure blob storage
     /// </summary>

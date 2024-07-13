@@ -127,7 +127,7 @@
                                style="border-collapse:collapse;width:640px;margin: 0 auto;padding: 0;background-color:#FFFFFF;border-radius:6px;box-shadow:0 3px 6px 0 rgba(0,0,0,.05);">
                             <tr>
                                 <td>
-                                  <div class="logo"
+                                    <div class="logo"
                                        style="text-align:center;margin: 0 0 40px; background-color: #E1A350;padding: 40px 0 0 0;">
                                        <img src="{{ logoUrl }}" width="auto" height="120" />
                                     </div>
@@ -139,13 +139,13 @@
                                     style="word-break:break-word;font-family:'Inter', Helvetica, Arial, sans-serif;font-size:16px;line-height:24px;padding: 0 50px;">
 
                                     <h1 style="margin-top:0;color:#111111;font-size:24px;line-height:36px;font-weight:600;margin-bottom:24px;">
-                                        Hi, {{ name }}!</h1>
+                                        {{ salutation }}</h1>
 
                                     <p style="color:#4a5566;margin: 20px 0;font-size:16px;line-height:28px;">
-                                        {{ inviteSenderName }} has invited you to use The Saharaviewpoint app to
-                                        collaborate with them. Click the button below to set up your account and get
-                                        started:</p>
+                                        {{ primaryMessage }}
+                                      </p>
 
+                                      {% if buttonText != null %}
                                     <table width="100%" align="center" cellpadding="0" cellspacing="0"
                                            role="presentation" style="border-collapse:collapse;">
                                         <tr>
@@ -158,8 +158,9 @@
                                                         <td align="center" class="btn"
                                                             style="word-break:break-word;font-family:'Inter', Helvetica, Arial, sans-serif;font-size:16px;line-height:24px;background-color:#0052e2;box-shadow:0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);border-radius:3px;">
                                                             <a href="{{ url }}" target="_blank"
-                                                               style="background-color:#000;padding: 14px 30px;display:inline-block;color:#FFF;text-decoration:none;border-radius:3px;-webkit-text-size-adjust:none;box-sizing:border-box;border-width:0px;border-style:solid;border-color:#0052e2;font-weight:600;font-size:15px;line-height:21px;letter-spacing:0.25px;">Set
-                                                                up account</a>
+                                                               style="background-color:#000;padding: 14px 30px;display:inline-block;color:#FFF;text-decoration:none;border-radius:3px;-webkit-text-size-adjust:none;box-sizing:border-box;border-width:0px;border-style:solid;border-color:#0052e2;font-weight:600;font-size:15px;line-height:21px;letter-spacing:0.25px;">
+                                                                {{ buttonText }}
+                                                              </a>
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -167,17 +168,22 @@
                                             </td>
                                         </tr>
                                     </table>
+                                    {% endif %}
 
-                                    <p style="color:#4a5566;margin: 20px 0;font-size:16px;line-height:28px;">If you have
-                                        any questions for {{ inviteSenderName }}, reply to this email and it will be
-                                        sent to them. Alternatively, <a href="mailto:support@saharaviewpoint.com"
-                                                                        style="color:#0052e2;">contact our support
-                                            team</a> anytime during business hours.</p>
+                                    {% if secondaryMessage != null %}
+                                    <p style="color:#4a5566;margin: 20px 0;font-size:16px;line-height:28px;">
+                                      {{ secondaryMessage }}
+                                    </p>
+                                    {% endif %}
 
-                                    <p style="color:#4a5566;margin: 20px 0;font-size:16px;line-height:28px;">Welcome
-                                        aboard,
-                                        <br>The Saharaviewpoint Team</p>
+                                    <p style="color:#4a5566;margin: 20px 0;font-size:16px;line-height:28px;">
+                                      {% if closingRemark != null %}
+                                      {{ closingRemark }},
+                                      {% endif %}
+                                        <br>The Saharaviewpoint Team
+                                      </p>
 
+                                      {% if url != null %}
                                     <table width="100%" style="border-collapse:collapse;">
                                         <tr>
                                             <td height="20"
@@ -194,12 +200,13 @@
                                     </table>
 
                                     <p class="small"
-                                       style="color:#4a5566;margin: 20px 0;font-size:14px;line-height:21px;">If you’re
-                                        having trouble with the button above, copy and paste the URL below into your web
-                                        browser.</p>
+                                       style="color:#4a5566;margin: 20px 0;font-size:14px;line-height:21px;">
+                                       If you're having trouble with the button above, copy and paste the URL below into your web
+                                        browser.
+                                    </p>
                                     <p class="small"
                                        style="color:#4a5566;margin: 20px 0;font-size:14px;line-height:21px;">{{ url }}</p>
-
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -213,8 +220,9 @@
                                             <td class="ms-content-body" align="center"
                                                 style="word-break:break-word;font-family:'Inter', Helvetica, Arial, sans-serif;font-size:16px;line-height:24px;padding: 40px 50px;">
                                                 <p class="small"
-                                                   style="margin: 20px 0;color:#96a2b3;font-size:14px;line-height:21px;">&copy; 2024
-                                                    Saharaviewpoint. All rights reserved.</p>
+                                                   style="margin: 20px 0;color:#96a2b3;font-size:14px;line-height:21px;">
+                                                   &copy; 2024 Saharaviewpoint. All rights reserved.
+                                                </p>
                                                 <p class="small"
                                                    style="margin: 20px 0;color:#96a2b3;font-size:14px;line-height:21px;">
                                                    2B Olumuyiwa Street <br /> Omole Phase 1 Ikeja <br /> Lagos Nigeria
