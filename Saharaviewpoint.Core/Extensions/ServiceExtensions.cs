@@ -130,8 +130,6 @@ public static class ServiceExtensions
             .Map(dest => dest.RequestedOn, src => src.CreatedAt)
             .Map(dest => dest.FulfilledByName, src => src.FulfilledBy != null ? $"{src.FulfilledBy.FirstName} {src.FulfilledBy.LastName}" : null);
 
-        services.AddSingleton<ICacheService, CacheService>();
-
         services.TryAddScoped<SoftDeleteInterceptor>();
         services.TryAddScoped<UserSession>();
         services.TryAddScoped<ITokenHandler, Services.TokenHandler>();

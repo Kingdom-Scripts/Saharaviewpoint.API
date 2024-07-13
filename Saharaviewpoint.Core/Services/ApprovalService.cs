@@ -70,7 +70,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.ClearListCache(TaskApprovalRequestCacheKeys);
+        _cache.ClearCaches(TaskApprovalRequestCacheKeys, $"Approval-TaskSetupApproval-{projectId}");
 
         return new SuccessResult(approval.Adapt<ProjectTaskApprovalView>());
     }
@@ -111,7 +111,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
                 .OrderByDescending(pta => pta.CreatedAt)
                 .ProjectToType<ProjectTaskApprovalView>()
                 .LastOrDefaultAsync();
-        }, TimeSpan.FromHours(2));
+        }, new TimeSpan(0, 45, 0));
 
         return approval is not null
             ? new SuccessResult(approval)
@@ -170,18 +170,18 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
             ? "Task setup approved successfully."
             : "Task setup approval request declined.";
 
-        _cache.ClearListCache(TaskApprovalRequestCacheKeys);
-        _cache.Remove($"Approval-TaskSetupApproval-{projectId}");
+        _cache.ClearCaches(TaskApprovalRequestCacheKeys, $"Approval-TaskSetupApproval-{projectId}");
 
         return new SuccessResult(message, approval.Adapt<ProjectTaskApprovalView>());
     }
 
     public async Task<Result> ListApprovalRequests(PagingOptionModel request)
     {
-        var cacheKey = GenerateCacheKey(request);
+        var generatedKey = GenerateCacheKey(request);
+        string cacheKey = $"Approval-ListApprovalRequests-{generatedKey}";
 
         // Retrieve the current list of cache keys and add the new key
-        var cacheKeys = _cache.GetOrAdd(TaskApprovalRequestCacheKeys, () => new List<string>(), TimeSpan.FromHours(2));
+        var cacheKeys = _cache.GetOrAdd(TaskApprovalRequestCacheKeys, () => new List<string>(), new TimeSpan(0, 45, 0));
         if (!cacheKeys.Contains(cacheKey))
         {
             cacheKeys.Add(cacheKey);
@@ -212,7 +212,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
                 .OrderByDescending(pta => pta.CreatedAt)
                 .ProjectToType<ProjectTaskApprovalView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
-        }, TimeSpan.FromHours(2));
+        }, new TimeSpan(0, 45, 0));
 
         return new SuccessResult(cachedResult);
     }

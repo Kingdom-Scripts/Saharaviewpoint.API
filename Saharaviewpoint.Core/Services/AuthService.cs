@@ -15,6 +15,7 @@ using Saharaviewpoint.Core.Contants;
 
 namespace Saharaviewpoint.Core.Services;
 
+// TODO: implement cache for user profile
 public class AuthService : IAuthService
 {
     private readonly SaharaviewpointContext _context;

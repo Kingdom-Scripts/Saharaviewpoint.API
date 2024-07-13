@@ -1,21 +1,25 @@
 ﻿using LazyCache;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Saharaviewpoint.Core.Utilities;
 public static class CacheUtil
 {
-    public static void ClearListCache(this IAppCache cache, params string[] listKey)
+    public static void ClearCaches(this IAppCache cache, params string[] cacheKeys)
     {
-        foreach(string cacheKey in listKey)
+        foreach (string key in cacheKeys)
         {
-            var cacheKeys = cache.Get<List<string>>(cacheKey);
-            if (cacheKeys != null)
+            // Attempt to get the key as if it points to a list of cache keys
+            var listKeys = cache.Get<List<string>>(key);
+            if (listKeys != null)
             {
-                foreach (var key in cacheKeys)
+                // If it does, clear each cache key in the list
+                foreach (var listKey in listKeys)
                 {
-                    cache.Remove(key);
+                    cache.Remove(listKey);
                 }
-                cache.Remove(cacheKey);
             }
+            // Whether it was a list of keys or a single key, remove the key itself
+            cache.Remove(key);
         }
     }
 }

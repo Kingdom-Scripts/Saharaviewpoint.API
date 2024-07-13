@@ -13,22 +13,36 @@ using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.ProjectManager;
+using LazyCache;
 
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: write an endpoint to return pending invitations
-// TODO: add caching
-
-public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession) : IProjectManagerService
+public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession, IAppCache cache) : BaseService, IProjectManagerService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     private readonly ITokenHandler _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
+    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
     public async Task<Result> ListProjectManagers(ProjectManagerSearchModel request)
     {
-        var projectManagers = await _context.UserRoles
+        var generatedKey = GenerateCacheKey(request);
+        string cacheKey = CacheKeys.ListProjectManagers() + generatedKey;
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.ListProjectManagers(), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.ListProjectManagers(), cacheKeys);
+        }
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            return await _context.UserRoles
             .Where(uRole => uRole.RoleId == (int)Roles.SvpManager)
             .Where(uRole => string.IsNullOrEmpty(request.SearchQuery)
                             || uRole.User!.Email.Contains(request.SearchQuery)
@@ -57,8 +71,9 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
             })
             .OrderBy(u => u.FirstName)
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, new TimeSpan(0, 45, 0));
 
-        return new SuccessResult(projectManagers);
+        return new SuccessResult(cachedResult);
     }
 
     public async Task<Result> InviteProjectManager(ProjectManagerModel model)
@@ -112,9 +127,13 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult("Invitation sent successfully.")
-            : new ErrorResult("Failed to invite project manager");
+        if (saved < 1)
+            return new ErrorResult("Failed to invite project manager");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListProjectManagers());
+
+        return new SuccessResult("Invitation sent successfully.");
     }
 
     public async Task<Result> AcceptInvitation(AcceptInvitationModel model)
@@ -165,6 +184,9 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
         if (saved < 1)
             return new ErrorResult("Unable to accept invitation, please try again later.");
 
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListProjectManagers());
+
         // create user token
         newUser.UserRoles = new List<UserRole>() { userRole };
         var authData = await _tokenGenerator.GenerateJwtToken(newUser);
@@ -185,6 +207,9 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
         user.IsActive = false;
         await _context.SaveChangesAsync();
 
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListProjectManagers());
+
         return new SuccessResult("User suspended successfully");
     }
 
@@ -197,6 +222,9 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
         user.IsActive = true;
         await _context.SaveChangesAsync();
 
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListProjectManagers());
+
         return new SuccessResult("User activated successfully");
     }
 
@@ -206,5 +234,10 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
             .AnyAsync(u => u.Email.ToLower().Trim() == email.ToLower().Trim());
 
         return new SuccessResult(content: emailExist);
+    }
+
+    internal static class CacheKeys
+    {
+        internal static string ListProjectManagers() => "ListProjectManagers";
     }
 }

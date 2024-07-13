@@ -1,8 +1,11 @@
+using Azure.Core;
+using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Input;
@@ -16,11 +19,12 @@ using Serilog;
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: add caching
-public class TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService) : ITaskService
+public class TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache) : BaseService, ITaskService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
+    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
     public async Task<Result> CreateTask(TaskModel model)
     {
@@ -37,6 +41,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         var mappedTask = model.Adapt<SvpTask>();
         mappedTask.Status = TaskStatusEnum.TODO;
+        mappedTask.ParentId = model.ParentId != 0 ? model.ParentId : null;
         mappedTask.CreatedById = _userSession.UserId;
         mappedTask.TaskAttachments = []; // remove the default empty attachment
 
@@ -61,7 +66,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
             }
         }
 
-        if (attachments.Any())
+        if (attachments.Count != 0)
             await _context.AddRangeAsync(attachments);
 
         // add log
@@ -72,55 +77,85 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult(StatusCodes.Status201Created, mappedTask.Adapt<TaskDetailView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys());
+
+        return new SuccessResult(StatusCodes.Status201Created, mappedTask.Adapt<TaskDetailView>());
     }
 
     public async Task<Result> ListTasks(TaskSearchModel request)
     {
-        bool projectExistAndHaveAccess = await _context.Projects
+        string cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.IsAnySvpAdmin);
+        string validationCacheKey = $"{cacheKey}-validation";
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.TaskListCacheKeys(), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.TaskListCacheKeys(), cacheKeys);
+        }
+        if (!cacheKeys.Contains(validationCacheKey))
+        {
+            cacheKeys.Add(validationCacheKey);
+            _cache.Add(CacheKeys.TaskListCacheKeys(), cacheKeys);
+        }
+
+        bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(validationCacheKey, async () =>
+        {
+            return await _context.Projects
             .Where(p => p.Id == request.ProjectId)
             .AnyAsync(p => _userSession.IsAnySvpAdmin || p.AssigneeId == _userSession.UserId || p.CreatedById == _userSession.UserId);
+        }, new TimeSpan(0, 45, 0));
 
         if (!projectExistAndHaveAccess)
             return new ErrorResult("Project not found or you do not have access to view tasks in this project");
 
-        var query = _context.Tasks
-            .Where(t => t.ProjectId == request.ProjectId)
-            .Where(t => !t.IsDeleted)
-            .AsQueryable();
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            var query = _context.Tasks
+                .Where(t => t.ProjectId == request.ProjectId)
+                .Where(t => !t.IsDeleted)
+                .AsQueryable();
 
-        // filter by status
-        query = query.Where(t => !request.Statuses.Any()
-                    || request.Statuses.Contains(t.Status));
+            // filter by status
+            query = query.Where(t => request.Statuses.Count == 0
+                        || request.Statuses.Contains(t.Status));
 
-        // filter by type
-        query = query.Where(t => !request.Types.Any()
-                   || request.Types.Contains(t.Type));
+            // filter by type
+            query = query.Where(t => request.Types.Count == 0
+                       || request.Types.Contains(t.Type));
 
-        if (!string.IsNullOrEmpty(request.SearchQuery))
-            query = query.Where(t => t.Summary.Contains(request.SearchQuery));
+            if (!string.IsNullOrEmpty(request.SearchQuery))
+                query = query.Where(t => t.Summary.Contains(request.SearchQuery));
 
-        var tasks = await query
-            .OrderByDescending(t => t.CreatedAt)
-            .ProjectToType<TaskView>()
-            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+            return await query
+                .OrderByDescending(t => t.CreatedAt)
+                .ProjectToType<TaskView>()
+                .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, new TimeSpan(0, 45, 0));
 
-        return new SuccessResult(tasks);
+        return new SuccessResult(cachedResult);
     }
 
     public async Task<Result> GetTask(int taskId)
     {
-        var task = await _context.Tasks
+        var cachedData = await _cache.GetOrAddAsync(CacheKeys.TaskDetails(taskId), async () =>
+        {
+            return await _context.Tasks
             .Where(t => t.Id == taskId && !t.IsDeleted)
             .ProjectToType<TaskDetailView>()
             .FirstOrDefaultAsync();
+        }, new TimeSpan(0, 45, 0));
 
-        if (task == null)
+        if (cachedData == null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
 
-        return new SuccessResult(task);
+        return new SuccessResult(cachedData);
     }
 
     public async Task<Result> DeleteTask(int taskId)
@@ -128,13 +163,11 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         var task = await _context.Tasks.FindAsync(taskId);
         if (task is not null)
         {
-            // TODO: fix this
-            //_context.Remove(task);
+            // TODO: test this
+            _context.Remove(task);
 
-
-            task.IsDeleted = true;
-            task.DeletedById = _userSession.UserId;
-            task.DeletedOnUtc = DateTime.UtcNow;
+            // clear caches
+            _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
         }
         await _context.SaveChangesAsync();
 
@@ -143,13 +176,16 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
     public async Task<Result> ListAttachments(int taskId)
     {
-        var attachments = await _context.TaskAttachments
-            .Where(ta => ta.TaskId == taskId)
-            .Select(ta => ta.Document)
-            .ProjectToType<DocumentView>()
-            .ToListAsync();
+        var cachedData = await _cache.GetOrAddAsync(CacheKeys.ListAttachments(taskId), async () =>
+        {
+            return await _context.TaskAttachments
+                .Where(ta => ta.TaskId == taskId)
+                .Select(ta => ta.Document)
+                .ProjectToType<DocumentView>()
+                .ToListAsync();
+        }, new TimeSpan(0, 45, 0));
 
-        return new SuccessResult(attachments);
+        return new SuccessResult(cachedData);
     }
 
     public async Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model, IProgress<int> progress)
@@ -190,9 +226,13 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult(StatusCodes.Status201Created, attachment.Document.Adapt<DocumentView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListAttachments(taskId));
+
+        return new SuccessResult(StatusCodes.Status201Created, attachment.Document.Adapt<DocumentView>());
     }
 
     public async Task<Result> RemoveAttachmentFromTask(int taskId, int documentId)
@@ -228,77 +268,86 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListAttachments(taskId));
+
+        return new SuccessResult();
     }
 
     public async Task<Result> ListLogs(int taskId, PagingOptionModel request)
     {
-        var logs = await _context.TaskLogs
-            .Where(tl => tl.TaskId == taskId)
-            .OrderByDescending(tl => tl.CreatedAt)
-            .ProjectToType<TaskLogView>()
-            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        var generatedKey = GenerateCacheKey(request);
+        string cacheKey = $"TaskService-ListLogs-{taskId}-{generatedKey}";
 
-        return new SuccessResult(logs);
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.TaskLogsCacheKeys(taskId), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.TaskLogsCacheKeys(taskId), cacheKeys);
+        }
+        string source = "Cache";
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            source = "Database";
+            return await _context.TaskLogs
+                .Where(tl => tl.TaskId == taskId)
+                .OrderByDescending(tl => tl.CreatedAt)
+                .ProjectToType<TaskLogView>()
+                .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, new TimeSpan(0, 45, 0));
+
+        return new SuccessResult(cachedResult);
     }
 
     public async Task<Result> ListBoardTasks(int projectId)
     {
-        //var tasks = await _context.Tasks
-        //    .Where(t => t.ProjectId == projectId && !t.IsDeleted)
-        //    .Where(t => _userSession.IsAnyAdmin || t.Project!.AssigneeId == _userSession.UserId || t.CreatedById == _userSession.UserId)
-        //    .Select(t => new
-        //    {
-        //        Task = t,
-        //        Parent = t.Parent
-        //    })
-        //    .AsNoTracking()
-        //    .OrderBy(t => t.Task.Order)
-        //    .Select(t => new BoardTaskView
-        //    {
-        //        Id = t.Task.Id,
-        //        Epic = t.Parent != null && t.Parent.Type == TaskTypeEnum.EPIC ? t.Parent.Summary : null,
-        //        Type = t.Task.Type,
-        //        Status = t.Task.Status,
-        //        Summary = t.Task.Summary,
-        //        CreatedAt = t.Task.CreatedAt,
-        //        DueDate = t.Task.DueDate,
-        //        Order = t.Task.Order
-        //    })
-        //    .ToListAsync();
-
-        //return new SuccessResult(tasks);
-
-        var query = from task in _context.Tasks
-                    where !task.IsDeleted && task.ProjectId == projectId
-                    where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
-                    where task.Type != TaskTypeEnum.EPIC
-                    select new
-                    {
-                        task,
-                        task.Parent
-                    };
-
-        var results = await query
-            .AsNoTracking()
-            .OrderBy(t => t.task.Order)
-            .ToListAsync();
-
-        var boardTaskViews = results.Select(t => new BoardTaskView
+        bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(CacheKeys.BoardTasksValidation(projectId), async () =>
         {
-            Id = t.task.Id,
-            Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
-            Type = t.task.Type,
-            Status = t.task.Status,
-            Summary = t.task.Summary,
-            CreatedAt = t.task.CreatedAt,
-            DueDate = t.task.DueDate,
-            Order = t.task.Order
-        }).ToList();
+            return await _context.Projects
+            .Where(p => p.Id == projectId)
+            .AnyAsync(p => _userSession.IsAnySvpAdmin || p.AssigneeId == _userSession.UserId || p.CreatedById == _userSession.UserId);
+        }, new TimeSpan(0, 45, 0));
 
-        return new SuccessResult(boardTaskViews);
+        if (!projectExistAndHaveAccess)
+            return new ErrorResult("Project not found or you do not have access to view tasks in this project");
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(CacheKeys.BoardTasks(projectId), async () =>
+        {
+            var query = from task in _context.Tasks
+                        where !task.IsDeleted && task.ProjectId == projectId
+                        where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
+                        where task.Type != TaskTypeEnum.EPIC
+                        select new
+                        {
+                            task,
+                            task.Parent
+                        };
+
+            var results = await query
+                .AsNoTracking()
+                .OrderBy(t => t.task.Order)
+                .ToListAsync();
+
+            return results.Select(t => new BoardTaskView
+            {
+                Id = t.task.Id,
+                Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
+                Type = t.task.Type,
+                Status = t.task.Status,
+                Summary = t.task.Summary,
+                CreatedAt = t.task.CreatedAt,
+                DueDate = t.task.DueDate,
+                Order = t.task.Order
+            }).ToList();
+        }, new TimeSpan(0, 45, 0));
+
+        return new SuccessResult(cachedResult);
     }
 
     public async Task<Result> ChangeTaskStatus(int taskId, TaskStatusModel model)
@@ -346,9 +395,13 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult(task.Adapt<TaskView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+
+        return new SuccessResult(task.Adapt<TaskView>());
     }
 
     public async Task<Result> ChangeDueDate(int taskId, TaskDueDateModel model)
@@ -360,7 +413,7 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         if (task is null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Task not found");
 
-        if (task.Status == TaskStatusEnum.COMPLETED) 
+        if (task.Status == TaskStatusEnum.COMPLETED)
             return new ErrorResult("Task is already completed, cannot change due date.");
 
         if (task.DueDate == model.DueDate)
@@ -372,13 +425,17 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         task.UpdatedById = _userSession.UserId;
 
         // add log
-        AddTaskLog(task, $"{_userSession.Name} changed due date to {model.DueDate.ToString("MMM dd, yyyy")}", previousDue.ToString("MMM dd, yyyy"), task.DueDate.ToString("MMM dd, yyyy"), model.Reason);
+        AddTaskLog(task, $"{_userSession.Name} changed due date to {model.DueDate:MMM dd, yyyy}", previousDue.ToString("MMM dd, yyyy"), task.DueDate.ToString("MMM dd, yyyy"), model.Reason);
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult(task.Adapt<TaskView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+
+        return new SuccessResult(task.Adapt<TaskView>());
     }
 
     #region Comments
@@ -401,9 +458,13 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult(StatusCodes.Status201Created, comment.Adapt<TaskCommentView>())
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.CommentListCacheKeys(taskId));
+
+        return new SuccessResult(StatusCodes.Status201Created, comment.Adapt<TaskCommentView>());
     }
 
     public async Task<Result> RemoveComment(int taskId, int commentId)
@@ -418,28 +479,47 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
         int saved = await _context.SaveChangesAsync();
 
-        return saved > 0
-            ? new SuccessResult()
-            : new ErrorResult("Unable to save changes, please try again later.");
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.CommentListCacheKeys(taskId));
+
+        return new SuccessResult();
     }
 
     public async Task<Result> ListComments(int taskId, PagingOptionModel request)
     {
-        var query = _context.TaskComments
+        var generatedKey = GenerateCacheKey(request);
+        string cacheKey = $"TaskService-Comment-{taskId}-{generatedKey}";
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.CommentListCacheKeys(taskId), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.CommentListCacheKeys(taskId), cacheKeys);
+        }
+        string source = "Cache";
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            var query = _context.TaskComments
             .Where(tc => tc.TaskId == taskId && tc.ParentId == null)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(request.SearchQuery))
-            query = query.Where(tc => tc.Message.Contains(request.SearchQuery));
+            if (!string.IsNullOrEmpty(request.SearchQuery))
+                query = query.Where(tc => tc.Message.Contains(request.SearchQuery));
+            source = "Database";
+            return await query
+                 .Include(tc => tc.CreatedBy)
+                 .Include(tc => tc.Children.Take(2))
+                 .OrderByDescending(tc => tc.CreatedAt)
+                 .ProjectToType<TaskCommentView>()
+                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, new TimeSpan(0, 45, 0));
 
-        var comments = await query
-            .Include(tc => tc.CreatedBy)
-            .Include(tc => tc.Children.Take(2))
-            .OrderByDescending(tc => tc.CreatedAt)
-            .ProjectToType<TaskCommentView>()
-            .ToPaginatedListAsync(request.PageIndex, request.PageSize);
-
-        return new SuccessResult(comments);
+        return new SuccessResult(cachedResult);
     }
 
     #endregion
@@ -461,7 +541,20 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
         if (task.Id == 0) log.Task = task;
 
         await _context.AddAsync(log);
+
+        _cache.ClearCaches(CacheKeys.TaskLogsCacheKeys(task.Id));
     }
 
     #endregion
+
+    internal class CacheKeys
+    {
+        internal static string TaskDetails(int id) => $"task-details-{id}";
+        internal static string ListAttachments(int id) => $"task-attachments-{id}";
+        internal static string BoardTasks(int projectId) => $"board-tasks-{projectId}";
+        internal static string BoardTasksValidation(int projectId) => $"board-tasks-{projectId}-validation";
+        internal static string TaskLogsCacheKeys(int id) => $"TaskService-ListLogs-{id}-CacheKeys";
+        internal static string CommentListCacheKeys(int id) => $"TaskService-Comment-{id}-CacheKeys";
+        internal static string TaskListCacheKeys() => "TaskService-ListTasks-CacheKeys";
+    }
 }

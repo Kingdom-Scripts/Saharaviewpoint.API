@@ -14,6 +14,7 @@ using Serilog;
 
 namespace Saharaviewpoint.Core.Services;
 
+// TODO: implement cache
 public class FileService : IFileService
 {
     private readonly SaharaviewpointContext _context;

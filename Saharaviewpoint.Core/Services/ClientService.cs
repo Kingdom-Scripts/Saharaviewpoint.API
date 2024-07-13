@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LazyCache;
+using Microsoft.EntityFrameworkCore;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Input.Auth;
@@ -11,14 +13,29 @@ using Saharaviewpoint.Models.View.Client;
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: add caching
-public class ClientService(SaharaviewpointContext context, UserSession userSession) : IClientService
+public class ClientService(SaharaviewpointContext context, UserSession userSession, IAppCache cache) : BaseService, IClientService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
 
     public async Task<Result> ListClients(ClientSearchModel request)
     {
-        var clients = await _context.Users
+        var generatedKey = GenerateCacheKey(request);
+        string cacheKey = CacheKeys.ListClients() + generatedKey;
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.ListClients(), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.ListClients(), cacheKeys);
+        }
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            return await _context.Users
             .Where(u => u.Type == UserTypes.CLIENT)
             .Where(u => string.IsNullOrEmpty(request.SearchQuery) || u.FirstName.Contains(request.SearchQuery) || u.LastName.Contains(request.SearchQuery) || u.Email.Contains(request.SearchQuery))
             .Where(u => !request.DateJoinedStart.HasValue || u.CreatedAt >= request.DateJoinedStart.Value.ToUniversalTime())
@@ -38,8 +55,9 @@ public class ClientService(SaharaviewpointContext context, UserSession userSessi
                 JoinedOn = u.CreatedAt
             })
             .ToPaginatedListAsync(request.PageIndex, request.PageSize);
+        }, new TimeSpan(0, 45, 0));
 
-        return new SuccessResult(clients);
+        return new SuccessResult(cachedResult);
     }
 
     public async Task<Result> DeactivateClient(string uid)
@@ -50,6 +68,9 @@ public class ClientService(SaharaviewpointContext context, UserSession userSessi
 
         client.IsActive = false;
         await _context.SaveChangesAsync();
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListClients());
 
         return new SuccessResult();
     }
@@ -63,6 +84,14 @@ public class ClientService(SaharaviewpointContext context, UserSession userSessi
         client.IsActive = true;
         await _context.SaveChangesAsync();
 
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListClients());
+
         return new SuccessResult();
+    }
+
+    internal static class CacheKeys
+    {
+        internal static string ListClients() => "CLientService-ListClients";
     }
 }
