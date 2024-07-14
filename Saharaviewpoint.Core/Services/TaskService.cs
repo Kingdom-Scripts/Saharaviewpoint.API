@@ -90,35 +90,6 @@ public class TaskService(SaharaviewpointContext context, UserSession userSession
 
     public async Task<Result> ListTasks(TaskSearchModel request)
     {
-        {
-            var emailModel = new GenericEmailModel
-            {
-                To = "mordecai@kingdomscripts.com,davidire71@gmail.com",
-                Cc = "info.kingdomscripts@gmail.com",
-                Subject = "New Task Created",
-                Salutation = "Hello,",
-                PrimaryMessage = $"A new task has been created.<br><br>" +
-                    "Summary: {model.Summary}<br>" +
-                    "Type: {model.Type}<br>" +
-                    "Status: {model.Status}<br>" +
-                    "Due Date: {model.DueDate:MMM dd, yyyy}<br><br>" +
-                    $"<strong>Please login to view the task.</strong>",
-                //ActionButton = new()
-                //{
-                //    Text = "View Task",
-                //    Url = "https://kingdomscripts.com"
-                //},
-                //SecondaryMessage = "You can view the task by clicking the button above.",
-                ClosingRemark = "Thank you for using our service."
-            };
-
-            await _emailService.SendEmail(emailModel);
-        }
-
-
-
-
-
         string cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.IsAnySvpAdmin);
         string validationCacheKey = $"{cacheKey}-validation";
 

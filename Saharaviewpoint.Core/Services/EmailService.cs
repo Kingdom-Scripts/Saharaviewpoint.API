@@ -75,7 +75,6 @@ public class EmailService : IEmailService
         context.Options.Filters.AddFilter("to_comma_separated",
             (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
         context.SetValue("url", url);
-        context.SetValue("logoUrl", $"{_appConfig.BaseURLs.Client}/api/v1/assets/svp-logo");
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -132,7 +131,6 @@ public class EmailService : IEmailService
         context.SetValue("url", url);
         context.SetValue("name", model.RecipientName);
         context.SetValue("inviteSenderName", model.SenderName);
-        context.SetValue("logoUrl", $"{_appConfig.BaseURLs.Client}/api/v1/assets/svp-logo");
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -174,14 +172,11 @@ public class EmailService : IEmailService
         context.Options.Filters.AddFilter("to_comma_separated", (input, arguments, ctx)
             => new StringValue($"{input.ToObjectValue():n}"));
 
-        args ??= new Dictionary<string, string?>();
+        args ??= [];
         foreach (var value in args)
         {
             context.SetValue(value.Key, value.Value ?? string.Empty);
         }
-
-        // set logo
-        context.SetValue("logoUrl", $"{_appConfig.BaseURLs.Client}/api/v1/assets/svp-logo");
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -227,12 +222,11 @@ public class EmailService : IEmailService
         context.SetValue("primaryMessage", model.PrimaryMessage);
         context.SetValue("secondaryMessage", model.SecondaryMessage);
         context.SetValue("closingRemark", model.ClosingRemark);
-        context.SetValue("logoUrl", $"{_appConfig.BaseURLs.Client}/api/v1/assets/svp-logo");
 
         if (model.ActionButton is not null)
         {
             context.SetValue("buttonText", model.ActionButton.Text);
-            context.SetValue("url", model.ActionButton.Url);    
+            context.SetValue("url", model.ActionButton.Url);
         }
 
         // compute output
@@ -249,11 +243,28 @@ public class EmailService : IEmailService
         try
         {
             mail.From = new MailAddress("test@kingdomscripts.com", "Saharaviewpoint");
+
+            //create Alrternative HTML view
+            AlternateView htmlView = AlternateView.CreateAlternateViewFromString(body, null, "text/html");
+
+            string filePath = Path.Combine(_hostingEnvironment.WebRootPath, "images", "svp-logo.png");
+
+            //Add Image
+            LinkedResource theEmailImage = new(filePath)
+            {
+                ContentId = "logoImageID"
+            };
+
+            //Add the Image to the Alternate view
+            htmlView.LinkedResources.Add(theEmailImage);
+
+            //Add view to the Email Message
+            mail.AlternateViews.Add(htmlView);
+
             mail.To.Add(to);
             if (cc is not null) mail.CC.Add(cc);
             if (bcc is not null) mail.Bcc.Add(bcc);
             mail.Subject = subject;
-            mail.Body = body;
             mail.IsBodyHtml = true;
 
             _smtpClient.Send(mail);
