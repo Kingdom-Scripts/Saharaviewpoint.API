@@ -82,13 +82,13 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.Email == model.Email);
 
         if (user == null)
-            return new ErrorResult("Login Failed:", "Invalid credentials.");
+            return new BadErrorResult("Invalid credentials.");
 
         if (!user.IsActive)
-            return new ErrorResult("Login Failed:", "Account suspended, kindly contact the admin.");
+            return new BadErrorResult("Account suspended, kindly contact the admin.");
 
         if (!user.HashedPassword.VerifyPassword(model.Password))
-            return new ErrorResult("Login Failed:", "Invalid credentials.");
+            return new BadErrorResult("Invalid credentials.");
 
         return await _tokenGenerator.GenerateJwtToken(user);
     }
