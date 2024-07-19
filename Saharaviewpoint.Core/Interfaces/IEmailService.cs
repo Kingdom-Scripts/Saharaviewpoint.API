@@ -1,4 +1,10 @@
-﻿using System.Net.Mail;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using System.Net.Mail;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Utilities;
 

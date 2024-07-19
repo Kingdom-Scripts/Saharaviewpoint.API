@@ -1,4 +1,10 @@
-﻿using Saharaviewpoint.Models.App.Constants;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Constants;
 
 namespace Saharaviewpoint.Models.Input.Auth;

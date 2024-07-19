@@ -1,4 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.App;

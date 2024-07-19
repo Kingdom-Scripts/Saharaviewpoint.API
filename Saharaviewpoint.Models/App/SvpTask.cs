@@ -1,3 +1,9 @@
+// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
 using Saharaviewpoint.Models.Interfaces;
 using System.ComponentModel.DataAnnotations;
 

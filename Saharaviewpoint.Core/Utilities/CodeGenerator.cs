@@ -1,4 +1,10 @@
-﻿namespace Saharaviewpoint.Core.Utilities;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+namespace Saharaviewpoint.Core.Utilities;
 
 public static class CodeGenerator
 {

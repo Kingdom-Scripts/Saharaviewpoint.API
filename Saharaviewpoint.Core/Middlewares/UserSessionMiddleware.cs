@@ -1,4 +1,10 @@
-﻿using System.Security.Claims;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Saharaviewpoint.Models.Constants;
 using Saharaviewpoint.Models.Input.Auth;

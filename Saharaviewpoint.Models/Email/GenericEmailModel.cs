@@ -1,4 +1,10 @@
-﻿namespace Saharaviewpoint.Models.Email;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+namespace Saharaviewpoint.Models.Email;
 public class GenericEmailModel
 {
     public required string To { get; set; }

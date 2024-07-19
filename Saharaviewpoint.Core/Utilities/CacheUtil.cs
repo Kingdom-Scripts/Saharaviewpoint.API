@@ -1,5 +1,10 @@
-﻿using LazyCache;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using LazyCache;
 
 namespace Saharaviewpoint.Core.Utilities;
 public static class CacheUtil

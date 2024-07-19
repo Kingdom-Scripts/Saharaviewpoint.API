@@ -1,3 +1,9 @@
+// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
 using System.Collections;
 using System.Globalization;
 using System.Reflection;

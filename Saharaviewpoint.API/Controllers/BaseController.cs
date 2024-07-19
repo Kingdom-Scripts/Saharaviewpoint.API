@@ -1,3 +1,9 @@
+// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Models.Utilities;
 using System.Net;

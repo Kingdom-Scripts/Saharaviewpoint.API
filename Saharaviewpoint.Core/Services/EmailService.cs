@@ -1,15 +1,21 @@
-﻿using Saharaviewpoint.Core.Interfaces;
-using System.Net.Mail;
-using System.Web;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
 using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
+using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Utilities;
 using Serilog;
+using System.Net.Mail;
+using System.Web;
 
 namespace Saharaviewpoint.Core.Services;
 

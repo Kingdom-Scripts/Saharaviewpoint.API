@@ -1,14 +1,21 @@
+// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
 using Azure.Core;
 using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
-using Saharaviewpoint.Models.Email;
+using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Task;
@@ -20,13 +27,27 @@ using Serilog;
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: add caching
-public class TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService) : BaseService, ITaskService
+public class TaskService : BaseService, ITaskService
 {
-    private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
-    private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
-    private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-    private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-    private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+    private readonly SaharaviewpointContext _context;
+    private readonly UserSession _userSession;
+    private readonly IFileService _fileService;
+    private readonly IAppCache _cache;
+    private readonly IEmailService _emailService;
+    private readonly BaseURLs _baseUrls;
+
+    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService,
+        IOptions<AppConfig> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
+        _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+        _baseUrls = options.Value.BaseURLs;
+    }
 
     public async Task<Result> CreateTask(TaskModel model)
     {

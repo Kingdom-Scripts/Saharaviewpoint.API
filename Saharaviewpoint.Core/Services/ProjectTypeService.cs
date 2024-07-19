@@ -1,4 +1,10 @@
-﻿using Mapster;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using Mapster;
 using Microsoft.AspNetCore.Http;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;

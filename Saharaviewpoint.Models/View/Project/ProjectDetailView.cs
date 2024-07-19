@@ -1,4 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿// ========================================================================
+// Copyright (c) Kingdom Scripts Technology Solutions. All rights reserved.
+// Author: Mordecai Godwin
+// Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
+// ========================================================================
+
+using Newtonsoft.Json;
 
 namespace Saharaviewpoint.Models.View.Project;
 
