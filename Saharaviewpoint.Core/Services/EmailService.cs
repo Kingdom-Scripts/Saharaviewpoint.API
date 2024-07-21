@@ -34,14 +34,23 @@ public class EmailService : IEmailService
         _appConfig = options.Value;
         _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
 
-        _smtpClient = new SmtpClient()
+        // var client = new SmtpClient();
+        // client.DeliveryMethod = SmtpDeliveryMethod.Network;
+        // client.EnableSsl = true;
+        // client.Host = "smtppro.zoho.com";
+        // client.Port = 587;
+        // client.UseDefaultCredentials = false;
+        // client.Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y");
+        // client.Send(mail);
+
+        _smtpClient = new SmtpClient
         {
-            Host = "smtp.zoho.com",
+            Host = "smtppro.zoho.com",
             Port = 587,
-            Credentials = new System.Net.NetworkCredential("thirdparty@kingdomscripts.com", "Davidire0)("),
-            EnableSsl = false,
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false
+            EnableSsl = true,
+            UseDefaultCredentials = false,
+            Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y"),
+            DeliveryMethod = SmtpDeliveryMethod.Network
         };
     }
 
@@ -77,9 +86,9 @@ public class EmailService : IEmailService
         var context = new TemplateContext
         {
             Options =
-                {
-                    MemberAccessStrategy = new UnsafeMemberAccessStrategy()
-                }
+            {
+                MemberAccessStrategy = new UnsafeMemberAccessStrategy()
+            }
         };
 
         context.Options.Filters.AddFilter("to_comma_separated",
@@ -131,9 +140,9 @@ public class EmailService : IEmailService
         var context = new TemplateContext
         {
             Options =
-                {
-                    MemberAccessStrategy = new UnsafeMemberAccessStrategy()
-                }
+            {
+                MemberAccessStrategy = new UnsafeMemberAccessStrategy()
+            }
         };
 
         context.Options.Filters.AddFilter("to_comma_separated",
@@ -198,7 +207,8 @@ public class EmailService : IEmailService
     public async Task<Result> SendEmail(GenericEmailModel model)
     {
         // get template file
-        string templatePath = Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", "generic-template.html");
+        string templatePath =
+            Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", "generic-template.html");
 
         // validate file
         if (!File.Exists(templatePath))
@@ -247,7 +257,8 @@ public class EmailService : IEmailService
         return SendMessage(model.To, model.Subject, output, model.Cc, model.Bcc);
     }
 
-    private Result SendMessage(string to, string subject, string body, string? cc = null, string? bcc = null, Attachment? attachment = null)
+    private Result SendMessage(string to, string subject, string body, string? cc = null, string? bcc = null,
+        Attachment? attachment = null)
     {
         var mail = new MailMessage();
 
@@ -278,28 +289,8 @@ public class EmailService : IEmailService
             mail.Subject = subject;
             mail.IsBodyHtml = true;
 
-            //_smtpClient.Send(mail);
+            _smtpClient.Send(mail);
 
-            var client = new SmtpClient();
-            client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            client.EnableSsl = true;
-            client.Host = "smtp.zoho.com";
-            client.Port = 587;
-            client.UseDefaultCredentials = false;
-            client.Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y");
-            client.Send(mail);
-
-            var smpt = new SmtpClient()
-            {
-                Host = "smtppro.zoho.com",
-                Port = 465,
-                Credentials = new System.Net.NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y"),
-                EnableSsl = false,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false
-            };
-
-            smpt.Send(mail);
             return new SuccessResult(true);
         }
         catch (Exception ex)
