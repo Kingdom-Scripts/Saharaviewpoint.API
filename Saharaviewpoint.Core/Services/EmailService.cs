@@ -14,6 +14,7 @@ using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Utilities;
 using Serilog;
+using System.Net;
 using System.Net.Mail;
 using System.Web;
 
@@ -33,11 +34,14 @@ public class EmailService : IEmailService
         _appConfig = options.Value;
         _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
 
-        _smtpClient = new SmtpClient("plesk6700.is.cc")
+        _smtpClient = new SmtpClient()
         {
+            Host = "smtp.zoho.com",
             Port = 587,
-            Credentials = new System.Net.NetworkCredential("test@kingdomscripts.com", "p6kIv33^4"),
-            EnableSsl = false
+            Credentials = new System.Net.NetworkCredential("thirdparty@kingdomscripts.com", "Davidire0)("),
+            EnableSsl = false,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false
         };
     }
 
@@ -80,7 +84,7 @@ public class EmailService : IEmailService
 
         context.Options.Filters.AddFilter("to_comma_separated",
             (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
-        context.SetValue("url", url);
+        _ = context.SetValue("url", url);
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -134,9 +138,9 @@ public class EmailService : IEmailService
 
         context.Options.Filters.AddFilter("to_comma_separated",
             (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
-        context.SetValue("url", url);
-        context.SetValue("name", model.RecipientName);
-        context.SetValue("inviteSenderName", model.SenderName);
+        _ = context.SetValue("url", url);
+        _ = context.SetValue("name", model.RecipientName);
+        _ = context.SetValue("inviteSenderName", model.SenderName);
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -181,7 +185,7 @@ public class EmailService : IEmailService
         args ??= [];
         foreach (var value in args)
         {
-            context.SetValue(value.Key, value.Value ?? string.Empty);
+            _ = context.SetValue(value.Key, value.Value ?? string.Empty);
         }
 
         // compute output
@@ -224,15 +228,16 @@ public class EmailService : IEmailService
             => new StringValue($"{input.ToObjectValue():n}"));
 
         // TODO: logo is not showing in received email
-        context.SetValue("salutation", model.Salutation);
-        context.SetValue("primaryMessage", model.PrimaryMessage);
-        context.SetValue("secondaryMessage", model.SecondaryMessage);
-        context.SetValue("closingRemark", model.ClosingRemark);
+        _ = context.SetValue("salutation", model.Salutation);
+        _ = context.SetValue("primaryMessage", model.PrimaryMessage);
+        _ = context.SetValue("secondaryMessage", model.SecondaryMessage);
+        _ = context.SetValue("closingRemark", model.ClosingRemark);
+        _ = context.SetValue("showAlternateUrl", model.ShowAlternateUrl);
 
         if (model.ActionButton is not null)
         {
-            context.SetValue("buttonText", model.ActionButton.Text);
-            context.SetValue("url", model.ActionButton.Url);
+            _ = context.SetValue("buttonText", model.ActionButton.Text);
+            _ = context.SetValue("url", model.ActionButton.Url);
         }
 
         // compute output
@@ -248,7 +253,7 @@ public class EmailService : IEmailService
 
         try
         {
-            mail.From = new MailAddress("test@kingdomscripts.com", "Saharaviewpoint");
+            mail.From = new MailAddress("thirdparty@kingdomscripts.com", "Saharaviewpoint");
 
             //create Alrternative HTML view
             AlternateView htmlView = AlternateView.CreateAlternateViewFromString(body, null, "text/html");
@@ -273,7 +278,28 @@ public class EmailService : IEmailService
             mail.Subject = subject;
             mail.IsBodyHtml = true;
 
-            _smtpClient.Send(mail);
+            //_smtpClient.Send(mail);
+
+            var client = new SmtpClient();
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.EnableSsl = true;
+            client.Host = "smtp.zoho.com";
+            client.Port = 587;
+            client.UseDefaultCredentials = false;
+            client.Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y");
+            client.Send(mail);
+
+            var smpt = new SmtpClient()
+            {
+                Host = "smtppro.zoho.com",
+                Port = 465,
+                Credentials = new System.Net.NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y"),
+                EnableSsl = false,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false
+            };
+
+            smpt.Send(mail);
             return new SuccessResult(true);
         }
         catch (Exception ex)

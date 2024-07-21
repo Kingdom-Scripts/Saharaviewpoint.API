@@ -9,13 +9,11 @@ using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Task;
@@ -34,19 +32,15 @@ public class TaskService : BaseService, ITaskService
     private readonly IFileService _fileService;
     private readonly IAppCache _cache;
     private readonly IEmailService _emailService;
-    private readonly BaseURLs _baseUrls;
 
-    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService,
-        IOptions<AppConfig> options)
+    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService)
     {
-        ArgumentNullException.ThrowIfNull(options);
 
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
-        _baseUrls = options.Value.BaseURLs;
     }
 
     public async Task<Result> CreateTask(TaskModel model)
@@ -96,7 +90,7 @@ public class TaskService : BaseService, ITaskService
         AddTaskLog(mappedTask, $"Task created by {_userSession.Name}");
 
         // add task
-        await _context.AddAsync(mappedTask);
+        _ = await _context.AddAsync(mappedTask);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -187,12 +181,12 @@ public class TaskService : BaseService, ITaskService
         if (task is not null)
         {
             // TODO: test this
-            _context.Remove(task);
+            _ = _context.Remove(task);
 
             // clear caches
             _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
         }
-        await _context.SaveChangesAsync();
+        _ = await _context.SaveChangesAsync();
 
         return new SuccessResult();
     }
@@ -245,7 +239,7 @@ public class TaskService : BaseService, ITaskService
         // Add log
         AddTaskLog(task, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
 
-        await _context.AddAsync(attachment);
+        _ = await _context.AddAsync(attachment);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -283,8 +277,8 @@ public class TaskService : BaseService, ITaskService
         if (!deleted.Success)
             return new ErrorResult(deleted.Message);
 
-        _context.Remove(attachment);
-        _context.Remove(attachment.Document);
+        _ = _context.Remove(attachment);
+        _ = _context.Remove(attachment.Document);
 
         // add log
         AddTaskLog(attachment.Task!, $"{_userSession.Name} removed an attachment", attachment.Document.Name);
@@ -312,11 +306,9 @@ public class TaskService : BaseService, ITaskService
             cacheKeys.Add(cacheKey);
             _cache.Add(CacheKeys.TaskLogsCacheKeys(taskId), cacheKeys);
         }
-        string source = "Cache";
         // Try to get the cached result
         var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
         {
-            source = "Database";
             return await _context.TaskLogs
                 .Where(tl => tl.TaskId == taskId)
                 .OrderByDescending(tl => tl.CreatedAt)
@@ -477,7 +469,7 @@ public class TaskService : BaseService, ITaskService
         comment.CreatedById = _userSession.UserId;
         comment.FullName = _userSession.Name;
 
-        await _context.AddAsync(comment);
+        _ = await _context.AddAsync(comment);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -498,7 +490,7 @@ public class TaskService : BaseService, ITaskService
         if (comment is null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Comment does not exist.");
 
-        _context.Remove(comment);
+        _ = _context.Remove(comment);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -523,7 +515,6 @@ public class TaskService : BaseService, ITaskService
             cacheKeys.Add(cacheKey);
             _cache.Add(CacheKeys.CommentListCacheKeys(taskId), cacheKeys);
         }
-        string source = "Cache";
         // Try to get the cached result
         var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
         {
@@ -533,7 +524,6 @@ public class TaskService : BaseService, ITaskService
 
             if (!string.IsNullOrEmpty(request.SearchQuery))
                 query = query.Where(tc => tc.Message.Contains(request.SearchQuery));
-            source = "Database";
             return await query
                  .Include(tc => tc.CreatedBy)
                  .Include(tc => tc.Children.Take(2))
@@ -563,7 +553,7 @@ public class TaskService : BaseService, ITaskService
 
         if (task.Id == 0) log.Task = task;
 
-        await _context.AddAsync(log);
+        _ = await _context.AddAsync(log);
 
         _cache.ClearCaches(CacheKeys.TaskLogsCacheKeys(task.Id));
     }

@@ -48,7 +48,7 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
             login.HashedToken = encryptedToken;
             login.ExpiresAt = DateTime.UtcNow.AddDays(30);
 
-            _context.Logins.Update(login);
+            _ = _context.Logins.Update(login);
         }
         else
         {
@@ -60,9 +60,9 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
                 ExpiresAt = DateTime.UtcNow.AddDays(30)
             };
 
-            await _context.Logins.AddAsync(login);
+            _ = await _context.Logins.AddAsync(login);
         }
-        await _context.SaveChangesAsync();
+        _ = await _context.SaveChangesAsync();
 
         // clear any previous token from cache
         _cache.Remove($"ValidateToken-{user.Uid}-{requestDomain}");
@@ -105,8 +105,8 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
             // clear the token from cache
             _cache.Remove($"ValidateToken-{userReference}-{login.Domain}");
 
-            _context.Logins.Update(login);
-            await _context.SaveChangesAsync();
+            _ = _context.Logins.Update(login);
+            _ = await _context.SaveChangesAsync();
         }
 
         var refreshToken = await _context.RefreshTokens
@@ -114,8 +114,8 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
 
         if (refreshToken != null)
         {
-            _context.Remove(refreshToken);
-            await _context.SaveChangesAsync();
+            _ = _context.Remove(refreshToken);
+            _ = await _context.SaveChangesAsync();
         }
     }
 
@@ -218,7 +218,7 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
         var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(r => r.UserId == userId);
         if (refreshToken == null)
         {
-            await _context.AddAsync(new RefreshToken
+            _ = await _context.AddAsync(new RefreshToken
             {
                 UserId = userId,
                 Code = token,
@@ -230,7 +230,7 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
             refreshToken.Code = token;
             refreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_jwtConfig.RefreshExpireDays);
         }
-        await _context.SaveChangesAsync();
+        _ = await _context.SaveChangesAsync();
 
         return token;
     }

@@ -184,6 +184,7 @@
                                             <br>The Saharaviewpoint Team
                                         </p>
 
+                                        {% if showAlternateUrl %}
                                         {% if url != null %}
                                         <table width="100%" style="border-collapse:collapse;">
                                             <tr>
@@ -207,6 +208,7 @@
                                         </p>
                                         <p class="small"
                                            style="color:#4a5566;margin: 20px 0;font-size:14px;line-height:21px;">{{ url }}</p>
+                                        {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>

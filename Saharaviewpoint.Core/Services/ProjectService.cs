@@ -4,33 +4,38 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Constants;
+using Saharaviewpoint.Models.Email;
+using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Project;
-using Microsoft.EntityFrameworkCore;
-using Saharaviewpoint.Core.Utilities;
-using Saharaviewpoint.Models.Constants;
-using Saharaviewpoint.Models.Input;
-using Saharaviewpoint.Models.View.Task;
-using Saharaviewpoint.Models.App.Constants;
-using LazyCache;
 
 namespace Saharaviewpoint.Core.Services;
 
 public class ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
-    IEmailService emailService, IAppCache cache) : BaseService, IProjectService
+    IEmailService emailService, IAppCache cache,
+        IOptions<AppConfig> options) : BaseService, IProjectService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+
+    private readonly BaseURLs _baseUrls = options.Value.BaseURLs;
 
     private const string ListProjectsCacheKeys = "ProjectService-ListProjects-CacheKeys";
     private const string ProjectLogsCacheKeys = "ProjectLogs-CacheKeys";
@@ -76,12 +81,45 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         AddProjectLog(mappedProject, ProjectLogTypes.Create, $"Project created {_userSession.Name}");
 
         // save project to databse
-        await _context.AddAsync(mappedProject);
+        _ = await _context.AddAsync(mappedProject);
 
         int saved = await _context.SaveChangesAsync();
 
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
+
+        // Send Notification Email
+        {
+            string baseUrl = $"{_baseUrls.Admin}/projects?approve={mappedProject.Id}";
+            string adminEmails = string.Join(", ", _context.Roles
+                    .Where(r => r.Name == nameof(Roles.SvpAdmin)
+                        || r.Name == nameof(Roles.SuperAdmin))
+                    .SelectMany(r => r.UserRoles)
+                    .Select(ur => ur.User.Email)
+                    .ToList());
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = adminEmails,
+                Subject = "New Project Request",
+                Salutation = "Hello,",
+                PrimaryMessage = "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
+                "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
+                "<strong>Project Title:</strong> New Project Name<br>" +
+                "<strong>Project Type:</strong> Bungalow<br>" +
+                "<strong>Proposed Start Date:</strong> 14 May 2024<br>" +
+                "<strong>Proposed End Date:</strong> 14 May 2024<br>" +
+                "<strong>Size of Site:</strong> 14 hecters<br><br>",
+                ClosingRemark = "Regards,",
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = baseUrl
+                }
+            };
+
+            var res = await _emailService.SendEmail(emailRequest);
+        }
 
         _cache.ClearCaches(ListProjectsCacheKeys, ProjectLogsCacheKeys);
 
@@ -199,6 +237,39 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
+        {
+            string baseUrl = $"{_baseUrls.Admin}/projects?approve=8";
+            var roleNames = new[] { nameof(Roles.SvpAdmin), nameof(Roles.SuperAdmin) };
+            string adminEmails = string.Join(",", _context.Roles
+                .Where(r => roleNames.Contains(r.Name))
+                .SelectMany(r => r.UserRoles)
+                .Select(ur => ur.User!.Email)
+                .Distinct()
+                .AsNoTracking());
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = adminEmails,
+                Subject = "New Project Request",
+                Salutation = "Hello,",
+                PrimaryMessage = "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
+                "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
+                "<strong>Project Title:</strong> New Project Name<br>" +
+                "<strong>Project Type:</strong> Bungalow<br>" +
+                "<strong>Proposed Start Date:</strong> 14 May 2024<br>" +
+                "<strong>Proposed End Date:</strong> 14 May 2024<br>" +
+                "<strong>Size of Site:</strong> 14 hecters<br><br>",
+                ClosingRemark = "Regards,",
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = baseUrl
+                }
+            };
+
+            var res = await _emailService.SendEmail(emailRequest);
+        }
+
         var cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient, _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
 
         // Retrieve the current list of cache keys and add the new key
@@ -332,7 +403,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 return new BadErrorResult("Assignee has been deactivated from the syste");
         }
 
-        model.Adapt(project);
+        _ = model.Adapt(project);
 
         project.UpdatedById = _userSession.UserId;
         project.UpdatedOn = DateTime.UtcNow;
@@ -459,7 +530,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             CreatedById = _userSession.UserId
         };
 
-        await _context.AddAsync(newType);
+        _ = await _context.AddAsync(newType);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -524,7 +595,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         if (project.Id == 0) log.Project = project;
 
-        await _context.ProjectLogs.AddAsync(log);
+        _ = await _context.ProjectLogs.AddAsync(log);
 
         _cache.ClearCaches(ProjectLogsCacheKeys);
     }

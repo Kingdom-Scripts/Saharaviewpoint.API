@@ -17,6 +17,7 @@ public class GenericEmailModel
     public EmailActionButton? ActionButton { get; set; }
     public string? SecondaryMessage { get; set; }
     public string? ClosingRemark { get; set; }
+    public bool ShowAlternateUrl { get; set; } = false;
 }
 
 public class EmailActionButton
