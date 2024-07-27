@@ -109,8 +109,7 @@ public class SaharaviewpointContext : DbContext
             .OnDelete(DeleteBehavior.Restrict); // Prevent cascading
 
         builder.Entity<Document>()
-            .ToTable(p =>
-                p.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word Document', 'Unknown')"));
+            .ToTable(p => p.HasCheckConstraint("CK_Document_Type", $"[Type] IN ({DocumentTypes.DB_CONSTRAINT})"));
 
         builder.Entity<SvpTask>()
             .ToTable(p => p.HasCheckConstraint("CK_Task_Type",

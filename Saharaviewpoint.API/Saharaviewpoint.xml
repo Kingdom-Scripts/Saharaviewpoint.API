@@ -458,5 +458,17 @@
         <member name="M:Saharaviewpoint.API.Migrations.TwentyFour.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
+        <member name="T:Saharaviewpoint.API.Migrations.TwentyFive">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.TwentyFive.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.TwentyFive.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:Saharaviewpoint.API.Migrations.TwentyFive.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

@@ -54,7 +54,4 @@ public interface IFileService
     /// <param name="fileName">The name of the file to be retrieved.</param>
     /// <returns></returns>
     Task<Result> DeleteFile(string folder, string subFolder, string fileName);
-
-    Task<Result<Document>> UploadTaskAttachment(string folder, string subFolder, IFormFile file,
-        IProgress<int> progress);
 }

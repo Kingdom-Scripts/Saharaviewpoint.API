@@ -93,7 +93,7 @@ public class EmailService : IEmailService
 
         context.Options.Filters.AddFilter("to_comma_separated",
             (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
-        _ = context.SetValue("url", url);
+        context.SetValue("url", url);
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -147,9 +147,9 @@ public class EmailService : IEmailService
 
         context.Options.Filters.AddFilter("to_comma_separated",
             (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
-        _ = context.SetValue("url", url);
-        _ = context.SetValue("name", model.RecipientName);
-        _ = context.SetValue("inviteSenderName", model.SenderName);
+        context.SetValue("url", url);
+        context.SetValue("name", model.RecipientName);
+        context.SetValue("inviteSenderName", model.SenderName);
 
         // compute output
         string output = await fluidTemplate.RenderAsync(context);
@@ -194,7 +194,7 @@ public class EmailService : IEmailService
         args ??= [];
         foreach (var value in args)
         {
-            _ = context.SetValue(value.Key, value.Value ?? string.Empty);
+            context.SetValue(value.Key, value.Value ?? string.Empty);
         }
 
         // compute output
@@ -238,16 +238,16 @@ public class EmailService : IEmailService
             => new StringValue($"{input.ToObjectValue():n}"));
 
         // TODO: logo is not showing in received email
-        _ = context.SetValue("salutation", model.Salutation);
-        _ = context.SetValue("primaryMessage", model.PrimaryMessage);
-        _ = context.SetValue("secondaryMessage", model.SecondaryMessage);
-        _ = context.SetValue("closingRemark", model.ClosingRemark);
-        _ = context.SetValue("showAlternateUrl", model.ShowAlternateUrl);
+        context.SetValue("salutation", model.Salutation);
+        context.SetValue("primaryMessage", model.PrimaryMessage);
+        context.SetValue("secondaryMessage", model.SecondaryMessage);
+        context.SetValue("closingRemark", model.ClosingRemark);
+        context.SetValue("showAlternateUrl", model.ShowAlternateUrl);
 
         if (model.ActionButton is not null)
         {
-            _ = context.SetValue("buttonText", model.ActionButton.Text);
-            _ = context.SetValue("url", model.ActionButton.Url);
+            context.SetValue("buttonText", model.ActionButton.Text);
+            context.SetValue("url", model.ActionButton.Url);
         }
 
         // compute output

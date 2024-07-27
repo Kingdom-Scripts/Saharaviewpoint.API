@@ -4,12 +4,9 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.Input;
-using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.Input.Task;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
@@ -72,40 +69,9 @@ public class TasksController(ITaskService taskService) : BaseController
     [HttpPost("{taskId}/attachments")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<DocumentView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
-    public async Task<IActionResult> UploadAttachment(int taskId, [FromForm] FileUploadModel file,
-        [FromServices] IHttpContextAccessor accessor)
+    public async Task<IActionResult> UploadAttachment(int taskId, [FromForm] FileUploadModel file)
     {
-        // var response = accessor.HttpContext.Response;
-        // response.ContentType = "application/json";
-        // response.Headers.Add("Cache-Control", "no-cache");
-        // response.Headers.Add("Connection", "keep-alive");
-
-        Response.StatusCode = 200;
-        Response.ContentType = "text/event-stream";
-        Response.ContentLength = 10000;
-
-        var sw = new StreamWriter(Response.Body);
-
-        var progress = new Progress<int>(async percentage =>
-        {
-            if (percentage > 96)
-            {
-                int wait = 2;
-            }
-
-            // Send progress update to client
-            var progressResponse = new SuccessResult(new { Percentage = percentage });
-            string json = JsonConvert.SerializeObject(progressResponse);
-
-            // Write progress update to response stream and flush immediately
-            // var data = Encoding.UTF8.GetBytes(json);
-            // response.Body.WriteAsync(data, 0, data.Length);
-            // response.Body.FlushAsync();
-            await sw.WriteAsync(percentage.ToString());
-            await sw.FlushAsync();
-        });
-
-        var result = await _taskService.AddAttachmentToTask(taskId, file, progress);
+        var result = await _taskService.AddAttachmentToTask(taskId, file);
         return ProcessResponse(result);
     }
 

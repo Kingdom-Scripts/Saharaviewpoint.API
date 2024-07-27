@@ -34,7 +34,7 @@ public class FileService : IFileService
         SaharaviewpointContext context, IWebHostEnvironment hostEnvironment)
     {
         _hostEnvironment = hostEnvironment ?? throw new ArgumentNullException(nameof(hostEnvironment));
-        ArgumentNullException.ThrowIfNull(keyVaultConfig); 
+        ArgumentNullException.ThrowIfNull(keyVaultConfig);
 
         // TODO: remove this api call from here
         //var keyVault = keyVaultConfig.Value;
@@ -158,76 +158,6 @@ public class FileService : IFileService
         }
     }
 
-    public async Task<Result<Document>> UploadTaskAttachment(string folder, string subFolder, IFormFile file, IProgress<int> progress)
-    {
-        try
-        {
-            string ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            string fileType = GetDocumentType(ext);
-
-            var containerClient = _blobServiceClient.GetBlobContainerClient(folder);
-
-            await containerClient.CreateIfNotExistsAsync();
-
-            string fileUploadName = $"{Guid.NewGuid()}{ext}";
-            if (fileType != DocumentTypes.IMAGE)
-            {
-                var blobClient = containerClient.GetBlobClient($"{subFolder}/{fileUploadName}");
-
-                // Upload data
-                // await blobClient.UploadAsync(file.OpenReadStream(), true);
-
-                // Get the length of the file
-                long fileLength = file.Length;
-
-                // Progress reporting variables
-                long bytesUploaded = 0;
-                const int bufferSize = 4096;
-                byte[] buffer = new byte[bufferSize];
-                int bytesRead;
-
-                // Upload data
-                using (var stream = file.OpenReadStream())
-                {
-                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                    {
-                        await blobClient.UploadAsync(new MemoryStream(buffer, 0, bytesRead), true);
-
-                        bytesUploaded += bytesRead;
-                        // Calculate progress percentage
-                        int progressPercentage = (int)((bytesUploaded * 100) / fileLength);
-                        Console.WriteLine($"Bytes uploaded: {bytesUploaded}, Progress: {progressPercentage}%");
-                        // Report progress
-                        progress?.Report(progressPercentage);
-                    }
-                }
-            }
-            else
-            {
-                await SaveImageAsync(containerClient, subFolder, fileUploadName, file);
-            }
-
-            var document = new Document
-            {
-                Name = file.FileName,
-                Type = fileType,
-                Url = $"{folder}/{subFolder}/{fileUploadName}",
-                ThumbnailUrl = fileType == DocumentTypes.IMAGE
-                    ? $"{folder}/{subFolder}/_thumbnail/{fileUploadName}"
-                    : $"thumbnail/{fileType}.png",
-                CreatedById = _userSession.UserId
-            };
-
-            return new SuccessResult<Document>(document);
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error uploading file");
-            return new ErrorResult<Document>("An unexpected error occurred while uploading your file(s)");
-        }
-    }
-
-
     public FileStreamResult? GetSvpLogo()
     {
         // get logo from file storage
@@ -315,6 +245,11 @@ public class FileService : IFileService
         else if (extension == ".doc" || extension == ".docx")
         {
             return DocumentTypes.WORD_DOCUMENT;
+        }
+        // Excel file or CSV
+        else if (extension == ".xls" || extension == ".xlsx" || extension == ".csv")
+        {
+            return DocumentTypes.EXCEL_DOCUMENT;
         }
         else
         {

@@ -5,7 +5,6 @@
 // ========================================================================
 
 using Saharaviewpoint.Models.Input;
-using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.Input.Task;
 using Saharaviewpoint.Models.Utilities;
 
@@ -18,7 +17,7 @@ public interface ITaskService
     Task<Result> GetTask(int taskId);
     Task<Result> DeleteTask(int taskId);
     Task<Result> ListAttachments(int taskId);
-    Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model, IProgress<int> progress);
+    Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model);
     Task<Result> RemoveAttachmentFromTask(int taskId, int documentId);
     Task<Result> ListLogs(int taskId, PagingOptionModel request);
     Task<Result> ListBoardTasks(int projectId);

@@ -90,7 +90,7 @@ public class TaskService : BaseService, ITaskService
         AddTaskLog(mappedTask, $"Task created by {_userSession.Name}");
 
         // add task
-        _ = await _context.AddAsync(mappedTask);
+        await _context.AddAsync(mappedTask);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -181,12 +181,12 @@ public class TaskService : BaseService, ITaskService
         if (task is not null)
         {
             // TODO: test this
-            _ = _context.Remove(task);
+            _context.Remove(task);
 
             // clear caches
             _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
         }
-        _ = await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
         return new SuccessResult();
     }
@@ -205,7 +205,7 @@ public class TaskService : BaseService, ITaskService
         return new SuccessResult(cachedData);
     }
 
-    public async Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model, IProgress<int> progress)
+    public async Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model)
     {
         var task = await _context.Tasks
             .Where(t => t.Id == taskId)
@@ -223,9 +223,7 @@ public class TaskService : BaseService, ITaskService
             .Select(p => p.FolderNames)
             .FirstOrDefaultAsync();
 
-        // var uploaded = await _fileService.UploadFileInternal(projectFolders!.First(), projectFolders!.Last(), model.File);
-        var uploaded =
-            await _fileService.UploadTaskAttachment(projectFolders!.First(), projectFolders!.Last(), model.File, progress);
+        var uploaded = await _fileService.UploadFileInternal(projectFolders!.First(), projectFolders!.Last(), model.File);
 
         if (!uploaded.Success)
             return new ErrorResult(uploaded.Message);
@@ -239,7 +237,7 @@ public class TaskService : BaseService, ITaskService
         // Add log
         AddTaskLog(task, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
 
-        _ = await _context.AddAsync(attachment);
+        await _context.AddAsync(attachment);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -254,7 +252,11 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> RemoveAttachmentFromTask(int taskId, int documentId)
     {
+        // delay for 10 seconds
+        await Task.Delay(10000);
+
         var attachment = await _context.TaskAttachments
+            .Include(ta => ta.Task)
             .Include(ta => ta.Document)
             .Where(ta => ta.TaskId == taskId && ta.DocumentId == documentId)
             .FirstOrDefaultAsync();
@@ -274,11 +276,11 @@ public class TaskService : BaseService, ITaskService
         // delete the file from azure
         var deleted = await _fileService.DeleteFile(projectFolders!.First(), projectFolders!.Last(), fileName);
 
-        if (!deleted.Success)
+        if (!deleted.Success && deleted.Message != "File not found")
             return new ErrorResult(deleted.Message);
 
-        _ = _context.Remove(attachment);
-        _ = _context.Remove(attachment.Document);
+        _context.Remove(attachment);
+        _context.Remove(attachment.Document);
 
         // add log
         AddTaskLog(attachment.Task!, $"{_userSession.Name} removed an attachment", attachment.Document.Name);
@@ -469,7 +471,7 @@ public class TaskService : BaseService, ITaskService
         comment.CreatedById = _userSession.UserId;
         comment.FullName = _userSession.Name;
 
-        _ = await _context.AddAsync(comment);
+        await _context.AddAsync(comment);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -490,7 +492,7 @@ public class TaskService : BaseService, ITaskService
         if (comment is null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Comment does not exist.");
 
-        _ = _context.Remove(comment);
+        _context.Remove(comment);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -553,7 +555,7 @@ public class TaskService : BaseService, ITaskService
 
         if (task.Id == 0) log.Task = task;
 
-        _ = await _context.AddAsync(log);
+        await _context.AddAsync(log);
 
         _cache.ClearCaches(CacheKeys.TaskLogsCacheKeys(task.Id));
     }

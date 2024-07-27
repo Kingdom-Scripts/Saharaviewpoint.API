@@ -81,7 +81,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         AddProjectLog(mappedProject, ProjectLogTypes.Create, $"Project created {_userSession.Name}");
 
         // save project to databse
-        _ = await _context.AddAsync(mappedProject);
+        await _context.AddAsync(mappedProject);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -95,7 +95,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                     .Where(r => r.Name == nameof(Roles.SvpAdmin)
                         || r.Name == nameof(Roles.SuperAdmin))
                     .SelectMany(r => r.UserRoles)
-                    .Select(ur => ur.User.Email)
+                    .Select(ur => ur.User!.Email)
                     .ToList());
 
             var emailRequest = new GenericEmailModel
@@ -237,39 +237,6 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        {
-            string baseUrl = $"{_baseUrls.Admin}/projects?approve=8";
-            var roleNames = new[] { nameof(Roles.SvpAdmin), nameof(Roles.SuperAdmin) };
-            string adminEmails = string.Join(",", _context.Roles
-                .Where(r => roleNames.Contains(r.Name))
-                .SelectMany(r => r.UserRoles)
-                .Select(ur => ur.User!.Email)
-                .Distinct()
-                .AsNoTracking());
-
-            var emailRequest = new GenericEmailModel
-            {
-                To = adminEmails,
-                Subject = "New Project Request",
-                Salutation = "Hello,",
-                PrimaryMessage = "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
-                "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
-                "<strong>Project Title:</strong> New Project Name<br>" +
-                "<strong>Project Type:</strong> Bungalow<br>" +
-                "<strong>Proposed Start Date:</strong> 14 May 2024<br>" +
-                "<strong>Proposed End Date:</strong> 14 May 2024<br>" +
-                "<strong>Size of Site:</strong> 14 hecters<br><br>",
-                ClosingRemark = "Regards,",
-                ActionButton = new()
-                {
-                    Text = "View Project",
-                    Url = baseUrl
-                }
-            };
-
-            var res = await _emailService.SendEmail(emailRequest);
-        }
-
         var cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient, _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
 
         // Retrieve the current list of cache keys and add the new key
@@ -403,7 +370,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 return new BadErrorResult("Assignee has been deactivated from the syste");
         }
 
-        _ = model.Adapt(project);
+        model.Adapt(project);
 
         project.UpdatedById = _userSession.UserId;
         project.UpdatedOn = DateTime.UtcNow;
@@ -530,7 +497,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             CreatedById = _userSession.UserId
         };
 
-        _ = await _context.AddAsync(newType);
+        await _context.AddAsync(newType);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -595,7 +562,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         if (project.Id == 0) log.Project = project;
 
-        _ = await _context.ProjectLogs.AddAsync(log);
+        await _context.ProjectLogs.AddAsync(log);
 
         _cache.ClearCaches(ProjectLogsCacheKeys);
     }
