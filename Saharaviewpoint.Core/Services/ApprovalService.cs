@@ -110,7 +110,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
                     $"<strong>Project Owner:</strong> {project.OwnerFirstName} {project.OwnerLastName}<br>" +
                     $"<strong>Initiator:</strong> {initiator.Name}<br>" +
                     $"<strong>Date Initiated:</strong> {DateTime.UtcNow:dd MMM, yyyy}<br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 ActionButton = new()
                 {
                     Text = "View Pending Requests",
@@ -130,7 +130,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
                     $"<strong>Project:</strong> {project.Title}<br>" +
                     $"<strong>Project Manager:</strong> {initiator.Name}<br>" +
                     $"<strong>Date Initiated:</strong> {DateTime.UtcNow:dd MMM, yyyy}<br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 // TODO: receive the url to view project from Samuel
                 //ActionButton = new()
                 //{

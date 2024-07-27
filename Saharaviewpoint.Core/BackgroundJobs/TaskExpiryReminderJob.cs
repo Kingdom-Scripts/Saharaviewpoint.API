@@ -42,20 +42,6 @@ internal class TaskExpiryReminderJob : IJob
                 || (task.DueDate > currentDate && task.DueDate <= lessThan24HoursFromNow))
             .ToList();
 
-        var all = _context.Tasks
-            .Where(t => t.Id > 28)
-            .ToList();
-
-        List<SvpTask> pendingTask = new();
-        foreach (var task in all)
-        {
-            bool isSevenDays = task.DueDate.Date == sevenDaysFromNow.Date;
-            bool isThreeDays = task.DueDate.Date == threeDaysFromNow.Date;
-            bool isLessThan24Hours = task.DueDate > currentDate && task.DueDate <= lessThan24HoursFromNow;
-
-            Console.WriteLine("wait");
-        }
-
         foreach (var task in pendingTasks)
         {
             // get days left
@@ -92,7 +78,7 @@ internal class TaskExpiryReminderJob : IJob
                     $"<strong>Task Summary:</strong> {task.Summary}<br>" +
                     $"<strong>Current Status:</strong> {task.Status}<br>" +
                     $"<strong>Due Date:</strong> {task.DueDate}<br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 ActionButton = new()
                 {
                     Text = "Review Task",

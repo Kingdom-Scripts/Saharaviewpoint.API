@@ -122,7 +122,7 @@ public class TaskService : BaseService, ITaskService
                 $"<strong>Expected Start Date:</strong> {mappedTask.ExpectedStartDate:dd MMM, yyyy}<br>" +
                 $"<strong>Expected End Date:</strong> {mappedTask.DueDate:dd MMMM, yyyy}<br>",
                 SecondaryMessage = "You are getting this email as an admin because this project tasks has already been approved before now.",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 ActionButton = new()
                 {
                     Text = "View Task Details",
@@ -473,7 +473,7 @@ public class TaskService : BaseService, ITaskService
                     $"<strong>Previous Status:</strong> {previousState}<br>" +
                     $"<strong>New Status:</strong> {task.Status}<br>" +
                     $"{(taskIsGoingBack ? $"<strong>Remark:</strong> {model.Reason}<br>" : "")}",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
 
                 // TODO: collect the url to view the task detail from Samuel
                 //ActionButton = new()
@@ -541,7 +541,7 @@ public class TaskService : BaseService, ITaskService
                     $"<strong>Former Due Date:</strong> {previousDue:dd MMM, yyyy}<br>" +
                     $"<strong>New Due Date:</strong> {task.DueDate:dd MMM, yyyy}<br>" +
                     $"<strong>Remark:</strong> {task.Status}<br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
 
                 // TODO: collect the url to view the task detail from Samuel
                 //ActionButton = new()

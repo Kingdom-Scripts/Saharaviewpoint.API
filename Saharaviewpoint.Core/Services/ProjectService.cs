@@ -105,7 +105,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 $"<strong>Proposed Start Date:</strong> {mappedProject.StartDate:dd MMM, yyyy}<br>" +
                 $"<strong>Proposed End Date:</strong> {mappedProject.DueDate:dd MMMM, yyyy}<br>" +
                 $"<strong>Size of Site:</strong> {mappedProject.SizeOfSite}<br><br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 ActionButton = new()
                 {
                     Text = "View Project",
@@ -169,7 +169,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                     $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 ActionButton = new()
                 {
                     Text = "Setup Tasks",
@@ -186,7 +186,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 Salutation = $"Hello {project.CreatedBy.FirstName},",
                 PrimaryMessage = $"Congratulations!<br><br>" +
                     $"This is to notify you that your project - {project.Title} - has been approved and assigned to <strong>{assignee.FirstName} {assignee.LastName}</strong>. The project manager will reach out to you with further instructions while your project tasks is configured. Stay tuned!<br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 // TODO: receive the url to view project from Samuel
                 //ActionButton = new()
                 //{
@@ -403,7 +403,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                     $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
                 ActionButton = new()
                 {
                     Text = "View Project Tasks",
@@ -558,7 +558,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 PrimaryMessage = $"Congratulations!<br><br>" +
                     $"This is to notify you that your project - {project.Title} - has been completed. You can now view the project details and download the project files.<br>",
                 SecondaryMessage = "Thank you for choosing Saharaviewpoint!",
-                ClosingRemark = "Regards,",
+                ClosingRemark = "Regards",
 
                 // TODO: collect the url to view the task detail from Samuel
                 //ActionButton = new()
