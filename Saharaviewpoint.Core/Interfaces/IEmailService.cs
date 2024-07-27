@@ -4,7 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using System.Net.Mail;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Utilities;
 
@@ -16,4 +15,5 @@ public interface IEmailService
     Task<Result> SendInvitationEmail(InvitationEmailModel model);
     Task<Result> SendEmail(string to, string subject, string template, Dictionary<string, string?>? args = null);
     Task<Result> SendEmail(GenericEmailModel model);
+    string GetUserEmails(params string[] roles);
 }

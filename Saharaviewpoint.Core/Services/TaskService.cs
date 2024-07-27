@@ -9,11 +9,14 @@ using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Task;
@@ -32,24 +35,29 @@ public class TaskService : BaseService, ITaskService
     private readonly IFileService _fileService;
     private readonly IAppCache _cache;
     private readonly IEmailService _emailService;
+    private readonly BaseURLs _baseUrls;
 
-    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService)
+    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService, IOptions<AppConfig> options)
     {
-
+        ArgumentNullException.ThrowIfNull(options);
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+
+        _baseUrls = options.Value.BaseURLs;
     }
 
     public async Task<Result> CreateTask(TaskModel model)
     {
         var project = await _context.Projects
             .Where(p => p.Id == model.ProjectId)
-            .Select(p => new Project
+            .Select(p => new
             {
-                FolderNames = p.FolderNames
+                p.Id,
+                p.Title,
+                p.FolderNames
             })
             .FirstOrDefaultAsync();
 
@@ -99,6 +107,31 @@ public class TaskService : BaseService, ITaskService
 
         // clear caches
         _cache.ClearCaches(CacheKeys.TaskListCacheKeys());
+
+        // Send Notification Email
+        {
+            var emailRequest = new GenericEmailModel
+            {
+                To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin),
+                Subject = $"{project.Title} - New Task Created",
+                Salutation = "Hello,",
+                PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> created a new task in the project <strong>{project.Title}</strong>.<br><br>" +
+                "<strong><span style=\"font-size:larger;\">Task Details</span></strong><br>" +
+                $"<strong>Summary:</strong> {mappedTask.Summary}<br>" +
+                $"<strong>Description:</strong> {mappedTask.Description}<br>" +
+                $"<strong>Expected Start Date:</strong> {mappedTask.ExpectedStartDate:dd MMM, yyyy}<br>" +
+                $"<strong>Expected End Date:</strong> {mappedTask.DueDate:dd MMMM, yyyy}<br>",
+                SecondaryMessage = "You are getting this email as an admin because this project tasks has already been approved before now.",
+                ClosingRemark = "Regards,",
+                ActionButton = new()
+                {
+                    Text = "View Task Details",
+                    Url = $"{_baseUrls.Admin}/tasks/all?projectId={project.Id}&taskId={mappedTask.Id}"
+                }
+            };
+
+            await _emailService.SendEmail(emailRequest);
+        }
 
         return new SuccessResult(StatusCodes.Status201Created, mappedTask.Adapt<TaskDetailView>());
     }
@@ -252,9 +285,6 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> RemoveAttachmentFromTask(int taskId, int documentId)
     {
-        // delay for 10 seconds
-        await Task.Delay(10000);
-
         var attachment = await _context.TaskAttachments
             .Include(ta => ta.Task)
             .Include(ta => ta.Document)
@@ -386,9 +416,12 @@ public class TaskService : BaseService, ITaskService
 
         string previousState = task.Status;
         task.Status = model.Status;
+        if (!task.StartDate.HasValue)
+            task.StartDate = DateTime.UtcNow;
 
         // check if status is going back and check for reasons
-        if (TaskStatusEnum.IsGoingBack(previousState, model.Status))
+        bool taskIsGoingBack = TaskStatusEnum.IsGoingBack(previousState, model.Status);
+        if (taskIsGoingBack)
         {
             if (string.IsNullOrEmpty(model.Reason))
                 return new ErrorResult("Reason is required when going back to previous status");
@@ -417,6 +450,41 @@ public class TaskService : BaseService, ITaskService
 
         // clear caches
         _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+
+        // Send Notification Email
+        {
+            var data = await _context.Projects
+                .Where(p => p.Id == task.ProjectId)
+                .Select(p => new
+                {
+                    ProjectTitle = p.Title,
+                    OwnerEmail = p.CreatedBy!.Email,
+                    OwnerFirstName = p.CreatedBy.FirstName,
+                }).FirstAsync();
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = data.OwnerEmail,
+                Subject = $"{data.ProjectTitle} - Task Update",
+                Salutation = $"Hello {data.OwnerFirstName},",
+                PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the status of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +
+                "<strong><span style=\"font-size:larger;\">Task Details</span></strong><br>" +
+                    $"<strong>Task Summary:</strong> {task.Summary}<br>" +
+                    $"<strong>Previous Status:</strong> {previousState}<br>" +
+                    $"<strong>New Status:</strong> {task.Status}<br>" +
+                    $"{(taskIsGoingBack ? $"<strong>Remark:</strong> {model.Reason}<br>" : "")}",
+                ClosingRemark = "Regards,",
+
+                // TODO: collect the url to view the task detail from Samuel
+                //ActionButton = new()
+                //{
+                //    Text = "View Project",
+                //    Url = url
+                //}
+            };
+
+            await _emailService.SendEmail(emailRequest);
+        }
 
         return new SuccessResult(task.Adapt<TaskView>());
     }
@@ -451,6 +519,50 @@ public class TaskService : BaseService, ITaskService
 
         // clear caches
         _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+
+        // Send Notification Email
+        {
+            var data = await _context.Projects
+                .Where(p => p.Id == task.ProjectId)
+                .Select(p => new
+                {
+                    ProjectTitle = p.Title,
+                    OwnerEmail = p.CreatedBy!.Email,
+                    OwnerFirstName = p.CreatedBy.FirstName,
+                }).FirstAsync();
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = data.OwnerEmail,
+                Subject = $"{data.ProjectTitle} - Task Update",
+                Salutation = $"Hello {data.OwnerFirstName},",
+                PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the due date of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +
+                    $"<strong>Task Summary:</strong> {task.Summary}<br>" +
+                    $"<strong>Former Due Date:</strong> {previousDue:dd MMM, yyyy}<br>" +
+                    $"<strong>New Due Date:</strong> {task.DueDate:dd MMM, yyyy}<br>" +
+                    $"<strong>Remark:</strong> {task.Status}<br>",
+                ClosingRemark = "Regards,",
+
+                // TODO: collect the url to view the task detail from Samuel
+                //ActionButton = new()
+                //{
+                //    Text = "View Project",
+                //    Url = url
+                //}
+            };
+
+            var adminEmail = emailRequest;
+            adminEmail.To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
+            adminEmail.Salutation = "Hello,";
+            adminEmail.ActionButton = new()
+            {
+                Text = "View Task",
+                Url = $"{_baseUrls.Admin}/tasks/all?projectId={task.ProjectId}&taskId={taskId}"
+            };
+
+            await _emailService.SendEmail(emailRequest);
+            await _emailService.SendEmail(adminEmail);
+        }
 
         return new SuccessResult(task.Adapt<TaskView>());
     }

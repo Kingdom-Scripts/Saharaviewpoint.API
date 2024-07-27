@@ -4,31 +4,37 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Saharaviewpoint.Models.App.Constants;
-using Saharaviewpoint.Models.App;
-using Saharaviewpoint.Models.Input.Project;
-using Saharaviewpoint.Models.Input;
-using Saharaviewpoint.Models.Utilities;
-using Saharaviewpoint.Models.View.Project;
-using Saharaviewpoint.Models.Input.Auth;
-using Saharaviewpoint.Core.Extensions;
-using Mapster;
-using Saharaviewpoint.Core.Interfaces;
 using Azure.Core;
 using LazyCache;
+using Mapster;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Saharaviewpoint.Core.Extensions;
+using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
+using Saharaviewpoint.Models.App;
+using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Email;
+using Saharaviewpoint.Models.Input;
+using Saharaviewpoint.Models.Input.Auth;
+using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Utilities;
+using Saharaviewpoint.Models.View.Project;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class ApprovalService(SaharaviewpointContext context, UserSession userSession, IAppCache cache) : BaseService, IApprovalService
+public class ApprovalService(SaharaviewpointContext context, UserSession userSession, IAppCache cache, IEmailService emailService,
+        IOptions<AppConfig> options) : BaseService, IApprovalService
 {
 
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     private const string TaskApprovalRequestCacheKeys = "TaskApprovalRequest-CacheKeys";
+    private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+    private readonly BaseURLs _baseUrls = options.Value.BaseURLs;
 
     public async Task<Result> SendTaskSetupForApproval(int projectId)
     {
@@ -40,12 +46,19 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
             return new ErrorResult("Task setup approval request already exists.");
 
         // validate the project still exists
-        bool projectExist = await _context.Projects
-            .AnyAsync(p => p.Id == projectId && !p.IsDeleted);
+        var project = await _context.Projects
+            .Where(p => p.Id == projectId && !p.IsDeleted)
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                OwnerFirstName = p.CreatedBy!.FirstName,
+                OwnerLastName = p.CreatedBy.LastName,
+                OwnerEmail = p.CreatedBy.Email
+            }).FirstOrDefaultAsync();
 
-        if (!projectExist)
+        if (project is null)
             return new BadErrorResult("Project does not exist");
-
 
         var approval = new ProjectTaskApproval
         {
@@ -66,17 +79,67 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
         await _context.ProjectLogs.AddAsync(log);
 
-        // TODO:  send reminder email 
-
         // save the changes
         int saved = await _context.SaveChangesAsync();
-
-        // TODO: send an email notifying the client and admin about the request.
 
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
         _cache.ClearCaches(TaskApprovalRequestCacheKeys, $"Approval-TaskSetupApproval-{projectId}");
+
+        // Send Notification Email
+        {
+            var initiator = await _context.Users
+                .Where(u => u.Id == _userSession.UserId)
+                .Select(u => new
+                {
+                    Name = $"{u.FirstName} {u.LastName}",
+                }).FirstAsync();
+
+            string url = $"{_baseUrls.Admin}/approvals/project-task-setup";
+            string adminEmails = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
+
+            var adminEmailRequest = new GenericEmailModel
+            {
+                To = adminEmails,
+                Subject = $"Task Approval Request - {project.Title}",
+                Salutation = "Hello,",
+                PrimaryMessage = "A task setup approval request has been initiated by a project manager. Kindly review the request and take necessary action.<br><br>" +
+                    "<strong><span style=\"font-size:larger;\">Request Details</span></strong><br>" +
+                    $"<strong>Project:</strong> {project.Title}<br>" +
+                    $"<strong>Project Owner:</strong> {project.OwnerFirstName} {project.OwnerLastName}<br>" +
+                    $"<strong>Initiator:</strong> {initiator.Name}<br>" +
+                    $"<strong>Date Initiated:</strong> {DateTime.UtcNow:dd MMM, yyyy}<br>",
+                ClosingRemark = "Regards,",
+                ActionButton = new()
+                {
+                    Text = "View Pending Requests",
+                    Url = url
+                }
+            };
+
+            await _emailService.SendEmail(adminEmailRequest);
+
+            var clientEmailRequest = new GenericEmailModel
+            {
+                To = project.OwnerEmail,
+                Subject = $"{project.Title} - Project Update",
+                Salutation = $"Hello {project.OwnerFirstName},",
+                PrimaryMessage = $"This is to notify you that your project - {project.Title} - has been completely setup and sent for approval by the assigned project manager. An administrator will review and address the request soon.<br><br>" +
+                    "<strong><span style=\"font-size:larger;\">Details</span></strong><br>" +
+                    $"<strong>Project:</strong> {project.Title}<br>" +
+                    $"<strong>Project Manager:</strong> {initiator.Name}<br>" +
+                    $"<strong>Date Initiated:</strong> {DateTime.UtcNow:dd MMM, yyyy}<br>",
+                ClosingRemark = "Regards,",
+                // TODO: receive the url to view project from Samuel
+                //ActionButton = new()
+                //{
+                //    Text = "View Project",
+                //    Url = clientUrl
+                //}
+            };
+            await _emailService.SendEmail(clientEmailRequest);
+        }
 
         return new SuccessResult(approval.Adapt<ProjectTaskApprovalView>());
     }
@@ -84,7 +147,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
     public async Task<Result> SendTaskSetupApprovalReminder(int projectId, int id)
     {
         var approval = await _context.ProjectTaskApprovals
-            .FirstOrDefaultAsync(pta => pta.Id == id && pta.ProjectId == projectId && !pta.IsFulfilled);
+            .FirstOrDefaultAsync(pta => pta.Id == id && pta.ProjectId == projectId);
 
         if (approval is null)
             return new ErrorResult("Invalid approval, request has not been initiated.");

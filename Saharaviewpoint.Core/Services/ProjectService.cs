@@ -90,13 +90,8 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         // Send Notification Email
         {
-            string baseUrl = $"{_baseUrls.Admin}/projects?approve={mappedProject.Id}";
-            string adminEmails = string.Join(", ", _context.Roles
-                    .Where(r => r.Name == nameof(Roles.SvpAdmin)
-                        || r.Name == nameof(Roles.SuperAdmin))
-                    .SelectMany(r => r.UserRoles)
-                    .Select(ur => ur.User!.Email)
-                    .ToList());
+            string url = $"{_baseUrls.Admin}/projects?approve={mappedProject.Id}";
+            string adminEmails = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
 
             var emailRequest = new GenericEmailModel
             {
@@ -105,20 +100,20 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 Salutation = "Hello,",
                 PrimaryMessage = "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
                 "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
-                "<strong>Project Title:</strong> New Project Name<br>" +
-                "<strong>Project Type:</strong> Bungalow<br>" +
-                "<strong>Proposed Start Date:</strong> 14 May 2024<br>" +
-                "<strong>Proposed End Date:</strong> 14 May 2024<br>" +
-                "<strong>Size of Site:</strong> 14 hecters<br><br>",
+                $"<strong>Project Title:</strong> {mappedProject.Title}<br>" +
+                $"<strong>Project Type:</strong> {mappedProject.Type}<br>" +
+                $"<strong>Proposed Start Date:</strong> {mappedProject.StartDate:dd MMM, yyyy}<br>" +
+                $"<strong>Proposed End Date:</strong> {mappedProject.DueDate:dd MMMM, yyyy}<br>" +
+                $"<strong>Size of Site:</strong> {mappedProject.SizeOfSite}<br><br>",
                 ClosingRemark = "Regards,",
                 ActionButton = new()
                 {
                     Text = "View Project",
-                    Url = baseUrl
+                    Url = url
                 }
             };
 
-            var res = await _emailService.SendEmail(emailRequest);
+            await _emailService.SendEmail(emailRequest);
         }
 
         _cache.ClearCaches(ListProjectsCacheKeys, ProjectLogsCacheKeys);
@@ -129,6 +124,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     public async Task<Result> ApproveProject(int id, string assigneeUid)
     {
         var project = await _context.Projects
+            .Include(p => p.CreatedBy)
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
         if (project == null)
@@ -156,6 +152,50 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         _cache.ClearCaches(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
+
+        // Send Notification Email
+        {
+            string url = $"{_baseUrls.Admin}/tasks/all?projectId={project.Id}";
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = assignee.Email,
+                Subject = "Project Assigned To You",
+                Salutation = $"Hello {assignee.FirstName},",
+                PrimaryMessage = "A new project has been assigned to you. Kindly log on the application to begin setting up tasks.<br><br>" +
+                    "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
+                    $"<strong>Project Title:</strong> {project.Title}<br>" +
+                    $"<strong>Project Type:</strong> {project.Type}<br>" +
+                    $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
+                    $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
+                    $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
+                ClosingRemark = "Regards,",
+                ActionButton = new()
+                {
+                    Text = "Setup Tasks",
+                    Url = url
+                }
+            };
+
+            await _emailService.SendEmail(emailRequest);
+
+            var clientEmailRequest = new GenericEmailModel
+            {
+                To = project.CreatedBy!.Email,
+                Subject = $"{project.Title} - Approved!",
+                Salutation = $"Hello {project.CreatedBy.FirstName},",
+                PrimaryMessage = $"Congratulations!<br><br>" +
+                    $"This is to notify you that your project - {project.Title} - has been approved and assigned to <strong>{assignee.FirstName} {assignee.LastName}</strong>. The project manager will reach out to you with further instructions while your project tasks is configured. Stay tuned!<br>",
+                ClosingRemark = "Regards,",
+                // TODO: receive the url to view project from Samuel
+                //ActionButton = new()
+                //{
+                //    Text = "View Project",
+                //    Url = clientUrl
+                //}
+            };
+            await _emailService.SendEmail(clientEmailRequest);
+        }
 
         return new SuccessResult();
     }
@@ -322,7 +362,8 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             {
                 u.FirstName,
                 u.LastName,
-                u.IsActive
+                u.IsActive,
+                u.Email
             })
             .FirstOrDefaultAsync();
 
@@ -345,6 +386,33 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         _cache.ClearCaches(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");
+
+        // Send Notification Email
+        {
+            string url = $"{_baseUrls.Admin}/tasks/all?projectId={project.Id}";
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = newAssignee.Email,
+                Subject = "Project Re-assigned To You",
+                Salutation = $"Hello {newAssignee.FirstName},",
+                PrimaryMessage = "A new project has been re-assigned to you. Kindly log on the application to view tasks.<br><br>" +
+                    "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
+                    $"<strong>Project Title:</strong> {project.Title}<br>" +
+                    $"<strong>Project Type:</strong> {project.Type}<br>" +
+                    $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
+                    $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
+                    $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
+                ClosingRemark = "Regards,",
+                ActionButton = new()
+                {
+                    Text = "View Project Tasks",
+                    Url = url
+                }
+            };
+
+            await _emailService.SendEmail(emailRequest);
+        }
 
         return new SuccessResult();
     }
@@ -442,13 +510,14 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     public async Task<Result> CompleteProject(int id)
     {
         var project = await _context.Projects
+            .Include(p => p.CreatedBy)
             .Where(p => p.Id == id && !p.IsDeleted)
             .FirstOrDefaultAsync();
 
         if (project == null)
             return new BadErrorResult("Project does not exist");
-        //if (project.Status == ProjectStatuses.Completed)
-        //    return new BadErrorResult("Project is already completed");
+        if (project.Status == ProjectStatuses.Completed)
+            return new BadErrorResult("Project is already completed");
 
         // validate there are no pending task for this project
         bool hasPendingTask = await _context.Tasks
@@ -470,7 +539,47 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        // TODO: send email to client and admin
+        // Send Notification Email
+        {
+            //var data = await _context.Projects
+            //    .Where(p => p.Id == project.Id)
+            //    .Select(p => new
+            //    {
+            //        ProjectTitle = p.Title,
+            //        OwnerEmail = p.CreatedBy!.Email,
+            //        OwnerFirstName = p.CreatedBy.FirstName,
+            //    }).FirstAsync();
+
+            var emailRequest = new GenericEmailModel
+            {
+                To = project.CreatedBy!.Email,
+                Subject = $"{project.Title} - Completed!",
+                Salutation = $"Hello {project.CreatedBy.FirstName},",
+                PrimaryMessage = $"Congratulations!<br><br>" +
+                    $"This is to notify you that your project - {project.Title} - has been completed. You can now view the project details and download the project files.<br>",
+                SecondaryMessage = "Thank you for choosing Saharaviewpoint!",
+                ClosingRemark = "Regards,",
+
+                // TODO: collect the url to view the task detail from Samuel
+                //ActionButton = new()
+                //{
+                //    Text = "View Project",
+                //    Url = url
+                //}
+            };
+
+            var adminEmail = emailRequest;
+            adminEmail.To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
+            adminEmail.Salutation = "Hello,";
+            adminEmail.ActionButton = new()
+            {
+                Text = "View Project",
+                Url = $"{_baseUrls.Admin}/projects?approve={project.Id}" // TODO: update this after you create a proper project details interface
+            };
+
+            await _emailService.SendEmail(emailRequest);
+            await _emailService.SendEmail(adminEmail);
+        }
 
         _cache.ClearCaches(ListProjectsCacheKeys, ProjectLogsCacheKeys);
         _cache.Remove($"project-details-{id}");

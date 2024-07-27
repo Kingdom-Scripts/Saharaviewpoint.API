@@ -14,16 +14,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Quartz;
+using Saharaviewpoint.Core.BackgroundJobs;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Services;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Project;
-using Saharaviewpoint.Core.Services;
+using Saharaviewpoint.Models.View.Project;
+using Saharaviewpoint.Models.View.Task;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Reflection;
 using System.Text;
-using Saharaviewpoint.Models.View.Task;
-using Saharaviewpoint.Models.View.Project;
 
 namespace Saharaviewpoint.Core.Extensions;
 
@@ -112,6 +114,22 @@ public static class ServiceExtensions
 
             options.AddPolicy("BasicAccess", policy => policy.RequireClaim("SubscriptionPlan", "Basic"));
         });
+
+        // set up Quartz
+        services.AddQuartz(q =>
+        {
+            // Job to notify users of impending task expiration. Runs every day at 12AM
+            var reminderJobKey = new JobKey("TaskExpiryReminderJob");
+            q.AddJob<TaskExpiryReminderJob>(opts => opts.WithIdentity(reminderJobKey));
+            q.AddTrigger(opts => opts
+                .ForJob(reminderJobKey)
+                .WithIdentity("TaskExpiryReminderJob-trigger")
+                .WithCronSchedule("* 0/4 * ? * *") // cron job to run every day at 8AM
+                                                   //.WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM // TODO: use this
+                .StartNow()
+            );
+        });
+        services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
         //Mapster global Setting. This can also be overwritten per transform
         TypeAdapterConfig.GlobalSettings.Default

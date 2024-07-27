@@ -7,8 +7,10 @@
 using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Email;
@@ -25,9 +27,11 @@ public class EmailService : IEmailService
     private readonly SmtpClient _smtpClient;
     private readonly IWebHostEnvironment _hostingEnvironment;
     private readonly AppConfig _appConfig;
+    private readonly SaharaviewpointContext _context;
 
     public EmailService(IWebHostEnvironment hostingEnvironment,
-        IOptions<AppConfig> options)
+        IOptions<AppConfig> options,
+        SaharaviewpointContext context)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -52,6 +56,7 @@ public class EmailService : IEmailService
             Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y"),
             DeliveryMethod = SmtpDeliveryMethod.Network
         };
+        _context = context;
     }
 
     public async Task<Result> SendConfirmEmail(string to, string token)
@@ -257,6 +262,13 @@ public class EmailService : IEmailService
         return SendMessage(model.To, model.Subject, output, model.Cc, model.Bcc);
     }
 
+    public string GetUserEmails(params string[] roles)
+        => string.Join(", ", _context.Roles
+                        .Where(r => roles.Contains(r.Name))
+                        .SelectMany(r => r.UserRoles)
+                        .Select(ur => ur.User!.Email)
+                        .ToList());
+
     private Result SendMessage(string to, string subject, string body, string? cc = null, string? bcc = null,
         Attachment? attachment = null)
     {
@@ -295,7 +307,7 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error sending email");
+            Log.Error(ex, $"Error sending email to {to}. Subject: {subject}");
             return new ErrorResult(ex.Message);
         }
         finally
