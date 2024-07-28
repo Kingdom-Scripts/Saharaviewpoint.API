@@ -74,12 +74,12 @@ public class FileService : IFileService
             : new ErrorResult<DocumentView>("Saving file failed");
     }
 
-    public async Task<FileStreamResult?> GetFileByPath(string folder, string subFolder, string fileName)
+    public async Task<FileStreamResult> GetFileByPath(string folder, string subFolder, string fileName)
     {
         return await GetFile(folder, subFolder, fileName);
     }
 
-    public async Task<FileStreamResult?> GetGenericThumbnail(string fileName)
+    public async Task<FileStreamResult> GetGenericThumbnail(string fileName)
     {
         var blobContainer = _blobServiceClient.GetBlobContainerClient("thumbnails");
 
