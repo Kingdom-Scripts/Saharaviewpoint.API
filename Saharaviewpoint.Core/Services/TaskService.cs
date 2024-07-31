@@ -10,9 +10,12 @@ using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Saharaviewpoint.Core.Contants;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
+using Saharaviewpoint.Models.ApiVideo.Response;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
@@ -24,6 +27,7 @@ using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
 using Saharaviewpoint.Models.View.Task;
 using Serilog;
+using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -36,8 +40,10 @@ public class TaskService : BaseService, ITaskService
     private readonly IAppCache _cache;
     private readonly IEmailService _emailService;
     private readonly BaseURLs _baseUrls;
+    private readonly HttpClient _apiVideoClient;
+    private readonly ILogger _logger;
 
-    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService, IOptions<AppConfig> options)
+    public TaskService(SaharaviewpointContext context, UserSession userSession, IFileService fileService, IAppCache cache, IEmailService emailService, IOptions<AppConfig> options, IHttpClientFactory factory, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(options);
         _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -45,8 +51,10 @@ public class TaskService : BaseService, ITaskService
         _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _baseUrls = options.Value.BaseURLs;
+        _apiVideoClient = factory.CreateClient(HttpClientKeys.ApiVideo);
     }
 
     public async Task<Result> CreateTask(TaskModel model)
@@ -230,8 +238,15 @@ public class TaskService : BaseService, ITaskService
         {
             return await _context.TaskAttachments
                 .Where(ta => ta.TaskId == taskId)
-                .Select(ta => ta.Document)
-                .ProjectToType<DocumentView>()
+                .Select(ta => new DocumentView
+                {
+                    Id = ta.Document.Id,
+                    Name = ta.Document.Name,
+                    Type = ta.Document.Type,
+                    Url = ta.Document.Type == DocumentTypes.VIDEO ? ta.Document.Url : $"{_baseUrls.AssetBase}/{ta.Document.Url}",
+                    ThumbnailUrl = ta.Document.Type == DocumentTypes.VIDEO ? ta.Document.ThumbnailUrl : $"{_baseUrls.AssetBase}/{ta.Document.ThumbnailUrl}",
+                    CreatedAt = ta.Document.CreatedAt
+                })
                 .ToListAsync();
         }, new TimeSpan(0, 45, 0));
 
@@ -280,7 +295,89 @@ public class TaskService : BaseService, ITaskService
         // clear caches
         _cache.ClearCaches(CacheKeys.ListAttachments(taskId));
 
-        return new SuccessResult(StatusCodes.Status201Created, attachment.Document.Adapt<DocumentView>());
+        var result = attachment.Document.Adapt<DocumentView>();
+        result.Url = result.Type == DocumentTypes.VIDEO ? result.Url : $"{_baseUrls.AssetBase}/{result.Url}";
+        result.ThumbnailUrl = result.Type == DocumentTypes.VIDEO ? result.ThumbnailUrl : $"{_baseUrls.AssetBase}/{result.ThumbnailUrl}";
+
+        return new SuccessResult(StatusCodes.Status201Created, result);
+    }
+
+    public async Task<Result> GetVideoUploadToken()
+    {
+        var model = new { ttl = 3600 };
+
+        var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8, "application/json");
+
+        var response = await _apiVideoClient.PostAsync("upload-tokens", content);
+        if (!response.IsSuccessStatusCode)
+            return new ErrorResult("Failed to get video upload token");
+
+        string contentRes = await response.Content.ReadAsStringAsync();
+        var uploadToken = JsonConvert.DeserializeObject<ApiVideoTokenView>(contentRes);
+
+        return new SuccessResult(uploadToken);
+    }
+
+    public async Task<Result> AddVideoToTask(int taskId, VideoDetailModel model)
+    {
+        var task = await _context.Tasks
+            .Where(t => t.Id == taskId)
+            .Select(t => new SvpTask
+            {
+                Id = t.Id,
+                ProjectId = t.ProjectId
+            }).FirstOrDefaultAsync();
+
+        if (task is null)
+            return new ErrorResult("Invalid task provided");
+
+        var projectFolders = await _context.Projects
+            .Where(p => p.Id == task.ProjectId)
+            .Select(p => p.FolderNames)
+            .FirstOrDefaultAsync();
+
+
+        var attachment = new TaskAttachment
+        {
+            TaskId = taskId,
+            Document = new Document
+            {
+                Name = model.title,
+                Type = DocumentTypes.VIDEO,
+                Url = model.assets.mp4,
+                ThumbnailUrl = model.assets.thumbnail,
+                CreatedById = _userSession.UserId,
+                VideoId = model.videoId,
+                VideoDuration = model.Duration,
+                VideoAsset = new()
+                {
+                    Iframe = model.assets.iframe,
+                    Player = model.assets.player,
+                    Hls = model.assets.hls,
+                    Thumbnail = model.assets.thumbnail,
+                    Mp4 = model.assets.mp4
+                }
+            }
+        };
+
+        // Add log
+        AddTaskLog(task, $"{_userSession.Name} added a video", "None", attachment.Document.Name);
+
+        await _context.AddAsync(attachment);
+
+        int saved = await _context.SaveChangesAsync();
+
+        if (saved < 1)
+            return new ErrorResult("Unable to save changes, please try again later.");
+
+        // clear caches
+        _cache.ClearCaches(CacheKeys.ListAttachments(taskId));
+
+        var result = attachment.Document.Adapt<DocumentView>();
+        result.Url = result.Type == DocumentTypes.VIDEO ? result.Url : $"{_baseUrls.AssetBase}/{result.Url}";
+        result.ThumbnailUrl = result.Type == DocumentTypes.VIDEO ? result.ThumbnailUrl : $"{_baseUrls.AssetBase}/{result.ThumbnailUrl}";
+
+        return new SuccessResult(StatusCodes.Status201Created, result);
     }
 
     public async Task<Result> RemoveAttachmentFromTask(int taskId, int documentId)
@@ -294,20 +391,35 @@ public class TaskService : BaseService, ITaskService
         if (attachment is null)
             return new ErrorResult("Attachment not found");
 
-        // get the project folders
-        var projectFolders = await _context.TaskAttachments
-            .Where(ta => ta.TaskId == taskId && ta.DocumentId == documentId)
-            .Select(ta => ta.Task!.Project!.FolderNames)
-            .FirstOrDefaultAsync();
+        if (attachment.Document.Type == DocumentTypes.VIDEO)
+        {
+            string videoId = attachment.Document.VideoId;
+            var response = await _apiVideoClient.DeleteAsync($"videos/{videoId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                string contentString = await response.Content.ReadAsStringAsync();
+                object error = JsonConvert.DeserializeObject<object>(contentString);
+                _logger.Error("Failed to delete video with ID: {@videoId}. {@Error}", videoId, error);
+                return new ErrorResult("Failed to remove video, please try again later.");
+            }
+        }
+        else
+        {
+            // get the project folders
+            var projectFolders = await _context.TaskAttachments
+                .Where(ta => ta.TaskId == taskId && ta.DocumentId == documentId)
+                .Select(ta => ta.Task!.Project!.FolderNames)
+                .FirstOrDefaultAsync();
 
-        // get the file name from the document url
-        string fileName = attachment.Document!.Url.Split('/').Last();
+            // get the file name from the document url
+            string fileName = attachment.Document!.Url.Split('/').Last();
 
-        // delete the file from azure
-        var deleted = await _fileService.DeleteFile(projectFolders!.First(), projectFolders!.Last(), fileName);
+            // delete the file from azure
+            var deletedRes = await _fileService.DeleteFile(projectFolders!.First(), projectFolders!.Last(), fileName);
 
-        if (!deleted.Success && deleted.Message != "File not found")
-            return new ErrorResult(deleted.Message);
+            if (!deletedRes.Success && deletedRes.Message != "File not found")
+                return new ErrorResult(deletedRes.Message);
+        }
 
         _context.Remove(attachment);
         _context.Remove(attachment.Document);

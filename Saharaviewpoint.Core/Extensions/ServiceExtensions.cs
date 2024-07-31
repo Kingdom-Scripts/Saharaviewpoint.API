@@ -16,7 +16,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Quartz;
 using Saharaviewpoint.Core.BackgroundJobs;
+using Saharaviewpoint.Core.Contants;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Middlewares;
 using Saharaviewpoint.Core.Services;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.Input.Auth;
@@ -24,6 +26,7 @@ using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.View.Project;
 using Saharaviewpoint.Models.View.Task;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 
@@ -115,6 +118,21 @@ public static class ServiceExtensions
             options.AddPolicy("BasicAccess", policy => policy.RequireClaim("SubscriptionPlan", "Basic"));
         });
 
+        // Add HTTP client for Api Video
+        services.AddHttpClient(HttpClientKeys.ApiVideo, client =>
+        {
+            string baseAddress = configuration["AppConfig:ApiVideo:BaseUrl"]!;
+
+            client.BaseAddress = new Uri(baseAddress);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        })
+        .AddHttpMessageHandler<ApiVideoHttpHandler>()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+            {
+                AllowAutoRedirect = false,
+                UseDefaultCredentials = true
+            });
+
         // set up Quartz
         services.AddQuartz(q =>
         {
@@ -124,8 +142,8 @@ public static class ServiceExtensions
             q.AddTrigger(opts => opts
                 .ForJob(reminderJobKey)
                 .WithIdentity("TaskExpiryReminderJob-trigger")
-                .WithCronSchedule("* 0/4 * ? * *") // cron job to run every day at 8AM
-                                                   //.WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM // TODO: use this
+                .WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM // TODO: use this
+                                                 //.WithCronSchedule("* 0/4 * ? * *") // cron job to run every day at 8AM // DEV test
                 .StartNow()
             );
         });
@@ -166,6 +184,7 @@ public static class ServiceExtensions
         services.TryAddTransient<ITaskService, TaskService>();
         services.TryAddTransient<IClientService, ClientService>();
         services.TryAddTransient<IApprovalService, ApprovalService>();
+        services.TryAddTransient<ApiVideoHttpHandler>();
 
         return services;
     }

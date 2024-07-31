@@ -10,6 +10,7 @@ namespace Saharaviewpoint.Models.App;
 
 public class Document : BaseAppModel
 {
+    [MaxLength(255)]
     [Required]
     public string Name { get; set; }
 
@@ -23,8 +24,13 @@ public class Document : BaseAppModel
     [MaxLength(255)]
     public required string ThumbnailUrl { get; set; }
 
+    [MaxLength(50)] public string VideoId { get; set; }
+    public short VideoDuration { get; set; }
+
     [Required]
     public int CreatedById { get; set; }
 
-    public User? CreatedBy { get; set; }
+    public VideoAsset VideoAsset { get; set; }
+
+    public User CreatedBy { get; set; }
 }

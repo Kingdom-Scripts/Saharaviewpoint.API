@@ -7,65 +7,67 @@
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
+using Saharaviewpoint.Models.Configurations;
 using Serilog;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateBootstrapLogger();
-
-Log.Information("Application Starting up...");
-
-var builder = WebApplication.CreateBuilder(args);
-
-// set up serilog.
-builder.Host.UseSerilog((hostContext, services, config) =>
+try
 {
-    config.ReadFrom.Configuration(hostContext.Configuration);
-    config.ReadFrom.Services(services);
-    config.Enrich.FromLogContext();
-    config.WriteTo.Console();
-});
+    Log.Logger = new LoggerConfiguration()
+.WriteTo.Console()
+.CreateBootstrapLogger();
 
-// Add services to the container.
-builder.Services.AddControllers();
+    Log.Information("Application Starting up...");
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(swagger =>
-{
-    //This is to generate the Default UI of Swagger Documentation
-    swagger.SwaggerDoc("v1", new OpenApiInfo
+    var builder = WebApplication.CreateBuilder(args);
+
+    // set up serilog.
+    builder.Host.UseSerilog((hostContext, services, config) =>
     {
-        Version = "v1",
-        Title = "Saharaviewpoint API",
-        Description = "Saharaviewpoint Web API. A project for managing and tracking construction development.",
-        Contact = new OpenApiContact
+        config.ReadFrom.Configuration(hostContext.Configuration);
+        config.ReadFrom.Services(services);
+        config.Enrich.FromLogContext();
+        config.WriteTo.Console();
+    });
+
+    // Add services to the container.
+    builder.Services.AddControllers();
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(swagger =>
+    {
+        //This is to generate the Default UI of Swagger Documentation
+        swagger.SwaggerDoc("v1", new OpenApiInfo
         {
-            Name = "Saharaviewpoint",
-            Email = "contact@saharaviewpoint.com"
-        }
-    });
+            Version = "v1",
+            Title = "Saharaviewpoint API",
+            Description = "Saharaviewpoint Web API. A project for managing and tracking construction development.",
+            Contact = new OpenApiContact
+            {
+                Name = "Saharaviewpoint",
+                Email = "contact@saharaviewpoint.com"
+            }
+        });
 
-    string xmlFilePath = Path.Combine(AppContext.BaseDirectory, "Saharaviewpoint.xml");
-    swagger.IncludeXmlComments(xmlFilePath, true);
+        string xmlFilePath = Path.Combine(AppContext.BaseDirectory, "Saharaviewpoint.xml");
+        swagger.IncludeXmlComments(xmlFilePath, true);
 
-    // include the XML of Saharaviewpoint.Core
-    string coreXmlFilePath = Path.Combine(AppContext.BaseDirectory, "SaharaviewpointCore.xml");
-    swagger.IncludeXmlComments(coreXmlFilePath, true);
+        // include the XML of Saharaviewpoint.Core
+        string coreXmlFilePath = Path.Combine(AppContext.BaseDirectory, "SaharaviewpointCore.xml");
+        swagger.IncludeXmlComments(coreXmlFilePath, true);
 
-    swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\""
-    });
+        swagger.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\""
+        });
 
-    swagger.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        swagger.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
         {
                 new OpenApiSecurityScheme
                 {
@@ -77,61 +79,69 @@ builder.Services.AddSwaggerGen(swagger =>
                 },
                 Array.Empty<string>()
         }
+        });
+
+        swagger.IgnoreObsoleteActions();
+        swagger.IgnoreObsoleteProperties();
     });
 
-    swagger.IgnoreObsoleteActions();
-    swagger.IgnoreObsoleteProperties();
-});
+    builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
+    builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+    builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
 
-builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
-builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
-builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
+    // Set up CORS
+    string svpAllowedOrigins = "_svpAllowedDomains";
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(name: svpAllowedOrigins,
+            policy =>
+            {
+                string[] hosts = builder.Configuration.GetSection("AppConfig:AllowedHosts").Get<string[]>()!;
+                policy.WithOrigins(hosts)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+    });
 
-// Set up CORS
-string svpAllowedOrigins = "_svpAllowedDomains";
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: svpAllowedOrigins,
-        policy =>
-        {
-            string[] hosts = builder.Configuration.GetSection("AppConfig:AllowedHosts").Get<string[]>()!;
-            policy.WithOrigins(hosts)
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
+    builder.Services.ConfigureServices(builder.Configuration, builder.Environment.IsProduction());
 
-builder.Services.ConfigureServices(builder.Configuration, builder.Environment.IsProduction());
+    var app = builder.Build();
 
-var app = builder.Build();
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+    }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
+    app.UseMiddleware<ErrorHandlerMiddleware>();
+
+    app.UseHttpsRedirection();
+
+    app.UseCors(svpAllowedOrigins);
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.UseMiddleware<JWTMiddleware>();
+
+    app.UseMiddleware<UserSessionMiddleware>();
+
+    app.MapControllers();
+
+    await InitializeApiVideoToken.InitializeToken(app);
+    PrepDatabase.PrepPopulation(app, app.Environment.IsProduction());
+
+    app.Run();
 }
-
-app.UseSwagger();
-app.UseSwaggerUI();
-
-app.UseMiddleware<ErrorHandlerMiddleware>();
-
-app.UseHttpsRedirection();
-
-app.UseCors(svpAllowedOrigins);
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseMiddleware<JWTMiddleware>();
-
-app.UseMiddleware<UserSessionMiddleware>();
-
-app.MapControllers();
-
-PrepDatabase.PrepPopulation(app, app.Environment.IsProduction());
-
-app.Run();
-
-Log.Information("Application Stopped cleanly");
-
-Log.CloseAndFlush();
+catch (Exception ex) when (ex.GetType().Name is not "StopTheHostException" &&
+                           ex.GetType().Name is not "HostAbortedException")
+{
+    Log.Fatal(ex, "Unhandled exception");
+}
+finally
+{
+    Log.Information("Shut down complete");
+    Log.CloseAndFlush();
+}
