@@ -30,6 +30,7 @@ public class VideoDetailModel
     public DateTime updatedAt { get; set; }
     public List<object> tags { get; set; }
     public List<object> metadata { get; set; }
+    public short Duration { get; set; }
     public Source source { get; set; }
     public Assets assets { get; set; }
 }
@@ -38,15 +39,6 @@ public class Source
 {
     public string type { get; set; }
     public string uri { get; set; }
-}
-
-public class ApiVideoDetail : VideoDetailModel
-{
-    public string playerId { get; set; }
-    public bool mp4Support { get; set; } = true;
-    public bool @public { get; set; } = true;
-    public int Duration { get; set; }
-    public string ThumbnailUrl { get; set; }
 }
 
 public class VideoDetailValidator : AbstractValidator<VideoDetailModel>

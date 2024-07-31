@@ -16,5 +16,5 @@ public class DocumentTypes
     public const string UNKNWON = "Unknown";
 
     public const string DB_CONSTRAINT =
-        $"'{IMAGE}', '{PDF}', '{WORD_DOCUMENT}', '{EXCEL_DOCUMENT}', '{UNKNWON}'";
+        $"'{IMAGE}', '{PDF}', '{WORD_DOCUMENT}', '{EXCEL_DOCUMENT}', '{VIDEO}', '{UNKNWON}'";
 }

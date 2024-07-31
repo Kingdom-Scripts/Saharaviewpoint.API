@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Saharaviewpoint.Models.App;
 
@@ -11,9 +12,11 @@ using Saharaviewpoint.Models.App;
 namespace Saharaviewpoint.API.Migrations
 {
     [DbContext(typeof(SaharaviewpointContext))]
-    partial class SaharaviewpointContextModelSnapshot : ModelSnapshot
+    [Migration("20240730145044_Twenty-Six")]
+    partial class TwentySix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -109,7 +112,7 @@ namespace Saharaviewpoint.API.Migrations
 
                     b.ToTable("Documents", "dbo", t =>
                         {
-                            t.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word', 'EXCEL', 'Video', 'Unknown')");
+                            t.HasCheckConstraint("CK_Document_Type", "[Type] IN ('Image', 'PDF', 'Word', 'EXCEL', 'Unknown')");
                         });
                 });
 

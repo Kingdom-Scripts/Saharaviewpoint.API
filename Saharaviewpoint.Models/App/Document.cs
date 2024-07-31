@@ -30,5 +30,7 @@ public class Document : BaseAppModel
     [Required]
     public int CreatedById { get; set; }
 
+    public VideoAsset VideoAsset { get; set; }
+
     public User CreatedBy { get; set; }
 }

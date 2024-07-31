@@ -6,6 +6,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Models.ApiVideo.Response;
 using Saharaviewpoint.Models.Input;
 using Saharaviewpoint.Models.Input.Task;
 using Saharaviewpoint.Models.Utilities;
@@ -72,6 +73,24 @@ public class TasksController(ITaskService taskService) : BaseController
     public async Task<IActionResult> UploadAttachment(int taskId, [FromForm] FileUploadModel file)
     {
         var result = await _taskService.AddAttachmentToTask(taskId, file);
+        return ProcessResponse(result);
+    }
+
+    [HttpGet("attachments/video-upload-token")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<ApiVideoTokenView>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> GetVideoUploadToken()
+    {
+        var result = await _taskService.GetVideoUploadToken();
+        return ProcessResponse(result);
+    }
+
+    [HttpPost("{taskId}/attachments/video")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<DocumentView>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
+    public async Task<IActionResult> AddVideoToTask(int taskId, [FromBody] VideoDetailModel model)
+    {
+        var result = await _taskService.AddVideoToTask(taskId, model);
         return ProcessResponse(result);
     }
 

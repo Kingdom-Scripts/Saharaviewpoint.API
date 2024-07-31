@@ -18,6 +18,8 @@ public interface ITaskService
     Task<Result> DeleteTask(int taskId);
     Task<Result> ListAttachments(int taskId);
     Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model);
+    Task<Result> GetVideoUploadToken();
+    Task<Result> AddVideoToTask(int taskId, VideoDetailModel model);
     Task<Result> RemoveAttachmentFromTask(int taskId, int documentId);
     Task<Result> ListLogs(int taskId, PagingOptionModel request);
     Task<Result> ListBoardTasks(int projectId);
