@@ -72,7 +72,7 @@ internal class TaskExpiryReminderJob : IJob
                 Subject = "Task Expiry Reminder",
                 Salutation = $"Hello {projectData.AssigneeFirstName},",
                 PrimaryMessage = $"This is a reminder that the task below is due in {actualLeft}. " +
-                    $"If the task has been completed, kindly match it as such.<br><br>" +
+                    $"If the task has been completed, kindly mark it as such.<br><br>" +
                     "<strong><span style=\"font-size:larger;\">Task Details</span></strong><br>" +
                     $"<strong>Project:</strong> {projectData.Title}<br>" +
                     $"<strong>Task Summary:</strong> {task.Summary}<br>" +
