@@ -11,14 +11,14 @@ using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.Configurations;
 using Serilog;
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+Log.Information("Application Starting up...");
+
 try
 {
-    Log.Logger = new LoggerConfiguration()
-.WriteTo.Console()
-.CreateBootstrapLogger();
-
-    Log.Information("Application Starting up...");
-
     var builder = WebApplication.CreateBuilder(args);
 
     // set up serilog.
