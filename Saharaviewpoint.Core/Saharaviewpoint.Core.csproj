@@ -6,6 +6,7 @@
     <Nullable>disable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DocumentationFile>SaharaviewpointCore.xml</DocumentationFile>
+    <Configurations>Debug;Release;Staging</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -13,6 +14,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Staging|AnyCPU'">
     <NoWarn>1701;1702;1591</NoWarn>
   </PropertyGroup>
 
