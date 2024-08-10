@@ -96,6 +96,7 @@ try
         options.AddPolicy(name: svpAllowedOrigins,
             policy =>
             {
+                // TODO: work on setting app settings directly in Azure App Settings
                 string[] hosts = builder.Configuration.GetSection("AppConfig:AllowedHosts").Get<string[]>()!;
                 policy.WithOrigins(hosts)
                     .AllowAnyHeader()
