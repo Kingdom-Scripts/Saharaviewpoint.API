@@ -21,7 +21,7 @@ public class PMInvitation : BaseAppModel
     public required string LastName { get; set; }
 
     [MaxLength(25)]
-    public string? Phone { get; set; }
+    public string Phone { get; set; }
 
     [Required]
     public DateTime ExpiryDate { get; set; }

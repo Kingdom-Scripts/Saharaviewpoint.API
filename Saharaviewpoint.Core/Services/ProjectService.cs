@@ -258,21 +258,33 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> GetProject(int id)
     {
-        var project = await _cache.GetOrAddAsync($"project-details-{id}", () => _context.Projects
-            .ProjectToType<ProjectDetailView>()
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted), new TimeSpan(0, 45, 0));
+        var cachedData = await _cache.GetOrAddAsync($"project-details-{id}", async () =>
+        {
+            var project = await _context.Projects
+                .ProjectToType<ProjectDetailView>()
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
-        if (project == null)
+            if (project == null)
+                return null;
+
+            if (project.Design is not null)
+            {
+                project.Design.Url = $"{_baseUrls.AssetBase}/{project.Design.Url}";
+                project.Design.ThumbnailUrl = $"{_baseUrls.AssetBase}/{project.Design.ThumbnailUrl}";
+            }
+
+            return project;
+        }, new TimeSpan(0, 45, 0));
+
+        if (cachedData == null)
             return new BadErrorResult("Project does not exist");
 
         // return forbidden if it's client and not the owner
         if (_userSession.AppType == AppTypes.Client
-            && project.CreatedById != _userSession.UserId)
+            && cachedData.CreatedById != _userSession.UserId)
             return new ForbiddenResult();
 
-        var mappedProject = project.Adapt<ProjectDetailView>();
-
-        return new SuccessResult(mappedProject);
+        return new SuccessResult(cachedData);
     }
 
     public async Task<Result> ListProjects(ProjectSearchModel request)

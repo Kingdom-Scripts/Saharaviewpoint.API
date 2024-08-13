@@ -10,6 +10,8 @@ using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Saharaviewpoint.Core.Contants;
+using Saharaviewpoint.Core.Contants.CacheKeys;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
@@ -32,7 +34,6 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-    private const string TaskApprovalRequestCacheKeys = "TaskApprovalRequest-CacheKeys";
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     private readonly BaseURLs _baseUrls = options.Value.BaseURLs;
 
@@ -85,7 +86,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
         if (saved < 1)
             return new ErrorResult("Unable to save changes, please try again later.");
 
-        _cache.ClearCaches(TaskApprovalRequestCacheKeys, $"Approval-TaskSetupApproval-{projectId}");
+        _cache.ClearCaches(CacheKeys.TaskApprovalRequest(), CacheKeys.TaskSetupApproval(projectId));
 
         // Send Notification Email
         {
@@ -173,7 +174,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
     public async Task<Result> GetTaskSetupApproval(int projectId)
     {
-        var approval = await _cache.GetOrAddAsync($"Approval-TaskSetupApproval-{projectId}", async () =>
+        var approval = await _cache.GetOrAddAsync(CacheKeys.TaskSetupApproval(projectId), async () =>
         {
             return await _context.ProjectTaskApprovals
                 .Where(pta => pta.ProjectId == projectId)
@@ -239,7 +240,12 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
             ? "Task setup approved successfully."
             : "Task setup approval request declined.";
 
-        _cache.ClearCaches(TaskApprovalRequestCacheKeys, $"Approval-TaskSetupApproval-{projectId}");
+        _cache.ClearCaches(
+            CacheKeys.TaskApprovalRequest(),
+            CacheKeys.TaskSetupApproval(projectId),
+            CacheKeys.TaskListCacheKeys(),
+            CacheKeys.BoardTasksValidation(projectId),
+            CacheKeys.BoardTasks(projectId));
 
         return new SuccessResult(message, approval.Adapt<ProjectTaskApprovalView>());
     }
@@ -247,14 +253,14 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
     public async Task<Result> ListApprovalRequests(PagingOptionModel request)
     {
         var generatedKey = GenerateCacheKey(request);
-        string cacheKey = $"Approval-ListApprovalRequests-{generatedKey}";
+        string cacheKey = CacheKeys.ListApprovalRequests(generatedKey);
 
         // Retrieve the current list of cache keys and add the new key
-        var cacheKeys = _cache.GetOrAdd(TaskApprovalRequestCacheKeys, () => new List<string>(), new TimeSpan(0, 45, 0));
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.TaskApprovalRequest(), () => new List<string>(), new TimeSpan(0, 45, 0));
         if (!cacheKeys.Contains(cacheKey))
         {
             cacheKeys.Add(cacheKey);
-            _cache.Add(TaskApprovalRequestCacheKeys, cacheKeys);
+            _cache.Add(CacheKeys.TaskApprovalRequest(), cacheKeys);
         }
 
         // Try to get the cached result

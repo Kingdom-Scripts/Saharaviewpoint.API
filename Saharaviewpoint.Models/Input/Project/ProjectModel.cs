@@ -13,7 +13,7 @@ namespace Saharaviewpoint.Models.Input.Project;
 public class ProjectModel
 {
     public required string Title { get; set; }
-    public string? Description { get; set; }
+    public string Description { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime DueDate { get; set; }
     public bool IsPriority { get; set; }
@@ -22,7 +22,7 @@ public class ProjectModel
     public decimal Budget { get; set; }
     public required string Location { get; set; }
     public required string Type { get; set; }
-    public string? SurroundingFacilities { get; set; }
+    public string SurroundingFacilities { get; set; }
     public IFormFile? Design { get; set; }
 }
 

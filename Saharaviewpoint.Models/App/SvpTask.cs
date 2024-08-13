@@ -16,7 +16,7 @@ public class SvpTask : BaseAppModel, ISoftDeletable
     [Required][MaxLength(15)] public string Type { get; set; } = null!;
     [Required][MaxLength(15)] public string Status { get; set; } = null!;
     [Required][MaxLength(255)] public string Summary { get; set; } = null!;
-    [MaxLength(5000)] public string? Description { get; set; }
+    [MaxLength(5000)] public string Description { get; set; }
     public int CreatedById { get; set; }
     public DateTime ExpectedStartDate { get; set; }
     public DateTime? StartDate { get; set; }

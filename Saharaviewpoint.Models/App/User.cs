@@ -26,7 +26,7 @@ public class User : BaseAppModel
     public required string LastName { get; set; }
 
     [MaxLength(25)]
-    public string? Phone { get; set; }
+    public string Phone { get; set; }
 
     [Required]
     [MaxLength(255)]

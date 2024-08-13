@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Saharaviewpoint.Core.Contants;
+using Saharaviewpoint.Core.Contants.CacheKeys;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
@@ -114,7 +115,9 @@ public class TaskService : BaseService, ITaskService
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // clear caches
-        _cache.ClearCaches(CacheKeys.TaskListCacheKeys());
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), 
+            CacheKeys.BoardTasks(model.ProjectId), 
+            CacheKeys.BoardTasksValidation(model.ProjectId));
 
         // Send Notification Email
         {
@@ -225,7 +228,10 @@ public class TaskService : BaseService, ITaskService
             _context.Remove(task);
 
             // clear caches
-            _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+            _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), 
+                CacheKeys.TaskDetails(taskId), 
+                CacheKeys.BoardTasks(task.ProjectId), 
+                CacheKeys.BoardTasksValidation(task.ProjectId));
         }
         await _context.SaveChangesAsync();
 
@@ -468,8 +474,10 @@ public class TaskService : BaseService, ITaskService
         bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(CacheKeys.BoardTasksValidation(projectId), async () =>
         {
             return await _context.Projects
-            .Where(p => p.Id == projectId)
-            .AnyAsync(p => _userSession.IsAnySvpAdmin || p.AssigneeId == _userSession.UserId || p.CreatedById == _userSession.UserId);
+                .Where(p => p.Id == projectId)
+                .AnyAsync(p => _userSession.IsAnySvpAdmin 
+                    || p.AssigneeId == _userSession.UserId 
+                    || p.CreatedById == _userSession.UserId);
         }, new TimeSpan(0, 45, 0));
 
         if (!projectExistAndHaveAccess)
@@ -561,7 +569,10 @@ public class TaskService : BaseService, ITaskService
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // clear caches
-        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), 
+            CacheKeys.TaskDetails(taskId), 
+            CacheKeys.BoardTasks(task.ProjectId),
+            CacheKeys.BoardTasksValidation(task.ProjectId));
 
         // Send Notification Email
         {
@@ -630,7 +641,10 @@ public class TaskService : BaseService, ITaskService
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // clear caches
-        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), 
+            CacheKeys.TaskDetails(taskId), 
+            CacheKeys.BoardTasks(task.ProjectId), 
+            CacheKeys.BoardTasksValidation(task.ProjectId));
 
         // Send Notification Email
         {
@@ -785,15 +799,4 @@ public class TaskService : BaseService, ITaskService
     }
 
     #endregion
-
-    internal class CacheKeys
-    {
-        internal static string TaskDetails(int id) => $"task-details-{id}";
-        internal static string ListAttachments(int id) => $"task-attachments-{id}";
-        internal static string BoardTasks(int projectId) => $"board-tasks-{projectId}";
-        internal static string BoardTasksValidation(int projectId) => $"board-tasks-{projectId}-validation";
-        internal static string TaskLogsCacheKeys(int id) => $"TaskService-ListLogs-{id}-CacheKeys";
-        internal static string CommentListCacheKeys(int id) => $"TaskService-Comment-{id}-CacheKeys";
-        internal static string TaskListCacheKeys() => "TaskService-ListTasks-CacheKeys";
-    }
 }

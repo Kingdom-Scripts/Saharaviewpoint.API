@@ -11,7 +11,7 @@ namespace Saharaviewpoint.Models.Input.Project;
 public class TaskApprovalModel
 {
     public bool Status { get; set; }
-    public string? Remark { get; set; }
+    public string Remark { get; set; }
 }
 
 public class TaskApprovalValidator : AbstractValidator<TaskApprovalModel>
