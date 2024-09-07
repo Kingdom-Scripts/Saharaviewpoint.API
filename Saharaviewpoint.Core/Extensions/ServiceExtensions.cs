@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using Quartz;
 using Saharaviewpoint.Core.BackgroundJobs;
 using Saharaviewpoint.Core.Contants;
@@ -26,6 +27,7 @@ using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.View.Project;
 using Saharaviewpoint.Models.View.Task;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using TokenHandler = Saharaviewpoint.Core.Services.TokenHandler;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -133,19 +135,50 @@ public static class ServiceExtensions
                 UseDefaultCredentials = true
             });
 
+        // Set up ZeptoMail HttpClient
+        string zeptoMailHttpClientName = configuration["ZeptoMail:HttpClientName"]!;
+        ArgumentException.ThrowIfNullOrEmpty(zeptoMailHttpClientName);
+
+        string zeptoMailKey = configuration["ZeptoMail:Key"]!;
+        ArgumentException.ThrowIfNullOrEmpty(zeptoMailKey);
+
+        // Configure ZeptoMail HttpClient
+        services.AddHttpClient(
+            zeptoMailHttpClientName,
+            client =>
+            {
+                // Set the base address of the named client.
+                client.BaseAddress = new Uri("https://api.zeptomail.com/v1.1/");
+
+                // Add a user-agent default request header.
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Zoho-enczapikey", zeptoMailKey);
+            });
+
         // set up Quartz
         services.AddQuartz(q =>
         {
             // Job to notify users of impending task expiration. Runs every day at 12AM
             var reminderJobKey = new JobKey("TaskExpiryReminderJob");
             q.AddJob<TaskExpiryReminderJob>(opts => opts.WithIdentity(reminderJobKey));
-            q.AddTrigger(opts => opts
-                .ForJob(reminderJobKey)
-                .WithIdentity("TaskExpiryReminderJob-trigger")
-                .WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM // TODO: use this
-                                                 //.WithCronSchedule("* 0/4 * ? * *") // cron job to run every day at 8AM // DEV test
-                .StartNow()
-            );
+            if (isProduction)
+            {
+                q.AddTrigger(opts => opts
+                    .ForJob(reminderJobKey)
+                    .WithIdentity("TaskExpiryReminderJob-trigger")
+                    .WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM
+                    .StartNow()
+                );
+            }
+            else
+            {
+                q.AddTrigger(opts => opts
+                    .ForJob(reminderJobKey)
+                    .WithIdentity("TaskExpiryReminderJob-trigger")
+                    .WithCronSchedule("* 0/4 * ? * *") // cron job to run every 4 minutes
+                    .StartNow()
+                );
+            }
+
         });
         services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 

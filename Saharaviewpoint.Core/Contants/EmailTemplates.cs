@@ -6,8 +6,10 @@
 
 namespace Saharaviewpoint.Core.Contants;
 
-public class EmailTemplates
+public static class EmailTemplates
 {
+    public const string WelcomeConfirmEmail = "welcome-confirm-email";
+    public const string ConfirmEmail = "confirm-email";
     public const string ResetPassword = "reset-password.html";
     public const string ForgotPassword = "forgot-password.html";
     public const string Invitation = "admin-invite.html";
