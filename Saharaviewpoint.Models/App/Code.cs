@@ -10,8 +10,7 @@ namespace Saharaviewpoint.Models.App;
 
 public class Code : BaseAppModel
 {
-    [MaxLength(255)]
-    public string? Email { get; set; }
+    [MaxLength(255)] public string Email { get; set; }
 
     [Required]
     [MaxLength(500)]

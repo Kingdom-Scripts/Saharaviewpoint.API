@@ -14,7 +14,7 @@ public class ProjectTaskApproval : BaseAppModel
     public int? FulfilledById { get; set; }
     public bool? Status { get; set; }
     public DateTime? FulfilledOn { get; set; }
-    public string? Remark { get; set; }
+    public string Remark { get; set; }
 
     public Project? Project { get; set; }
     public User? Requester { get; set; }

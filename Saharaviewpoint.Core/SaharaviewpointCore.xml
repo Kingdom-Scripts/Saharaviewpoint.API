@@ -61,5 +61,17 @@
             <param name="fileName">The name of the file to be retrieved.</param>
             <returns></returns>
         </member>
+        <member name="T:Saharaviewpoint.Core.Utilities.HttpUtilities">
+            <summary>
+                Utility class for HTTP-related operations.
+            </summary>
+        </member>
+        <member name="M:Saharaviewpoint.Core.Utilities.HttpUtilities.ToJsonContent(System.Object)">
+            <summary>
+                Converts an object to JSON content for HTTP requests.
+            </summary>
+            <param name="obj">The object to be serialized to JSON content.</param>
+            <returns>An instance of <see cref="T:System.Net.Http.StringContent" /> representing JSON content.</returns>
+        </member>
     </members>
 </doc>

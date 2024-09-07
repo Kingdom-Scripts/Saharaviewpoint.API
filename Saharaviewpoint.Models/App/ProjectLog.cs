@@ -21,11 +21,9 @@ public class ProjectLog : BaseAppModel
     [StringLength(255)]
     public string Description { get; set; } = null!;
 
-    [StringLength(1000)]
-    public string? PreviousState { get; set; }
+    [StringLength(1000)] public string PreviousState { get; set; }
 
-    [StringLength(1000)]
-    public string? CurrentState { get; set; }
+    [StringLength(1000)] public string CurrentState { get; set; }
 
     [Required]
     public int CreatedById { get; set; }
@@ -33,6 +31,5 @@ public class ProjectLog : BaseAppModel
     public Project? Project { get; set; }
     public User? CreatedBy { get; set; }
 
-    [StringLength(5000)]
-    public string? Remark { get; set; }
+    [StringLength(5000)] public string Remark { get; set; }
 }

@@ -4,6 +4,10 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.Net;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Text;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using Quartz;
 using Saharaviewpoint.Core.BackgroundJobs;
 using Saharaviewpoint.Core.Interfaces;
@@ -24,8 +29,7 @@ using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.View.Project;
 using Saharaviewpoint.Models.View.Task;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using System.Reflection;
-using System.Text;
+using TokenHandler = Saharaviewpoint.Core.Services.TokenHandler;
 
 namespace Saharaviewpoint.Core.Extensions;
 
@@ -121,15 +125,46 @@ public static class ServiceExtensions
             // Job to notify users of impending task expiration. Runs every day at 12AM
             var reminderJobKey = new JobKey("TaskExpiryReminderJob");
             q.AddJob<TaskExpiryReminderJob>(opts => opts.WithIdentity(reminderJobKey));
-            q.AddTrigger(opts => opts
-                .ForJob(reminderJobKey)
-                .WithIdentity("TaskExpiryReminderJob-trigger")
-                .WithCronSchedule("* 0/4 * ? * *") // cron job to run every day at 8AM
-                                                   //.WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM // TODO: use this
-                .StartNow()
-            );
+            if (isProduction)
+            {
+                q.AddTrigger(opts => opts
+                    .ForJob(reminderJobKey)
+                    .WithIdentity("TaskExpiryReminderJob-trigger")
+                    .WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM
+                    .StartNow()
+                );
+            }
+            else
+            {
+                q.AddTrigger(opts => opts
+                    .ForJob(reminderJobKey)
+                    .WithIdentity("TaskExpiryReminderJob-trigger")
+                    .WithCronSchedule("* 0/4 * ? * *") // cron job to run every 4 minutes
+                    .StartNow()
+                );
+            }
+
         });
         services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+
+        // Set up ZeptoMail HttpClient
+        string zeptoMailHttpClientName = configuration["ZeptoMail:HttpClientName"]!;
+        ArgumentException.ThrowIfNullOrEmpty(zeptoMailHttpClientName);
+
+        string zeptoMailKey = configuration["ZeptoMail:Key"]!;
+        ArgumentException.ThrowIfNullOrEmpty(zeptoMailKey);
+
+        // Configure ZeptoMail HttpClient
+        services.AddHttpClient(
+            zeptoMailHttpClientName,
+            client =>
+            {
+                // Set the base address of the named client.
+                client.BaseAddress = new Uri("https://api.zeptomail.com/v1.1/");
+
+                // Add a user-agent default request header.
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Zoho-enczapikey", zeptoMailKey);
+            });
 
         //Mapster global Setting. This can also be overwritten per transform
         TypeAdapterConfig.GlobalSettings.Default
@@ -156,7 +191,7 @@ public static class ServiceExtensions
 
         services.TryAddScoped<SoftDeleteInterceptor>();
         services.TryAddScoped<UserSession>();
-        services.TryAddScoped<ITokenHandler, Services.TokenHandler>();
+        services.TryAddScoped<ITokenHandler, TokenHandler>();
         services.TryAddScoped<IFileService, FileService>();
         services.TryAddScoped<IEmailService, EmailService>();
 

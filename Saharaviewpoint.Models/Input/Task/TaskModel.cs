@@ -16,7 +16,7 @@ public class TaskModel
     public int ParentId { get; set; }
     public required string Type { get; set; }
     public required string Summary { get; set; }
-    public string? Description { get; set; }
+    public string Description { get; set; }
     public DateTime ExpectedStartDate { get; set; }
     public DateTime? DueDate { get; set; }
 

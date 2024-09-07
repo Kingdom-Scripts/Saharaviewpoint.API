@@ -63,12 +63,20 @@ internal class TaskExpiryReminderJob : IJob
                 {
                     t.Project!.Title,
                     AssigneeEmail = t.Project.Assignee!.Email,
-                    AssigneeFirstName = t.Project.Assignee.FirstName
+                    AssigneeFirstName = t.Project.Assignee.FirstName,
+                    AssigneeLastName = t.Project.Assignee.LastName
                 }).FirstAsync();
 
             var emailRequest = new GenericEmailModel
             {
-                To = projectData.AssigneeEmail,
+                To =
+                [
+                    new EmailAddress
+                    {
+                        Address = projectData.AssigneeEmail,
+                        Name = $"{projectData.AssigneeFirstName} {projectData.AssigneeLastName}"
+                    }
+                ],
                 Subject = "Task Expiry Reminder",
                 Salutation = $"Hello {projectData.AssigneeFirstName},",
                 PrimaryMessage = $"This is a reminder that the task below is due in {actualLeft}. " +

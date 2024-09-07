@@ -4,59 +4,69 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.Web;
 using Fluid;
 using Fluid.Values;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Email;
 using Saharaviewpoint.Models.Utilities;
 using Serilog;
-using System.Net;
-using System.Net.Mail;
-using System.Web;
 
 namespace Saharaviewpoint.Core.Services;
 
 public class EmailService : IEmailService
 {
-    private readonly SmtpClient _smtpClient;
     private readonly IWebHostEnvironment _hostingEnvironment;
-    private readonly AppConfig _appConfig;
     private readonly SaharaviewpointContext _context;
+    private readonly AppConfig _appConfig;
+    private readonly ZeptoMailConfig _zeptoMailConfig;
+    private readonly HttpClient _zeptoMailClient;
 
     public EmailService(IWebHostEnvironment hostingEnvironment,
         IOptions<AppConfig> options,
-        SaharaviewpointContext context)
+        SaharaviewpointContext context, IOptions<ZeptoMailConfig> zeptoMailConfig, IHttpClientFactory httpClientFactory)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentException.ThrowIfNullOrEmpty(nameof(zeptoMailConfig));
+        ArgumentException.ThrowIfNullOrEmpty(nameof(httpClientFactory));
 
         _appConfig = options.Value;
+        _zeptoMailConfig = zeptoMailConfig.Value;
         _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
-
-        // var client = new SmtpClient();
-        // client.DeliveryMethod = SmtpDeliveryMethod.Network;
-        // client.EnableSsl = true;
-        // client.Host = "smtppro.zoho.com";
-        // client.Port = 587;
-        // client.UseDefaultCredentials = false;
-        // client.Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y");
-        // client.Send(mail);
-
-        _smtpClient = new SmtpClient
-        {
-            Host = "smtppro.zoho.com",
-            Port = 587,
-            EnableSsl = true,
-            UseDefaultCredentials = false,
-            Credentials = new NetworkCredential("thirdparty@kingdomscripts.com", "hDvhi1?y"),
-            DeliveryMethod = SmtpDeliveryMethod.Network
-        };
+        _zeptoMailClient = httpClientFactory.CreateClient(_zeptoMailConfig.HttpClientName);
         _context = context;
+    }
+
+    public async Task<Result> SendZeptoMailTemplate(string emailKey, EmailModel model)
+    {
+        var payload = new
+        {
+            from = model.From is not null
+                ? model.From
+                : new EmailAddress { Address = "no-reply@saharaviewpoint.com", Name = "Saharaviewpoint" },
+            to = new[] { new { email_address = model.To } },
+            template_key = emailKey,
+            merge_info = model.MetaData
+        };
+
+        var jsonContent = payload.ToJsonContent();
+
+        var response = await _zeptoMailClient.PostAsync("email/template", jsonContent);
+        if (!response.IsSuccessStatusCode)
+        {
+            Log.Error("Error sending email. Status code: {StatusCode}", response.StatusCode);
+            return new ErrorResult("Error sending email");
+        }
+
+        return new SuccessResult(true);
     }
 
     public async Task<Result> SendConfirmEmail(string to, string token)
@@ -104,7 +114,13 @@ public class EmailService : IEmailService
         string output = await fluidTemplate.RenderAsync(context);
 
         // send email
-        return SendMessage(to, "Confirm Your Email Address", output);
+        // return SendMessage(to, "Confirm Your Email Address", output);
+        return await SendMessage(new EmailModel
+        {
+            To = [new EmailAddress { Address = to }],
+            Subject = "Confirm Your Email Address",
+            HtmlBody = output
+        });
     }
 
     public async Task<Result> SendInvitationEmail(InvitationEmailModel model)
@@ -160,11 +176,17 @@ public class EmailService : IEmailService
         string output = await fluidTemplate.RenderAsync(context);
 
         // send email
-        return SendMessage(model.RecipientEmail, "Invitation to Join Team - Saharaviewpoint", output);
+        // return SendMessage(model.RecipientEmail, "Invitation to Join Team - Saharaviewpoint", output);
+        return await SendMessage(new EmailModel
+        {
+            To = [new EmailAddress { Address = model.RecipientEmail, Name = model.RecipientName }],
+            Subject = "Invitation to Join Team - Saharaviewpoint",
+            HtmlBody = output
+        });
     }
 
     public async Task<Result> SendEmail(string to, string subject, string template,
-        Dictionary<string, string?>? args = null)
+        Dictionary<string, string> args = null)
     {
         // get template file
         string templatePath = Path.Combine(_hostingEnvironment.ContentRootPath, "EmailTemplates", template);
@@ -206,7 +228,13 @@ public class EmailService : IEmailService
         string output = await fluidTemplate.RenderAsync(context);
 
         // send email
-        return SendMessage(to, subject, output);
+        // return SendMessage(to, subject, output);
+        return await SendMessage(new EmailModel
+        {
+            To = [new EmailAddress { Address = to }],
+            Subject = subject,
+            HtmlBody = output
+        });
     }
 
     public async Task<Result> SendEmail(GenericEmailModel model)
@@ -242,7 +270,6 @@ public class EmailService : IEmailService
         context.Options.Filters.AddFilter("to_comma_separated", (input, arguments, ctx)
             => new StringValue($"{input.ToObjectValue():n}"));
 
-        // TODO: logo is not showing in received email
         context.SetValue("salutation", model.Salutation);
         context.SetValue("primaryMessage", model.PrimaryMessage);
         context.SetValue("secondaryMessage", model.SecondaryMessage);
@@ -259,60 +286,100 @@ public class EmailService : IEmailService
         string output = await fluidTemplate.RenderAsync(context);
 
         // send email
-        return SendMessage(model.To, model.Subject, output, model.Cc, model.Bcc);
+        // return SendMessage(model.To, model.Subject, output, model.Cc, model.Bcc);
+        return await SendMessage(new EmailModel
+        {
+            To = model.To,
+            Cc = model.Cc,
+            Bcc = model.Bcc,
+            Subject = model.Subject,
+            HtmlBody = output,
+            Attachments = model.Attachments
+        });
     }
 
-    public string GetUserEmails(params string[] roles)
-        => string.Join(", ", _context.Roles
-                        .Where(r => roles.Contains(r.Name))
-                        .SelectMany(r => r.UserRoles)
-                        .Select(ur => ur.User!.Email)
-                        .ToList());
+    public List<EmailAddress> GetUserEmails(params string[] roles)
+        => _context.Roles
+            .Where(r => roles.Contains(r.Name))
+            .SelectMany(r => r.UserRoles)
+            .Select(ur => new EmailAddress { Address = ur.User.Email, Name = $"{ur.User.FirstName} {ur.User.LastName}" })
+            .ToList();
 
-    private Result SendMessage(string to, string subject, string body, string? cc = null, string? bcc = null,
-        Attachment? attachment = null)
+    private async Task<Result> SendMessage(EmailModel model)
     {
-        var mail = new MailMessage();
-
         try
         {
-            mail.From = new MailAddress("thirdparty@kingdomscripts.com", "Saharaviewpoint");
-
-            //create Alrternative HTML view
-            AlternateView htmlView = AlternateView.CreateAlternateViewFromString(body, null, "text/html");
-
-            string filePath = Path.Combine(_hostingEnvironment.WebRootPath, "images", "svp-logo.png");
-
-            //Add Image
-            LinkedResource theEmailImage = new(filePath)
+            var payload = new
             {
-                ContentId = "logoImageID"
+                from = model.From ?? new EmailAddress
+                    { Address = _zeptoMailConfig.DefaultSenderAssdress, Name = _zeptoMailConfig.DefaultSenderName },
+                to = model.To.Select(cc => new { email_address = cc }).ToArray(),
+                cc = model.Cc.Select(cc => new { email_address = cc }).ToArray(),
+                bcc = model.Bcc.Select(cc => new { email_address = cc }).ToArray(),
+                subject = model.Subject,
+                htmlbody = model.HtmlBody,
+                merge_info = model.MetaData,
+                inline_images = new[]
+                {
+                    new
+                    {
+                        file_cache_key = _zeptoMailConfig.LogoFileKey,
+                        cid = "logoImageID"
+                    }
+                },
+                attachments = model.Attachments.Select(file => new
+                {
+                    name = file.FileName,
+                    mime_type = GetFileMimeType(file),
+                    content = GetBase64String(file)
+                }).ToArray()
             };
 
-            //Add the Image to the Alternate view
-            htmlView.LinkedResources.Add(theEmailImage);
-
-            //Add view to the Email Message
-            mail.AlternateViews.Add(htmlView);
-
-            mail.To.Add(to);
-            if (cc is not null) mail.CC.Add(cc);
-            if (bcc is not null) mail.Bcc.Add(bcc);
-            mail.Subject = subject;
-            mail.IsBodyHtml = true;
-
-            _smtpClient.Send(mail);
+            var jsonContent = payload.ToJsonContent();
+            var response = await _zeptoMailClient.PostAsync("email", jsonContent);
+            if (!response.IsSuccessStatusCode)
+            {
+                Log.Error("Error sending email. Status code: {StatusCode}", response.StatusCode);
+                return new ErrorResult("Error sending email");
+            }
 
             return new SuccessResult(true);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error sending email to {to}. Subject: {subject}");
+            // Log.Error(ex, $"Error sending email to {to}. Subject: {subject}");
+            Log.Error(ex, "Error sending email to {Addresses}. Subject: {Subject}",
+                string.Join(", ", model.To.Select(m => $"{m.Name} <{m.Address}>")), model.Subject);
             return new ErrorResult(ex.Message);
         }
-        finally
+    }
+
+    private string GetFileMimeType(IFormFile file)
+    {
+        if (file is null)
         {
-            mail.Dispose();
+            return string.Empty;
         }
+
+        var provider = new FileExtensionContentTypeProvider();
+        if (!provider.TryGetContentType(file.FileName, out string contentType))
+        {
+            contentType = "application/octet-stream";
+        }
+
+        return contentType;
+    }
+
+    private string GetBase64String(IFormFile file)
+    {
+        if (file is null)
+        {
+            return string.Empty;
+        }
+
+        using var ms = new MemoryStream();
+        file.CopyTo(ms);
+        byte[] fileBytes = ms.ToArray();
+        return Convert.ToBase64String(fileBytes);
     }
 }

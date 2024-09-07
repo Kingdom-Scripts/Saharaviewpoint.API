@@ -4,7 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Azure.Core;
 using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
@@ -240,12 +239,20 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> AddAttachmentToTask(int taskId, FileUploadModel model)
     {
+
         var task = await _context.Tasks
             .Where(t => t.Id == taskId)
-            .Select(t => new SvpTask
+            .Select(t => new
             {
-                Id = t.Id,
-                ProjectId = t.ProjectId
+                t.Id,
+                t.ProjectId,
+                t.Summary,
+                TaskOwnerId = t.CreatedById,
+                TaskOwnerEmail = t.CreatedBy.Email,
+                TaskOwnerName = $"{t.CreatedBy.FirstName} {t.CreatedBy.LastName}",
+                ProjectOwnerEmail = t.Project.CreatedBy.Email,
+                ProjectOwnerName = $"{t.Project.CreatedBy.FirstName} {t.Project.CreatedBy.LastName}",
+
             }).FirstOrDefaultAsync();
 
         if (task is null)
@@ -268,7 +275,7 @@ public class TaskService : BaseService, ITaskService
         };
 
         // Add log
-        AddTaskLog(task, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
+        AddTaskLog(new SvpTask{Id = task.Id}, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
 
         await _context.AddAsync(attachment);
 
@@ -279,6 +286,33 @@ public class TaskService : BaseService, ITaskService
 
         // clear caches
         _cache.ClearCaches(CacheKeys.ListAttachments(taskId));
+
+        // Send Notification
+        var emailModel = new GenericEmailModel
+        {
+            To = [new EmailAddress { Address = task.ProjectOwnerEmail, Name = task.ProjectOwnerName }],
+            Cc = [new EmailAddress { Address = task.TaskOwnerEmail, Name = task.TaskOwnerName }],
+            Subject = $"Attachment Uploaded - {task.Summary}",
+            Salutation = "Hello,",
+            PrimaryMessage =
+                $"This is to notify you that <strong>{_userSession.Name}</strong> uploaded an attachment to the task <strong>{task.Summary}</strong>.",
+            ClosingRemark = "Regards",
+            ActionButton = new EmailActionButton
+            {
+                Text = "View Task",
+                Url = $"{_baseUrls.Admin}/tasks/all?projectId={task.ProjectId}&taskId={taskId}"
+                // TODO: add url to view task for client
+            },
+            Attachments = [model.File]
+        };
+        if (task.TaskOwnerId != _userSession.UserId)
+            emailModel.Cc.Add(new EmailAddress
+            {
+                Address = _context.Users.First(u => u.Id == _userSession.UserId).Email ,
+                Name = _userSession.Name
+            });
+
+        await _emailService.SendEmail(emailModel);
 
         return new SuccessResult(StatusCodes.Status201Created, attachment.Document.Adapt<DocumentView>());
     }
@@ -460,11 +494,12 @@ public class TaskService : BaseService, ITaskService
                     ProjectTitle = p.Title,
                     OwnerEmail = p.CreatedBy!.Email,
                     OwnerFirstName = p.CreatedBy.FirstName,
+                    OwnerLastName = p.CreatedBy.LastName
                 }).FirstAsync();
 
             var emailRequest = new GenericEmailModel
             {
-                To = data.OwnerEmail,
+                To = [new EmailAddress{Address = data.OwnerEmail, Name = $"{data.OwnerFirstName} {data.OwnerLastName}"}],
                 Subject = $"{data.ProjectTitle} - Task Update",
                 Salutation = $"Hello {data.OwnerFirstName},",
                 PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the status of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +
@@ -529,11 +564,12 @@ public class TaskService : BaseService, ITaskService
                     ProjectTitle = p.Title,
                     OwnerEmail = p.CreatedBy!.Email,
                     OwnerFirstName = p.CreatedBy.FirstName,
+                    OwnerLastName = p.CreatedBy.LastName
                 }).FirstAsync();
 
             var emailRequest = new GenericEmailModel
             {
-                To = data.OwnerEmail,
+                To = [new EmailAddress{Address = data.OwnerEmail, Name = $"{data.OwnerFirstName} {data.OwnerLastName}"}],
                 Subject = $"{data.ProjectTitle} - Task Update",
                 Salutation = $"Hello {data.OwnerFirstName},",
                 PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the due date of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +

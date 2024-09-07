@@ -7,8 +7,8 @@
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
+using Saharaviewpoint.Models.Configurations;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -86,6 +86,7 @@ builder.Services.AddSwaggerGen(swagger =>
 builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
 builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
+builder.Services.Configure<ZeptoMailConfig>(builder.Configuration.GetSection("ZeptoMail"));
 
 // Set up CORS
 string svpAllowedOrigins = "_svpAllowedDomains";

@@ -97,11 +97,10 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
                 }).FirstAsync();
 
             string url = $"{_baseUrls.Admin}/approvals/project-task-setup";
-            string adminEmails = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
 
             var adminEmailRequest = new GenericEmailModel
             {
-                To = adminEmails,
+                To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin),
                 Subject = $"Task Approval Request - {project.Title}",
                 Salutation = "Hello,",
                 PrimaryMessage = "A task setup approval request has been initiated by a project manager. Kindly review the request and take necessary action.<br><br>" +
@@ -122,7 +121,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
             var clientEmailRequest = new GenericEmailModel
             {
-                To = project.OwnerEmail,
+                To = [new EmailAddress{Address = project.OwnerEmail, Name = $"{project.OwnerFirstName} {project.OwnerLastName}"}],
                 Subject = $"{project.Title} - Project Update",
                 Salutation = $"Hello {project.OwnerFirstName},",
                 PrimaryMessage = $"This is to notify you that your project - {project.Title} - has been completely setup and sent for approval by the assigned project manager. An administrator will review and address the request soon.<br><br>" +

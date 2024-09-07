@@ -91,11 +91,10 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         // Send Notification Email
         {
             string url = $"{_baseUrls.Admin}/projects?approve={mappedProject.Id}";
-            string adminEmails = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
 
             var emailRequest = new GenericEmailModel
             {
-                To = adminEmails,
+                To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin),
                 Subject = "New Project Request",
                 Salutation = "Hello,",
                 PrimaryMessage = "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
@@ -159,7 +158,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var emailRequest = new GenericEmailModel
             {
-                To = assignee.Email,
+                To = [new EmailAddress{Address = assignee.Email, Name = $"{assignee.FirstName} {assignee.LastName}"}],
                 Subject = "Project Assigned To You",
                 Salutation = $"Hello {assignee.FirstName},",
                 PrimaryMessage = "A new project has been assigned to you. Kindly log on the application to begin setting up tasks.<br><br>" +
@@ -181,7 +180,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var clientEmailRequest = new GenericEmailModel
             {
-                To = project.CreatedBy!.Email,
+                To = [new EmailAddress{Address = project.CreatedBy!.Email, Name = $"{project.CreatedBy.FirstName} {project.CreatedBy.LastName}"}],
                 Subject = $"{project.Title} - Approved!",
                 Salutation = $"Hello {project.CreatedBy.FirstName},",
                 PrimaryMessage = $"Congratulations!<br><br>" +
@@ -393,7 +392,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var emailRequest = new GenericEmailModel
             {
-                To = newAssignee.Email,
+                To = [new EmailAddress{Address = newAssignee.Email, Name = $"{newAssignee.FirstName} {newAssignee.LastName}"}],
                 Subject = "Project Re-assigned To You",
                 Salutation = $"Hello {newAssignee.FirstName},",
                 PrimaryMessage = "A new project has been re-assigned to you. Kindly log on the application to view tasks.<br><br>" +
@@ -552,7 +551,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var emailRequest = new GenericEmailModel
             {
-                To = project.CreatedBy!.Email,
+                To = [new EmailAddress{Address = project.CreatedBy!.Email, Name = $"{project.CreatedBy.FirstName} {project.CreatedBy.LastName}"}],
                 Subject = $"{project.Title} - Completed!",
                 Salutation = $"Hello {project.CreatedBy.FirstName},",
                 PrimaryMessage = $"Congratulations!<br><br>" +
