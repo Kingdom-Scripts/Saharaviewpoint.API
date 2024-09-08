@@ -35,10 +35,10 @@ internal class ApiVideoHttpHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         // get the current url
-        string requestedUrl = request.RequestUri.ToString();
+        string requestedUrl = request.RequestUri!.ToString();
         if (!requestedUrl.Contains("api-key"))
         {
-            var bearerToken = await GetBearerToken();
+            string bearerToken = await GetBearerToken();
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken ?? "");
         }
 
@@ -58,11 +58,11 @@ internal class ApiVideoHttpHandler : DelegatingHandler
         if (!string.IsNullOrEmpty(refreshToken))
         {
             response = await RefreshToken(refreshToken);
-            _logger.Information($"--> Api.Video Token refreshed on {DateTime.UtcNow}");
+            _logger.Information("--> Api.Video Token refreshed on {UtcNow}", DateTime.UtcNow);
         }
         else
         {
-            _logger.Information($"--> Api.Video Token created on {DateTime.UtcNow}");
+            _logger.Information("--> Api.Video Token created on {UtcNow}", DateTime.UtcNow);
             response = await CreateNewToken();
         }
 
@@ -87,7 +87,7 @@ internal class ApiVideoHttpHandler : DelegatingHandler
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.Error($"--> Could not refresh Api.Video Token: {response.StatusCode}");
+            _logger.Error("--> Could not refresh Api.Video Token: {ResponseStatusCode}", response.StatusCode);
             return await CreateNewToken();
         }
 
@@ -109,7 +109,7 @@ internal class ApiVideoHttpHandler : DelegatingHandler
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.Error($"--> Could not get Api.Video Token: {response.StatusCode}");
+            _logger.Error("--> Could not get Api.Video Token: {ResponseStatusCode}", response.StatusCode);
             throw new Exception("Request to third-party service failed.");
         }
 

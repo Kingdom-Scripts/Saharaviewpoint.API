@@ -29,7 +29,7 @@ public class UserSessionMiddleware(RequestDelegate next)
         }
 
         // get the app type
-        string? token = context.Request.Headers["AppType"];
+        string token = context.Request.Headers["AppType"];
         if (token is not null)
         {
             session.AppType = token == "Client" ? AppTypes.Client : AppTypes.Admin;

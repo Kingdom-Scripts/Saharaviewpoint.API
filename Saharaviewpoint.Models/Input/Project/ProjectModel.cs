@@ -23,7 +23,7 @@ public class ProjectModel
     public required string Location { get; set; }
     public required string Type { get; set; }
     public string SurroundingFacilities { get; set; }
-    public IFormFile? Design { get; set; }
+    public IFormFile Design { get; set; }
 }
 
 public class ProjectModelValidator : AbstractValidator<ProjectModel>

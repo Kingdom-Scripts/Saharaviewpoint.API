@@ -91,7 +91,7 @@ public class FileService : IFileService
         }
 
         var stream = await blobClient.OpenReadAsync();
-        string? contentType = blobClient.GetProperties().Value.ContentType;
+        string contentType = blobClient.GetProperties().Value.ContentType;
         return new FileStreamResult(stream, contentType)
         {
             FileDownloadName = fileName
@@ -158,7 +158,7 @@ public class FileService : IFileService
         }
     }
 
-    public FileStreamResult? GetSvpLogo()
+    public FileStreamResult GetSvpLogo()
     {
         // get logo from file storage
         string filePath = Path.Combine(_hostEnvironment.WebRootPath, "images", "svp-logo.svg");
@@ -176,7 +176,7 @@ public class FileService : IFileService
         };
     }
 
-    private async Task<FileStreamResult?> GetFile(string folder, string subFolder, string fileName)
+    private async Task<FileStreamResult> GetFile(string folder, string subFolder, string fileName)
     {
         var blobContainer = _blobServiceClient.GetBlobContainerClient(folder);
 
@@ -188,48 +188,44 @@ public class FileService : IFileService
         }
 
         var stream = await blobClient.OpenReadAsync();
-        string? contentType = blobClient.GetProperties().Value.ContentType;
+        string contentType = blobClient.GetProperties().Value.ContentType;
         return new FileStreamResult(stream, contentType)
         {
             FileDownloadName = fileName
         };
     }
 
-    private static async Task<BlobClient> SaveImageAsync(BlobContainerClient containerClient, string subFolder,
+    private static async Task SaveImageAsync(BlobContainerClient containerClient, string subFolder,
         string fileUploadName, IFormFile image)
     {
-        using (var stream = new MemoryStream())
-        {
-            await image.CopyToAsync(stream);
-            stream.Seek(0, SeekOrigin.Begin);
+        using var stream = new MemoryStream();
+        await image.CopyToAsync(stream);
+        stream.Seek(0, SeekOrigin.Begin);
 
-            // Compress the image using Tinify
-            var source = await TinifyAPI.Tinify.FromBuffer(stream.ToArray());
+        // Compress the image using Tinify
+        var source = await TinifyAPI.Tinify.FromBuffer(stream.ToArray());
 
-            // get thumbnail
-            byte[]? thumbnailFile = await source
-                .Preserve("copyright", "creation")
-                .Resize(new
-                {
-                    method = "thumb",
-                    width = 150,
-                    height = 150
-                }).ToBuffer();
+        // get thumbnail
+        byte[] thumbnailFile = await source
+            .Preserve("copyright", "creation")
+            .Resize(new
+            {
+                method = "thumb",
+                width = 150,
+                height = 150
+            }).ToBuffer();
 
-            // compress original
-            byte[] optimizedFile = await source
-                .Preserve("copyright", "creation")
-                .ToBuffer();
+        // compress original
+        byte[] optimizedFile = await source
+            .Preserve("copyright", "creation")
+            .ToBuffer();
 
-            var thumbnailClient = containerClient.GetBlobClient($"{subFolder}/_thumbnail/{fileUploadName}");
-            var imageClient = containerClient.GetBlobClient($"{subFolder}/{fileUploadName}");
+        var thumbnailClient = containerClient.GetBlobClient($"{subFolder}/_thumbnail/{fileUploadName}");
+        var imageClient = containerClient.GetBlobClient($"{subFolder}/{fileUploadName}");
 
-            // Upload data
-            await thumbnailClient.UploadAsync(new MemoryStream(thumbnailFile), true);
-            await imageClient.UploadAsync(new MemoryStream(optimizedFile), true);
-
-            return imageClient;
-        }
+        // Upload data
+        await thumbnailClient.UploadAsync(new MemoryStream(thumbnailFile), true);
+        await imageClient.UploadAsync(new MemoryStream(optimizedFile), true);
     }
 
     private static string GetDocumentType(string extension)

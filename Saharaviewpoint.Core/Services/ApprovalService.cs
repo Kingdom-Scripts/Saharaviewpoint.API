@@ -4,13 +4,11 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Azure.Core;
 using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Saharaviewpoint.Core.Contants;
 using Saharaviewpoint.Core.Contants.CacheKeys;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
@@ -147,13 +145,48 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
     public async Task<Result> SendTaskSetupApprovalReminder(int projectId, int id)
     {
         var approval = await _context.ProjectTaskApprovals
-            .FirstOrDefaultAsync(pta => pta.Id == id && pta.ProjectId == projectId);
+            .Where(pta => pta.Id == id && pta.ProjectId == projectId)
+            .Select(pta => new
+            {
+                pta.IsFulfilled,
+                InitiatorName = $"{pta.Requester!.FirstName} {pta.Requester.LastName}",
+                Project = new
+                {
+                    pta.Project!.Title,
+                    OwnerFirstName = pta.Project.CreatedBy!.FirstName,
+                    OwnerLastName = pta.Project.CreatedBy.LastName
+                },
+            })
+            .FirstOrDefaultAsync();
 
         if (approval is null)
             return new ErrorResult("Invalid approval, request has not been initiated.");
 
         if (approval.IsFulfilled)
             return new ErrorResult("Task setup approval request has been fulfilled.");
+
+        string url = $"{_baseUrls.Admin}/approvals/project-task-setup";
+
+        var adminEmailRequest = new GenericEmailModel
+        {
+            To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin),
+            Subject = $"(Reminder) Task Approval Request - {approval.Project.Title}",
+            Salutation = "Hello,",
+            PrimaryMessage = "A task setup approval request has been initiated by a project manager. Kindly review the request and take necessary action.<br><br>" +
+                             "<strong><span style=\"font-size:larger;\">Request Details</span></strong><br>" +
+                             $"<strong>Project:</strong> {approval.Project.Title}<br>" +
+                             $"<strong>Project Owner:</strong> {approval.Project.OwnerFirstName} {approval.Project.OwnerLastName}<br>" +
+                             $"<strong>Initiator:</strong> {approval.InitiatorName}<br>" +
+                             $"<strong>Date Initiated:</strong> {DateTime.UtcNow:dd MMM, yyyy}<br>",
+            ClosingRemark = "Regards",
+            ActionButton = new()
+            {
+                Text = "View Pending Requests",
+                Url = url
+            }
+        };
+
+        await _emailService.SendEmail(adminEmailRequest);
 
         // add log
         var log = new ProjectLog
@@ -166,7 +199,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
         await _context.ProjectLogs.AddAsync(log);
 
         // save the changes
-        int saved = await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
         return new SuccessResult("Reminder sent successfuly.");
     }
@@ -251,7 +284,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
 
     public async Task<Result> ListApprovalRequests(PagingOptionModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = CacheKeys.ListApprovalRequests(generatedKey);
 
         // Retrieve the current list of cache keys and add the new key

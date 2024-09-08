@@ -30,10 +30,10 @@ public class SvpTask : BaseAppModel, ISoftDeletable
     public int? DeletedById { get; set; }
     public DateTime? DeletedOnUtc { get; set; }
 
-    public SvpTask? Parent { get; set; }
-    public User? CreatedBy { get; set; }
-    public User? UpdatedBy { get; set; }
-    public Project? Project { get; set; }
-    public User? DeletedBy { get; set; }
+    public SvpTask Parent { get; set; }
+    public User CreatedBy { get; set; }
+    public User UpdatedBy { get; set; }
+    public Project Project { get; set; }
+    public User DeletedBy { get; set; }
     public List<TaskAttachment> TaskAttachments { get; set; } = new();
 }

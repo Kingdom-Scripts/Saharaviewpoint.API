@@ -14,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
 using Quartz;
 using Saharaviewpoint.Core.BackgroundJobs;
 using Saharaviewpoint.Core.Contants;
@@ -27,7 +26,6 @@ using Saharaviewpoint.Models.Input.Project;
 using Saharaviewpoint.Models.View.Project;
 using Saharaviewpoint.Models.View.Task;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using TokenHandler = Saharaviewpoint.Core.Services.TokenHandler;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -67,22 +65,22 @@ public static class ServiceExtensions
 
         // Add fluent validation.
         services.AddValidatorsFromAssembly(Assembly.Load("Saharaviewpoint.Core"));
-        services.AddFluentValidationAutoValidation(configuration =>
+        services.AddFluentValidationAutoValidation(config =>
         {
             // Disable the built-in .NET model (data annotations) validation.
-            configuration.DisableBuiltInModelValidation = true;
+            config.DisableBuiltInModelValidation = true;
 
             // Enable validation for parameters bound from `BindingSource.Form` binding sources.
-            configuration.EnableFormBindingSourceAutomaticValidation = true;
+            config.EnableFormBindingSourceAutomaticValidation = true;
 
             // Enable validation for parameters bound from `BindingSource.Path` binding sources.
-            configuration.EnablePathBindingSourceAutomaticValidation = true;
+            config.EnablePathBindingSourceAutomaticValidation = true;
 
             // Enable validation for parameters bound from 'BindingSource.Custom' binding sources.
-            configuration.EnableCustomBindingSourceAutomaticValidation = true;
+            config.EnableCustomBindingSourceAutomaticValidation = true;
 
             // Replace the default result factory with a custom implementation.
-            configuration.OverrideDefaultResultFactoryWith<CustomResultFactory>();
+            config.OverrideDefaultResultFactoryWith<CustomResultFactory>();
         });
 
         services.AddHttpContextAccessor();
@@ -105,7 +103,7 @@ public static class ServiceExtensions
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = configuration["JwtConfig:Issuer"],
                 ValidAudience = configuration["JwtConfig:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtConfig:Secret"])),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtConfig:Secret"]!)),
                 ClockSkew = TimeSpan.Zero
             };
         });

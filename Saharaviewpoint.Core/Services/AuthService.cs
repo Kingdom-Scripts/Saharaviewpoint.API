@@ -83,7 +83,7 @@ public class AuthService : IAuthService
     public async Task<Result> AuthenticateUser(LoginModel model)
     {
         model.Email = model.Email.ToLower().Trim();
-        User? user = await _context.Users
+        User user = await _context.Users
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == model.Email);
 
@@ -145,7 +145,7 @@ public class AuthService : IAuthService
             $"{_baseUrls.Client}/auth/reset-password?email={model.Email}&token={HttpUtility.UrlEncode(token)}";
 
         // send email
-        var args = new Dictionary<string, string?> {
+        var args = new Dictionary<string, string> {
             {
                 "url", url
             },

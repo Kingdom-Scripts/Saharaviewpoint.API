@@ -4,8 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Saharaviewpoint.Models.Input;
-
 namespace Saharaviewpoint.Models.Input.Project;
 
 public class ProjectSearchModel : PagingOptionModel

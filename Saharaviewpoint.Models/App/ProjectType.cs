@@ -11,6 +11,7 @@ namespace Saharaviewpoint.Models.App;
 public class ProjectType : BaseAppModel
 {
     [Required]
+    [StringLength(255)]
     public string Name { get; set; }
 
     [Required]

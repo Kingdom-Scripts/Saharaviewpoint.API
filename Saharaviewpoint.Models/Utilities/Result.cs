@@ -4,8 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Newtonsoft.Json;
-
 namespace Saharaviewpoint.Models.Utilities;
 
 /// <summary>
@@ -67,7 +65,7 @@ public class Result<T>
     /// <summary>
     /// Indicates whether the operation was successful.
     /// </summary>
-    public bool Success { get; set; } = false;
+    public bool Success { get; set; }
 
     /// <summary>
     /// The title associated with the result.

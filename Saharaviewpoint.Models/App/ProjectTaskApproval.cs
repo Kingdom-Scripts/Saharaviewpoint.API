@@ -4,6 +4,8 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Saharaviewpoint.Models.App;
 
 public class ProjectTaskApproval : BaseAppModel
@@ -14,9 +16,10 @@ public class ProjectTaskApproval : BaseAppModel
     public int? FulfilledById { get; set; }
     public bool? Status { get; set; }
     public DateTime? FulfilledOn { get; set; }
+    [StringLength(2000)]
     public string Remark { get; set; }
 
-    public Project? Project { get; set; }
-    public User? Requester { get; set; }
-    public User? FulfilledBy { get; set; }
+    public Project Project { get; set; }
+    public User Requester { get; set; }
+    public User FulfilledBy { get; set; }
 }

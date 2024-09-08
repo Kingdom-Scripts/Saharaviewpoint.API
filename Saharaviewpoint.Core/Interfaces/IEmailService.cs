@@ -14,7 +14,7 @@ public interface IEmailService
     Task<Result> SendZeptoMailTemplate(string emailKey, EmailModel model);
     Task<Result> SendConfirmEmail(string to, string token);
     Task<Result> SendInvitationEmail(InvitationEmailModel model);
-    Task<Result> SendEmail(string to, string subject, string template, Dictionary<string, string?>? args = null);
+    Task<Result> SendEmail(string to, string subject, string template, Dictionary<string, string> args = null);
     Task<Result> SendEmail(GenericEmailModel model);
     List<EmailAddress> GetUserEmails(params string[] roles);
 }

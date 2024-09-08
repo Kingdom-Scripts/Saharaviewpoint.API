@@ -30,8 +30,8 @@ public class ProjectLog : BaseAppModel
     [Required]
     public int CreatedById { get; set; }
 
-    public Project? Project { get; set; }
-    public User? CreatedBy { get; set; }
+    public Project Project { get; set; }
+    public User CreatedBy { get; set; }
 
     [StringLength(5000)]
     public string Remark { get; set; }

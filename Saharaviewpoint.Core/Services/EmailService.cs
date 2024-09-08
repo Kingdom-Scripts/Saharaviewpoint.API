@@ -87,7 +87,7 @@ public class EmailService : IEmailService
 
         var fluidParser = new FluidParser();
         // return error on failure to parse input
-        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string fluidError))
         {
             Log.Error("Error in parsing template: {FluidError}", fluidError);
             return new ErrorResult($"Error in parsing template: {fluidError}");
@@ -107,7 +107,7 @@ public class EmailService : IEmailService
         };
 
         context.Options.Filters.AddFilter("to_comma_separated",
-            (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
+            (input, _, _) => new StringValue($"{input.ToObjectValue():n}"));
         context.SetValue("url", url);
 
         // compute output
@@ -141,7 +141,7 @@ public class EmailService : IEmailService
 
         var fluidParser = new FluidParser();
         // return error on failure to parse input
-        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string fluidError))
         {
             Log.Error("Error in parsing template: {FluidError}", fluidError);
             return new ErrorResult($"Error in parsing template: {fluidError}");
@@ -167,7 +167,7 @@ public class EmailService : IEmailService
         };
 
         context.Options.Filters.AddFilter("to_comma_separated",
-            (input, arguments, ctx) => new StringValue($"{input.ToObjectValue():n}"));
+            (input, _, _) => new StringValue($"{input.ToObjectValue():n}"));
         context.SetValue("url", url);
         context.SetValue("name", model.RecipientName);
         context.SetValue("inviteSenderName", model.SenderName);
@@ -203,7 +203,7 @@ public class EmailService : IEmailService
 
         var fluidParser = new FluidParser();
         // return error on failure to parse input
-        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string fluidError))
         {
             Log.Error("Error in parsing template: {FluidError}", fluidError);
             return new ErrorResult($"Error in parsing template: {fluidError}");
@@ -215,7 +215,7 @@ public class EmailService : IEmailService
             Options = { MemberAccessStrategy = new UnsafeMemberAccessStrategy() }
         };
 
-        context.Options.Filters.AddFilter("to_comma_separated", (input, arguments, ctx)
+        context.Options.Filters.AddFilter("to_comma_separated", (input, _, _)
             => new StringValue($"{input.ToObjectValue():n}"));
 
         args ??= [];
@@ -255,7 +255,7 @@ public class EmailService : IEmailService
 
         var fluidParser = new FluidParser();
         // return error on failure to parse input
-        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string? fluidError))
+        if (!fluidParser.TryParse(sourceString, out var fluidTemplate, out string fluidError))
         {
             Log.Error("Error in parsing template: {FluidError}", fluidError);
             return new ErrorResult($"Error in parsing template: {fluidError}");
@@ -267,7 +267,7 @@ public class EmailService : IEmailService
             Options = { MemberAccessStrategy = new UnsafeMemberAccessStrategy() }
         };
 
-        context.Options.Filters.AddFilter("to_comma_separated", (input, arguments, ctx)
+        context.Options.Filters.AddFilter("to_comma_separated", (input, _, _)
             => new StringValue($"{input.ToObjectValue():n}"));
 
         context.SetValue("salutation", model.Salutation);

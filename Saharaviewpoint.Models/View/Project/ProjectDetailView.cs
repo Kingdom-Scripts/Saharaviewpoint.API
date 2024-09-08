@@ -24,7 +24,7 @@ public class ProjectDetailView : ProjectView
 
     public string SiteCondition { get; set; }
 
-    public DocumentView? Design { get; set; }
+    public DocumentView Design { get; set; }
 
     [JsonIgnore]
     public int CreatedById { get; set; }

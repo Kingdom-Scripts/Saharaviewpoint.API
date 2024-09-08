@@ -18,22 +18,20 @@ public class BulkImageUploadModel
 
 public class BulkImageUploadModelValidator : AbstractValidator<BulkImageUploadModel>
 {
-    private readonly FileSettings _fileSettings;
-
     public BulkImageUploadModelValidator(IOptions<AppConfig> appConfig)
     {
-        _fileSettings = appConfig.Value.FileSettings;
+        var fileSettings = appConfig.Value.FileSettings;
 
         RuleForEach(model => model.Files)
        .Must(file => file.Length > 0).WithMessage("File is unreadable");
 
         RuleForEach(model => model.Files)
-            .Must(file => file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) && file.Length <= _fileSettings.MaxSizeLength)
-            .WithMessage(file => $"File is too large. Max file size for images is {_fileSettings.MaxSizeLength / (1024 * 1024)}MB");
+            .Must(file => file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) && file.Length <= fileSettings.MaxSizeLength)
+            .WithMessage(_ => $"File is too large. Max file size for images is {fileSettings.MaxSizeLength / (1024 * 1024)}MB");
 
         RuleForEach(model => model.Files)
             .Must(file => !string.IsNullOrEmpty(Path.GetExtension(file.FileName).ToLowerInvariant()) &&
-                           _fileSettings.PermittedFileTypes.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
-            .WithMessage(file => $"File is invalid. Please upload only a {string.Join(", ", _fileSettings.PermittedFileTypes)} file");
+                           fileSettings.PermittedFileTypes.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
+            .WithMessage(_ => $"File is invalid. Please upload only a {string.Join(", ", fileSettings.PermittedFileTypes)} file");
     }
 }

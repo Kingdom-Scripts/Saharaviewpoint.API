@@ -18,7 +18,7 @@ public static class CacheUtil
             if (listKeys != null)
             {
                 // If it does, clear each cache key in the list
-                foreach (var listKey in listKeys)
+                foreach (string listKey in listKeys)
                 {
                     cache.Remove(listKey);
                 }

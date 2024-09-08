@@ -43,7 +43,7 @@ public interface IProjectService
 
     Task<Result> DeleteType(int id);
 
-    Task<Result> ListTypes(string? searchTerm);
+    Task<Result> ListTypes(string searchTerm);
 
     #endregion TYPES
 }

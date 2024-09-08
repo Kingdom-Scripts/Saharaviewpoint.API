@@ -124,6 +124,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     {
         var project = await _context.Projects
             .Include(p => p.CreatedBy)
+            .Include(p => p.Type)
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
         if (project == null)
@@ -164,7 +165,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 PrimaryMessage = "A new project has been assigned to you. Kindly log on the application to begin setting up tasks.<br><br>" +
                     "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
                     $"<strong>Project Title:</strong> {project.Title}<br>" +
-                    $"<strong>Project Type:</strong> {project.Type}<br>" +
+                    $"<strong>Project Type:</strong> {project.Type?.Name}<br>" +
                     $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
@@ -288,7 +289,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        var cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient, _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
+        string cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient, _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(ListProjectsCacheKeys, () => new List<string>(), new TimeSpan(0, 45, 0));
@@ -327,7 +328,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                     .ToPaginatedListAsync(request.PageIndex, request.PageSize);
             }
 
-            string? searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
+            string searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
                 ? request.SearchQuery.Trim().ToLower()
                 : null;
 
@@ -362,6 +363,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     {
         var project = await _context.Projects.Where(p => p.Id == id && !p.IsDeleted)
             .Include(p => p.Assignee)
+            .Include(p => p.Type)
             .FirstOrDefaultAsync();
 
         if (project == null)
@@ -410,7 +412,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                 PrimaryMessage = "A new project has been re-assigned to you. Kindly log on the application to view tasks.<br><br>" +
                     "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
                     $"<strong>Project Title:</strong> {project.Title}<br>" +
-                    $"<strong>Project Type:</strong> {project.Type}<br>" +
+                    $"<strong>Project Type:</strong> {project.Type?.Name}<br>" +
                     $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
@@ -495,7 +497,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjectLogs(int id, PagingOptionModel request)
     {
-        var cacheKey = GenerateCacheKey(request, id);
+        string cacheKey = GenerateCacheKey(request, id);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(ProjectLogsCacheKeys, () => new List<string>(), new TimeSpan(0, 45, 0));
@@ -646,7 +648,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
-    public async Task<Result> ListTypes(string? searchTerm)
+    public async Task<Result> ListTypes(string searchTerm)
     {
         searchTerm = string.IsNullOrEmpty(searchTerm)
             ? null
@@ -667,7 +669,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     #region PRIVATE METHODS
 
-    private async void AddProjectLog(Project project, ProjectLogTypes type, string description, string? previousState = null, string? currentState = null, string? remark = null)
+    private async void AddProjectLog(Project project, ProjectLogTypes type, string description, string previousState = null, string currentState = null, string remark = null)
     {
         var log = new ProjectLog
         {

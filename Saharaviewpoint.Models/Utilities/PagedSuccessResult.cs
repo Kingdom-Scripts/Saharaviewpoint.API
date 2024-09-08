@@ -82,33 +82,18 @@ public class PagedSuccessResult : Result
 
     // Ignore error related properties
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new string Detail { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new string Instance { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new string Path { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new TraceInfo TraceInfo { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new IDictionary<string, string[]> ValidationErrors { get; set; }
 }
@@ -178,34 +163,19 @@ public class PagedPagedSuccessResult<T> : Result<T>
         AddPaging(content);
     }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new string Detail { get; set; }
 
     // Ignore error related properties
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new string Instance { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new string Path { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new TraceInfo TraceInfo { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new IDictionary<string, string[]> ValidationErrors { get; set; }
 }

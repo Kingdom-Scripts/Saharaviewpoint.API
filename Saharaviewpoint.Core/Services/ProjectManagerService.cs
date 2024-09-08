@@ -6,12 +6,10 @@
 
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input.User;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.User;
@@ -24,7 +22,7 @@ using LazyCache;
 namespace Saharaviewpoint.Core.Services;
 
 // TODO: write an endpoint to return pending invitations
-public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppConfig> appConfig, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession, IAppCache cache) : BaseService, IProjectManagerService
+public class ProjectManagerService(SaharaviewpointContext context, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession, IAppCache cache) : BaseService, IProjectManagerService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
@@ -34,7 +32,7 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
 
     public async Task<Result> ListProjectManagers(ProjectManagerSearchModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = CacheKeys.ListProjectManagers() + generatedKey;
 
         // Retrieve the current list of cache keys and add the new key
@@ -60,7 +58,7 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
             .Where(u => !request.IsInactiveOnly || u.User!.IsActive == false)
             .SelectMany(uRole => uRole.User!.Projects.DefaultIfEmpty(), (userRole, project) => new
             {
-                User = userRole.User,
+                userRole.User,
                 Project = project
             })
             .GroupBy(x => x.User)
@@ -104,7 +102,7 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
         mappedInvitation.CreatedById = _userSession.UserId;
         mappedInvitation.ExpiryDate = DateTime.UtcNow.AddDays(7);
 
-        string? token = CodeGenerator.GenerateCode(100);
+        string token = CodeGenerator.GenerateCode(100);
 
         var emailSent = await _emailService
             .SendInvitationEmail(new InvitationEmailModel
@@ -236,7 +234,7 @@ public class ProjectManagerService(SaharaviewpointContext context, IOptions<AppC
 
     public async Task<Result> CheckIfEmailExist(string email)
     {
-        var emailExist = await _context.Users
+        bool emailExist = await _context.Users
             .AnyAsync(u => u.Email.ToLower().Trim() == email.ToLower().Trim());
 
         return new SuccessResult(content: emailExist);

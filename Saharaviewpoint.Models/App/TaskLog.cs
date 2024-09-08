@@ -26,8 +26,8 @@ namespace Saharaviewpoint.Models.App
         [Required]
         public int CreatedById { get; set; }
 
-        public SvpTask? Task { get; set; }
-        public User? CreatedBy { get; set; }
+        public SvpTask Task { get; set; }
+        public User CreatedBy { get; set; }
 
         [StringLength(5000)]
         public string Remark { get; set; }

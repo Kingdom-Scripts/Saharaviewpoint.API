@@ -95,7 +95,7 @@ public class TaskService : BaseService, ITaskService
             }
             else
             {
-                Log.Error(uploaded.Message);
+                Log.Error("Failed to upload attachment for task: {@Task}. Error: {@Error}", mappedTask, uploaded.Message);
             }
         }
 
@@ -370,12 +370,6 @@ public class TaskService : BaseService, ITaskService
         if (task is null)
             return new ErrorResult("Invalid task provided");
 
-        var projectFolders = await _context.Projects
-            .Where(p => p.Id == task.ProjectId)
-            .Select(p => p.FolderNames)
-            .FirstOrDefaultAsync();
-
-
         var attachment = new TaskAttachment
         {
             TaskId = taskId,
@@ -438,7 +432,7 @@ public class TaskService : BaseService, ITaskService
             {
                 string contentString = await response.Content.ReadAsStringAsync();
                 object error = JsonConvert.DeserializeObject<object>(contentString);
-                _logger.Error("Failed to delete video with ID: {@videoId}. {@Error}", videoId, error);
+                _logger.Error("Failed to delete video with ID: {@VideoId}. {@Error}", videoId, error);
                 return new ErrorResult("Failed to remove video, please try again later.");
             }
         }
@@ -479,7 +473,7 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> ListLogs(int taskId, PagingOptionModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = $"TaskService-ListLogs-{taskId}-{generatedKey}";
 
         // Retrieve the current list of cache keys and add the new key
@@ -733,7 +727,7 @@ public class TaskService : BaseService, ITaskService
     public async Task<Result> AddComment(int taskId, CommentModel model)
     {
         // validate task
-        var taskExist = await _context.Tasks
+        bool taskExist = await _context.Tasks
             .AnyAsync(t => t.Id == taskId && !t.IsDeleted);
 
         if (!taskExist)
@@ -780,7 +774,7 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> ListComments(int taskId, PagingOptionModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = $"TaskService-Comment-{taskId}-{generatedKey}";
 
         // Retrieve the current list of cache keys and add the new key
@@ -814,7 +808,7 @@ public class TaskService : BaseService, ITaskService
 
     #region Private Methods
 
-    private async void AddTaskLog(SvpTask task, string description, string? previousState = null, string? currentState = null, string? remark = null)
+    private async void AddTaskLog(SvpTask task, string description, string previousState = null, string currentState = null, string remark = null)
     {
         var log = new TaskLog
         {

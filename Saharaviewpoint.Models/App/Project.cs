@@ -4,7 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -19,11 +18,13 @@ public class Project : BaseAppModel
     [MaxLength(5000)]
     public string Description { get; set; }
 
+    [StringLength(255)]
     [Required] public string SizeOfSite { get; set; } = null!;
 
     [Column(TypeName = "decimal(19, 2)")]
     public decimal Budget { get; set; }
 
+    [StringLength(255)]
     public string Location { get; set; } = null!;
 
     public int TypeId { get; set; }
@@ -65,17 +66,18 @@ public class Project : BaseAppModel
 
     public DateTime? DateDeleted { get; set; }
 
+    [StringLength(4000)]
     public string RejectionReason { get; set; }
 
     [MaxLength(255)]
     public List<string> FolderNames { get; set; } = new();
 
-    public ProjectType? Type { get; set; }
-    public User? Assignee { get; set; }
-    public Document? Design { get; set; }
+    public ProjectType Type { get; set; }
+    public User Assignee { get; set; }
+    public Document Design { get; set; }
 
-    public User? CreatedBy { get; set; }
-    public User? UpdatedBy { get; set; }
+    public User CreatedBy { get; set; }
+    public User UpdatedBy { get; set; }
 
-    public User? DeletedBy { get; set; }
+    public User DeletedBy { get; set; }
 }

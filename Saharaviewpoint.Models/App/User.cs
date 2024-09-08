@@ -17,6 +17,7 @@ public class User : BaseAppModel
     public required string Email { get; set; }
 
     [Required]
+    [StringLength(255)]
     public required string Type { get; set; }
 
     [MaxLength(50)]

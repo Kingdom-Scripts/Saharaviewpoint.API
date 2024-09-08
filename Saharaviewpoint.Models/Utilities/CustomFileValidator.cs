@@ -16,7 +16,7 @@ public static class CustomFileValidator
         public string ErrorMessage { get; set; }
     }
 
-    public static FileValidationResult HaveValidFile(IFormFile? design)
+    public static FileValidationResult HaveValidFile(IFormFile design)
     {
         if (design == null)
         {
@@ -28,10 +28,10 @@ public static class CustomFileValidator
             return new FileValidationResult { IsValid = false, ErrorMessage = "No file provided or the file is empty." };
         }
 
-        string[]? allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
+        string[] allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".pdf" };
         int maxFileSize = 5 * 1024 * 1024; // 5 MB
 
-        string? fileExtension = Path.GetExtension(design.FileName).ToLowerInvariant();
+        string fileExtension = Path.GetExtension(design.FileName).ToLowerInvariant();
         if (!allowedExtensions.Contains(fileExtension))
         {
             return new FileValidationResult { IsValid = false, ErrorMessage = "Invalid file extension." };

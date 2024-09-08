@@ -36,12 +36,12 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
         DateTime expiresAt = DateTime.UtcNow.AddDays(_jwtConfig.Expires);
 
         // get the request domain
-        string? requestDomain = _httpContextAccessor.HttpContext!.Request.Headers["Origin"].ToString();
+        string requestDomain = _httpContextAccessor.HttpContext!.Request.Headers["Origin"].ToString();
 
-        string? token = GenerateAccessToken(user, requestDomain, expiresAt);
+        string token = GenerateAccessToken(user, requestDomain, expiresAt);
 
         // store the token
-        var encryptedToken = token.HashPassword();
+        string encryptedToken = token.HashPassword();
         var login = await _context.Logins.FirstOrDefaultAsync(l => l.UserId == user.Id && l.Domain == requestDomain);
         if (login != null)
         {
@@ -167,10 +167,9 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
     private string GenerateAccessToken(User user, string requestDomain, DateTime expiresAt)
     {
         // validate domain
-        string[]? domains = _jwtConfig.AllowedDomains.Split(",");
-        // TODO: uncomment the code below for live
-        // if (!domains.Contains(requestDomain))
-        //     throw new Exception("Unable to process request");
+        string[] domains = _jwtConfig.AllowedDomains.Split(",");
+        if (!domains.Contains(requestDomain))
+            throw new Exception("Unable to process request");
 
         // generate token that is valid for 7 days
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -183,9 +182,9 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
         claimIdentity.AddClaims([new Claim("SubscriptionPlan", "Basic")]); // TODO: use this for subscription plans
 
         claimIdentity.AddClaims(user.UserRoles.Select(role =>
-            new Claim(ClaimTypes.Role, role.Role.Name)));
+            new Claim(ClaimTypes.Role, role.Role?.Name ?? string.Empty)));
 
-        byte[]? key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
+        byte[] key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -197,7 +196,7 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
         };
 
         var securityToken = tokenHandler.CreateToken(tokenDescriptor);
-        string? token = tokenHandler.WriteToken(securityToken);
+        string token = tokenHandler.WriteToken(securityToken);
 
         return token;
     }
@@ -205,7 +204,7 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
     private async Task<string> GenerateRefreshToken(int userId)
     {
         // Create a byte array to store the random bytes
-        byte[]? randomNumber = new byte[64];
+        byte[] randomNumber = new byte[64];
 
         // Generate a random characters
         using var rng = RandomNumberGenerator.Create();

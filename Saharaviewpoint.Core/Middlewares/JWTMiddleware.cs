@@ -36,7 +36,7 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
         }
 
         // get the token
-        string? token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+        string token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
         // continue if token is null
         if (token == null)
@@ -78,7 +78,7 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
         try
         {
             var jwtHandler = new JwtSecurityTokenHandler();
-            byte[]? key = Encoding.ASCII.GetBytes(jwtConfig.Secret);
+            byte[] key = Encoding.ASCII.GetBytes(jwtConfig.Secret);
             jwtHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
@@ -93,44 +93,41 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
             }, out SecurityToken validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
-            string? id = jwtToken.Claims.First(x => x.Type == "sid").Value;
-            string? uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
-            string? type = jwtToken.Claims.First(x => x.Type == "Type").Value;
+            string id = jwtToken.Claims.First(x => x.Type == "sid").Value;
+            string uid = jwtToken.Claims.First(x => x.Type == "uid").Value;
+            string type = jwtToken.Claims.First(x => x.Type == "Type").Value;
 
             // get request domain
-            string? domain = context.Request.Headers["Origin"].ToString();
+            string domain = context.Request.Headers["Origin"].ToString();
 
-            using (var scope = _scopeFactory.CreateScope())
+            using var scope = _scopeFactory.CreateScope();
+            var tokenHandler = scope.ServiceProvider.GetRequiredService<ITokenHandler>();
+
+            //check if token is valid
+            bool isValid = await tokenHandler!.ValidateToken(uid, token, domain);
+            if (!isValid)
             {
-                var tokenHandler = scope.ServiceProvider.GetRequiredService<ITokenHandler>();
-
-                //check if token is valid
-                bool isValid = await tokenHandler!.ValidateToken(uid, token, domain);
-                if (!isValid)
-                {
-                    context.Items["User"] = null;
-                    context.User = null;
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    return false;
-                };
-
-                // attach account to context on successful jwt validation
-                context.Items["User"] = new
-                {
-                    Uid = uid,
-                    Id = int.Parse(id),
-                    Type = type,
-                    Roles = jwtToken.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToList()
-                };
-
-                return true;
+                context.Items["User"] = null;
+                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return false;
             }
+
+            // attach account to context on successful jwt validation
+            context.Items["User"] = new
+            {
+                Uid = uid,
+                Id = int.Parse(id),
+                Type = type,
+                Roles = jwtToken.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value).ToList()
+            };
+
+            return true;
         }
         catch (Exception ex)
         {
             // do nothing if jwt validation fails
             // account is not attached to context so request won't have access to secure routes
-            Log.Error(ex, "JWT validation failed.");
+            Log.Error(ex, "JWT validation failed");
         }
 
         return false;
