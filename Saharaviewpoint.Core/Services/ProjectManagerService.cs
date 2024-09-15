@@ -21,7 +21,6 @@ using LazyCache;
 
 namespace Saharaviewpoint.Core.Services;
 
-// TODO: write an endpoint to return pending invitations
 public class ProjectManagerService(SaharaviewpointContext context, IEmailService emailService, ITokenHandler tokenGenerator, UserSession userSession, IAppCache cache) : BaseService, IProjectManagerService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));

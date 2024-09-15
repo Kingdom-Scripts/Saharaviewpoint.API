@@ -32,8 +32,7 @@ public class PMInvitation : BaseAppModel
 
     public bool EmailSent { get; set; } = false;
 
-    // TODO: make this required`
-    public int? CreatedById { get; set; }
+    public int CreatedById { get; set; }
 
     public User CreatedBy { get; set; }
 }

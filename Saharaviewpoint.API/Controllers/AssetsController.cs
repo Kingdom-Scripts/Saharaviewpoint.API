@@ -13,7 +13,7 @@ namespace Saharaviewpoint.API.Controllers;
 
 [Route("api/v1/assets")]
 [ApiController]
-[AllowAnonymous] // TODO: remove this
+[AllowAnonymous]
 public class AssetsController(IFileService fileService) : BaseController
 {
     private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));

@@ -31,7 +31,6 @@ using Serilog;
 
 namespace Saharaviewpoint.Core.Services;
 
-// TODO: add caching
 public class TaskService : BaseService, ITaskService
 {
     private readonly SaharaviewpointContext _context;
@@ -223,7 +222,6 @@ public class TaskService : BaseService, ITaskService
         var task = await _context.Tasks.FindAsync(taskId);
         if (task is not null)
         {
-            // TODO: test this
             _context.Remove(task);
 
             // clear caches
@@ -320,8 +318,7 @@ public class TaskService : BaseService, ITaskService
             ActionButton = new EmailActionButton
             {
                 Text = "View Task",
-                Url = $"{_baseUrls.Admin}/tasks/all?projectId={task.ProjectId}&taskId={taskId}"
-                // TODO: add url to view task for client
+                Url = $"{_baseUrls.Client}/project/task/{taskId}"
             },
             Attachments = [model.File]
         };
@@ -625,13 +622,11 @@ public class TaskService : BaseService, ITaskService
                     $"<strong>New Status:</strong> {task.Status}<br>" +
                     $"{(taskIsGoingBack ? $"<strong>Remark:</strong> {model.Reason}<br>" : "")}",
                 ClosingRemark = "Regards",
-
-                // TODO: collect the url to view the task detail from Samuel
-                //ActionButton = new()
-                //{
-                //    Text = "View Project",
-                //    Url = url
-                //}
+                ActionButton = new()
+                {
+                    Text = "View Task",
+                    Url = $"{_baseUrls.Client}/project/task/{taskId}"
+                }
             };
 
             await _emailService.SendEmail(emailRequest);
@@ -689,7 +684,7 @@ public class TaskService : BaseService, ITaskService
             var emailRequest = new GenericEmailModel
             {
                 To = [new EmailAddress{Address = data.OwnerEmail, Name = $"{data.OwnerFirstName} {data.OwnerLastName}"}],
-                Subject = $"{data.ProjectTitle} - Task Update",
+                Subject = $"{data.ProjectTitle} - Task Due Date Update",
                 Salutation = $"Hello {data.OwnerFirstName},",
                 PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the due date of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +
                     $"<strong>Task Summary:</strong> {task.Summary}<br>" +
@@ -697,13 +692,11 @@ public class TaskService : BaseService, ITaskService
                     $"<strong>New Due Date:</strong> {task.DueDate:dd MMM, yyyy}<br>" +
                     $"<strong>Remark:</strong> {task.Status}<br>",
                 ClosingRemark = "Regards",
-
-                // TODO: collect the url to view the task detail from Samuel
-                //ActionButton = new()
-                //{
-                //    Text = "View Project",
-                //    Url = url
-                //}
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = $"{_baseUrls.Client}/project/task/{taskId}"
+                }
             };
 
             var adminEmail = emailRequest;

@@ -66,7 +66,6 @@ public class TasksController(ITaskService taskService) : BaseController
         return ProcessResponse(result);
     }
 
-    // TODO: fix this for dynamic file upload
     [HttpPost("{taskId}/attachments")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<DocumentView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
