@@ -4,6 +4,9 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Text;
 using FluentValidation;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,15 +23,15 @@ using Saharaviewpoint.Core.Contants;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Middlewares;
 using Saharaviewpoint.Core.Services;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Project;
+using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Project;
 using Saharaviewpoint.Models.View.Task;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
+using TokenHandler = Saharaviewpoint.Core.Services.TokenHandler;
 
 namespace Saharaviewpoint.Core.Extensions;
 
@@ -36,25 +39,8 @@ public static class ServiceExtensions
 {
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration, bool isProduction)
     {
-        // TODO: uncomment the code below to use Azure Key Vault to retrieve secrets
-        //// set up database
-        //var keyVault = new KeyVaultConfig
-        //{
-        //    KeyVaultURL = configuration.GetSection("KeyVault:KeyVaultURL").Value,
-        //    ClientId = configuration.GetSection("KeyVault:ClientId").Value,
-        //    ClientSecret = configuration.GetSection("KeyVault:ClientSecret").Value,
-        //    DirectoryID = configuration.GetSection("KeyVault:DirectoryID").Value
-        //};
-
-        //var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
-
-        //var keyVaultClient = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
-
-        //string connectionString = keyVaultClient.GetSecret("ConnectionStrings--Saharaviewpoint").Value.Value;
-
-        // TODO: remove the connectionString variable below
-        string connectionString = configuration.GetConnectionString("Saharaviewpoint") ?? string.Empty;
-
+        var keyVault = new KeyVaultUtil(configuration.GetSection("AppConfig:KeyVaultUrl").Value ?? string.Empty);
+        string connectionString = keyVault.GetSecret(KeyVaultKeys.DefaultConnectionString);
         services.AddDbContext<SaharaviewpointContext>((sp, opt) =>
             {
                 opt.UseSqlServer(connectionString,
@@ -92,10 +78,10 @@ public static class ServiceExtensions
             option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
+        }).AddJwtBearer(bearerOptions =>
         {
-            options.SaveToken = true;
-            options.TokenValidationParameters = new TokenValidationParameters
+            bearerOptions.SaveToken = true;
+            bearerOptions.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
@@ -103,25 +89,24 @@ public static class ServiceExtensions
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = configuration["JwtConfig:Issuer"],
                 ValidAudience = configuration["JwtConfig:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtConfig:Secret"]!)),
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyVault.GetSecret(KeyVaultKeys.JwtSecert))),
                 ClockSkew = TimeSpan.Zero
             };
         });
 
-        services.AddAuthorization(options =>
+        services.AddAuthorization(authorizationOptions =>
         {
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            authorizationOptions.FallbackPolicy = new AuthorizationPolicyBuilder()
                 .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
                 .RequireAuthenticatedUser()
                 .Build();
-
-            options.AddPolicy("BasicAccess", policy => policy.RequireClaim("SubscriptionPlan", "Basic"));
         });
 
         // Add HTTP client for Api Video
         services.AddHttpClient(HttpClientKeys.ApiVideo, client =>
         {
-            string baseAddress = configuration["AppConfig:ApiVideo:BaseUrl"]!;
+            string baseAddress = configuration["AppConfig:ApiVideoUrl"]!;
 
             client.BaseAddress = new Uri(baseAddress);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -134,15 +119,12 @@ public static class ServiceExtensions
             });
 
         // Set up ZeptoMail HttpClient
-        string zeptoMailHttpClientName = configuration["ZeptoMail:HttpClientName"]!;
-        ArgumentException.ThrowIfNullOrEmpty(zeptoMailHttpClientName);
-
-        string zeptoMailKey = configuration["ZeptoMail:Key"]!;
+        string zeptoMailKey = keyVault.GetSecret(KeyVaultKeys.ZeptoMailKey);
         ArgumentException.ThrowIfNullOrEmpty(zeptoMailKey);
 
         // Configure ZeptoMail HttpClient
         services.AddHttpClient(
-            zeptoMailHttpClientName,
+            HttpClientKeys.ZeptoMail,
             client =>
             {
                 // Set the base address of the named client.
@@ -172,7 +154,9 @@ public static class ServiceExtensions
                 q.AddTrigger(opts => opts
                     .ForJob(reminderJobKey)
                     .WithIdentity("TaskExpiryReminderJob-trigger")
-                    .WithCronSchedule("* 0/4 * ? * *") // cron job to run every 4 minutes
+                    //.WithCronSchedule("* 0/4 * ? * *") // cron job to run every 4 minutes
+                    .WithCronSchedule("0 0 8 ? * *") // cron job to run every day at 8AM
+
                     .StartNow()
                 );
             }
@@ -203,9 +187,11 @@ public static class ServiceExtensions
             .Map(dest => dest.RequestedOn, src => src.CreatedAt)
             .Map(dest => dest.FulfilledByName, src => src.FulfilledBy != null ? $"{src.FulfilledBy.FirstName} {src.FulfilledBy.LastName}" : null);
 
+        services.TryAddSingleton<ScopedSecrets>();
+
         services.TryAddScoped<SoftDeleteInterceptor>();
         services.TryAddScoped<UserSession>();
-        services.TryAddScoped<ITokenHandler, Services.TokenHandler>();
+        services.TryAddScoped<ITokenHandler, TokenHandler>();
         services.TryAddScoped<IFileService, FileService>();
         services.TryAddScoped<IEmailService, EmailService>();
 

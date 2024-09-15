@@ -4,6 +4,7 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.Text;
 using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
@@ -27,7 +28,6 @@ using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
 using Saharaviewpoint.Models.View.Task;
 using Serilog;
-using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
@@ -39,7 +39,7 @@ public class TaskService : BaseService, ITaskService
     private readonly IFileService _fileService;
     private readonly IAppCache _cache;
     private readonly IEmailService _emailService;
-    private readonly BaseURLs _baseUrls;
+    private readonly BaseUrLs _baseUrls;
     private readonly HttpClient _apiVideoClient;
     private readonly ILogger _logger;
 
@@ -53,7 +53,7 @@ public class TaskService : BaseService, ITaskService
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _baseUrls = options.Value.BaseURLs;
+        _baseUrls = options.Value.BaseUrLs;
         _apiVideoClient = factory.CreateClient(HttpClientKeys.ApiVideo);
     }
 

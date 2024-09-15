@@ -19,7 +19,7 @@ using System.Text;
 namespace Saharaviewpoint.Core.Utilities;
 public static class InitializeApiVideoToken
 {
-    public static async Task<bool> InitializeToken(IApplicationBuilder app)
+    public static async void InitializeToken(IApplicationBuilder app)
     {
         using var serviceScope = app.ApplicationServices.CreateScope();
         var cacheService = serviceScope.ServiceProvider.GetService<IAppCache>();
@@ -31,9 +31,9 @@ public static class InitializeApiVideoToken
         var httpClient = httpClientFactory.CreateClient(HttpClientKeys.ApiVideo);
 
         var appConfig = serviceScope.ServiceProvider.GetService<IOptions<AppConfig>>();
-        string apiVideoKey = appConfig!.Value.ApiVideo.Key;
 
-        var request = new { apiKey = apiVideoKey };
+        var keyVaultUtil = new KeyVaultUtil(appConfig.Value.KeyVaultUrl);
+        var request = new { apiKey = keyVaultUtil.GetSecret(KeyVaultKeys.ApiVideoKey) };
         var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
 
         var response = await httpClient.PostAsync("auth/api-key", content);
@@ -43,7 +43,7 @@ public static class InitializeApiVideoToken
             string stringResponse = await response.Content.ReadAsStringAsync();
             object error = JsonConvert.DeserializeObject<object>(stringResponse);
             Log.Error("--> Could not get Api.Video Token: {@Error}", error ?? "Unknown error");
-            return false;
+            return;
         }
 
         string resString = await response.Content.ReadAsStringAsync();
@@ -57,6 +57,5 @@ public static class InitializeApiVideoToken
         cacheService.Add(AuthKeys.ApiVideoRefreshToken, refreshToken, DateTime.UtcNow.AddYears(20));
 
         Log.Information("--> Api.Video Token initialized");
-        return true;
     }
 }

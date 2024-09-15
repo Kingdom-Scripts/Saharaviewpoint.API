@@ -13,6 +13,7 @@ using Saharaviewpoint.Models.Constants;
 using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Middlewares;
 internal class ApiVideoHttpHandler : DelegatingHandler
@@ -22,14 +23,16 @@ internal class ApiVideoHttpHandler : DelegatingHandler
     private readonly IAppCache _cacheService;
     private readonly ILogger _logger;
 
-    public ApiVideoHttpHandler(IOptions<AppConfig> appConfig, IAppCache cacheService, ILogger logger)
+    public ApiVideoHttpHandler(IOptions<AppConfig> appConfig, IAppCache cacheService, ILogger logger,
+        ScopedSecrets secrets)
     {
         ArgumentNullException.ThrowIfNull(appConfig);
+        ArgumentNullException.ThrowIfNull(secrets);
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _apiVideoBaseUrl = appConfig.Value.ApiVideo.BaseUrl;
-        _apiVideoKey = appConfig.Value.ApiVideo.Key;
+        _apiVideoBaseUrl =  appConfig.Value.ApiVideoUrl;
+        _apiVideoKey = secrets.ApiVideoKey;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

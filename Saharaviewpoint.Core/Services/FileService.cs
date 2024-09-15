@@ -9,19 +9,18 @@ using Mapster;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
 using Serilog;
+using TinifyAPI;
+using Result = Saharaviewpoint.Models.Utilities.Result;
 
 namespace Saharaviewpoint.Core.Services;
 
-// TODO: implement cache
 public class FileService : IFileService
 {
     private readonly SaharaviewpointContext _context;
@@ -29,29 +28,19 @@ public class FileService : IFileService
     private readonly UserSession _userSession;
     private readonly IWebHostEnvironment _hostEnvironment;
 
-    // TODO: add caching
-    public FileService(IOptions<AppConfig> appConfig, IOptions<KeyVaultConfig> keyVaultConfig, UserSession userSession,
-        SaharaviewpointContext context, IWebHostEnvironment hostEnvironment)
+    public FileService(UserSession userSession,
+        SaharaviewpointContext context, IWebHostEnvironment hostEnvironment, ScopedSecrets secrets)
     {
         _hostEnvironment = hostEnvironment ?? throw new ArgumentNullException(nameof(hostEnvironment));
-        ArgumentNullException.ThrowIfNull(keyVaultConfig);
+        ArgumentNullException.ThrowIfNull(secrets);
 
-        // TODO: remove this api call from here
-        //var keyVault = keyVaultConfig.Value;
-        //var credential = new ClientSecretCredential(keyVault.DirectoryID, keyVault.ClientId, keyVault.ClientSecret);
-
-        // var client = new SecretClient(new Uri(keyVault.KeyVaultURL), credential);
-
-        // string connectionString = $"{client.GetSecret("StorageKey--Saharaviewpoint").Value.Value}";
-
-        string connectionString =
-            "DefaultEndpointsProtocol=https;AccountName=svpstoragedev;AccountKey=HGWzG6y5UG06ZnrauWD+fqkAVMcdyea/v4V8Q4qaA7MUvdjSvZe//K+Db4x7PWWw9JtyXkscC7Yj+AStRJ9Wug==;EndpointSuffix=core.windows.net";
+        string connectionString = secrets.StorageKey;
         _blobServiceClient = new BlobServiceClient(connectionString);
         _userSession = userSession;
         _context = context;
 
         // set up tinify
-        TinifyAPI.Tinify.Key = appConfig.Value.TinifyKey;
+        Tinify.Key = secrets.TinifyKey;
     }
 
     public async Task<Result<Document>> UploadFileInternal(string folder, string subFolder, IFormFile file)
@@ -203,7 +192,7 @@ public class FileService : IFileService
         stream.Seek(0, SeekOrigin.Begin);
 
         // Compress the image using Tinify
-        var source = await TinifyAPI.Tinify.FromBuffer(stream.ToArray());
+        var source = await Tinify.FromBuffer(stream.ToArray());
 
         // get thumbnail
         byte[] thumbnailFile = await source

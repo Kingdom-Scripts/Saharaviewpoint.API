@@ -8,8 +8,6 @@ namespace Saharaviewpoint.Models.Configurations;
 
 public class ZeptoMailConfig
 {
-    public string HttpClientName { get; set; }
     public string DefaultSenderAssdress { get; set; }
     public string DefaultSenderName { get; set; }
-    public string LogoFileKey { get; set; }
 }

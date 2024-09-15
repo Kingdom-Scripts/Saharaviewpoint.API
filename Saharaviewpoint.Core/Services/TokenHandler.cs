@@ -24,12 +24,13 @@ using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor, IAppCache cache) : ITokenHandler
+public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext context, IHttpContextAccessor httpContextAccessor, IAppCache cache, ScopedSecrets secrets) : ITokenHandler
 {
     private readonly JwtConfig _jwtConfig = jwtConfig.Value;
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+    private readonly ScopedSecrets _secrets = secrets ?? throw new ArgumentNullException(nameof(secrets));
 
     public async Task<Result> GenerateJwtToken(User user)
     {
@@ -179,12 +180,11 @@ public class TokenHandler(IOptions<JwtConfig> jwtConfig, SaharaviewpointContext 
         claimIdentity.AddClaims([new Claim("sid", user.Id.ToString())]);
         claimIdentity.AddClaims([new Claim("name", $"{user.FirstName} {user.LastName}")]);
         claimIdentity.AddClaims([new Claim("Type", user.Type)]);
-        claimIdentity.AddClaims([new Claim("SubscriptionPlan", "Basic")]); // TODO: use this for subscription plans
 
         claimIdentity.AddClaims(user.UserRoles.Select(role =>
             new Claim(ClaimTypes.Role, role.Role?.Name ?? string.Empty)));
 
-        byte[] key = Encoding.ASCII.GetBytes(_jwtConfig.Secret);
+        byte[] key = Encoding.ASCII.GetBytes(_secrets.JwtSecert);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {

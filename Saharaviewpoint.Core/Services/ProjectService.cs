@@ -35,7 +35,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
-    private readonly BaseURLs _baseUrls = options.Value.BaseURLs;
+    private readonly BaseUrLs _baseUrls = options.Value.BaseUrLs;
 
     private const string ListProjectsCacheKeys = "ProjectService-ListProjects-CacheKeys";
     private const string ProjectLogsCacheKeys = "ProjectLogs-CacheKeys";

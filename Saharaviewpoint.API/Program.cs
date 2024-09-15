@@ -7,8 +7,8 @@
 using Microsoft.OpenApi.Models;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Middlewares;
-using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Core.Utilities;
+using Saharaviewpoint.Models.Configurations;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -87,7 +87,6 @@ try
 
     builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
     builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
-    builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
     builder.Services.Configure<ZeptoMailConfig>(builder.Configuration.GetSection("ZeptoMail"));
 
     // Set up CORS
@@ -118,6 +117,7 @@ try
     app.UseSwaggerUI();
 
     app.UseMiddleware<ErrorHandlerMiddleware>();
+    app.UseMiddleware<SecretsMiddleware>();
 
     app.UseHttpsRedirection();
 
@@ -127,12 +127,11 @@ try
     app.UseAuthorization();
 
     app.UseMiddleware<JWTMiddleware>();
-
     app.UseMiddleware<UserSessionMiddleware>();
 
     app.MapControllers();
 
-    await InitializeApiVideoToken.InitializeToken(app);
+    InitializeApiVideoToken.InitializeToken(app);
     PrepDatabase.PrepPopulation(app, app.Environment.IsProduction());
 
     app.Run();

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
+using Saharaviewpoint.Core.Contants;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
@@ -29,20 +30,24 @@ public class EmailService : IEmailService
     private readonly AppConfig _appConfig;
     private readonly ZeptoMailConfig _zeptoMailConfig;
     private readonly HttpClient _zeptoMailClient;
+    private readonly string _logoFileKey;
 
     public EmailService(IWebHostEnvironment hostingEnvironment,
         IOptions<AppConfig> options,
-        SaharaviewpointContext context, IOptions<ZeptoMailConfig> zeptoMailConfig, IHttpClientFactory httpClientFactory)
+        SaharaviewpointContext context, IOptions<ZeptoMailConfig> zeptoMailConfig, IHttpClientFactory httpClientFactory, ScopedSecrets secrets)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(secrets);
         ArgumentException.ThrowIfNullOrEmpty(nameof(zeptoMailConfig));
         ArgumentException.ThrowIfNullOrEmpty(nameof(httpClientFactory));
 
         _appConfig = options.Value;
         _zeptoMailConfig = zeptoMailConfig.Value;
         _hostingEnvironment = hostingEnvironment ?? throw new ArgumentNullException(nameof(hostingEnvironment));
-        _zeptoMailClient = httpClientFactory.CreateClient(_zeptoMailConfig.HttpClientName);
+        _zeptoMailClient = httpClientFactory.CreateClient(HttpClientKeys.ZeptoMail);
         _context = context;
+
+        _logoFileKey = secrets.ZeptoLogoKey;
     }
 
     public async Task<Result> SendZeptoMailTemplate(string emailKey, EmailModel model)
@@ -95,7 +100,7 @@ public class EmailService : IEmailService
 
         // get and encode the url with token
         string url =
-            $"{_appConfig.BaseURLs.Client}/auth/confirm-email?email={to}&token={HttpUtility.UrlEncode(token)}";
+            $"{_appConfig.BaseUrLs.Client}/auth/confirm-email?email={to}&token={HttpUtility.UrlEncode(token)}";
 
         // parse template using Fluid
         var context = new TemplateContext
@@ -149,8 +154,8 @@ public class EmailService : IEmailService
 
         // get and encode the url with token
         string baseUrl = model.UserType == UserTypes.SVP_MANAGER
-            ? _appConfig.BaseURLs.Admin
-            : _appConfig.BaseURLs.Client;
+            ? _appConfig.BaseUrLs.Admin
+            : _appConfig.BaseUrLs.Client;
 
         string url = $"{baseUrl}/auth/accept-invitation" +
                      $"?email={model.RecipientEmail}" +
@@ -323,7 +328,7 @@ public class EmailService : IEmailService
                 {
                     new
                     {
-                        file_cache_key = _zeptoMailConfig.LogoFileKey,
+                        file_cache_key = _logoFileKey,
                         cid = "logoImageID"
                     }
                 },

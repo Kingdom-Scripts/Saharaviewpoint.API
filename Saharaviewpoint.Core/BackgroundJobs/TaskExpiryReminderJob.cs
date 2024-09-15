@@ -18,14 +18,14 @@ internal class TaskExpiryReminderJob : IJob
 {
     private readonly SaharaviewpointContext _context;
     private readonly IEmailService _emailService;
-    private readonly BaseURLs _baseUrls;
+    private readonly BaseUrLs _baseUrls;
 
     public TaskExpiryReminderJob(SaharaviewpointContext context, IEmailService emailService, IOptions<AppConfig> options)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         ArgumentNullException.ThrowIfNull(options);
-        _baseUrls = options.Value.BaseURLs;
+        _baseUrls = options.Value.BaseUrLs;
     }
 
     public async Task Execute(IJobExecutionContext context)

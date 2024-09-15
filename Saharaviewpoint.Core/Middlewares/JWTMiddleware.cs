@@ -18,6 +18,7 @@ using System.Security.Claims;
 using System.Text;
 using Serilog;
 using Microsoft.Extensions.DependencyInjection;
+using Saharaviewpoint.Models.Utilities;
 
 namespace Saharaviewpoint.Core.Middlewares;
 
@@ -26,7 +27,7 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
     private readonly RequestDelegate _next = next;
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
 
-    public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig)
+    public async Task Invoke(HttpContext context, IOptions<JwtConfig> jwtConfig, ScopedSecrets secrets)
     {
         // continue if action called is anonymous.
         if (IsAnonymous(context))
@@ -46,7 +47,7 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
         }
 
         // attach the token to the request
-        if (await AttachAccountToContext(context, token, jwtConfig.Value))
+        if (await AttachAccountToContext(context, token, jwtConfig.Value, secrets))
         {
             await _next(context);
         }
@@ -73,12 +74,12 @@ public class JWTMiddleware(RequestDelegate next, IServiceScopeFactory scopeFacto
         return false;
     }
 
-    private async Task<bool> AttachAccountToContext(HttpContext context, string token, JwtConfig jwtConfig)
+    private async Task<bool> AttachAccountToContext(HttpContext context, string token, JwtConfig jwtConfig, ScopedSecrets secrets)
     {
         try
         {
             var jwtHandler = new JwtSecurityTokenHandler();
-            byte[] key = Encoding.ASCII.GetBytes(jwtConfig.Secret);
+            byte[] key = Encoding.ASCII.GetBytes(secrets.JwtSecert);
             jwtHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,

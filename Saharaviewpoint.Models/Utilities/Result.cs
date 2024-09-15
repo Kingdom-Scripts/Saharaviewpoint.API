@@ -3,6 +3,9 @@
 // Author: Mordecai Godwin
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
+// ReSharper disable once RedundantUsingDirective
+
+using System.Text.Json.Serialization;
 
 namespace Saharaviewpoint.Models.Utilities;
 

@@ -5,8 +5,8 @@
 // ========================================================================
 
 namespace Saharaviewpoint.Core.Contants;
-internal class HttpClientKeys
+internal static class HttpClientKeys
 {
     public static readonly string ApiVideo = "ApiVideo";
+    public static readonly string ZeptoMail = "ZeptoMailApi";
 }
-

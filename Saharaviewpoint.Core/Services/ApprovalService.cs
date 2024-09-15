@@ -33,7 +33,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
-    private readonly BaseURLs _baseUrls = options.Value.BaseURLs;
+    private readonly BaseUrLs _baseUrls = options.Value.BaseUrLs;
 
     public async Task<Result> SendTaskSetupForApproval(int projectId)
     {
