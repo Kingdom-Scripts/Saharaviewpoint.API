@@ -316,8 +316,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
             CacheKeys.TaskApprovalRequest(),
             CacheKeys.TaskSetupApproval(projectId),
             CacheKeys.TaskListCacheKeys(),
-            CacheKeys.BoardTasksValidation(projectId),
-            CacheKeys.BoardTasks(projectId));
+            CacheKeys.ListBoardTasks());
 
         return new SuccessResult(message, approval.Adapt<ProjectTaskApprovalView>());
     }

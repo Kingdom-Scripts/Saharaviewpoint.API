@@ -114,8 +114,7 @@ public class TaskService : BaseService, ITaskService
 
         // clear caches
         _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
-            CacheKeys.BoardTasks(model.ProjectId),
-            CacheKeys.BoardTasksValidation(model.ProjectId));
+            CacheKeys.ListBoardTasks());
 
         // Send Notification Email
         {
@@ -201,6 +200,71 @@ public class TaskService : BaseService, ITaskService
         return new SuccessResult(cachedResult);
     }
 
+    public async Task<Result> ListBoardTasks(int projectId, string searchQuery)
+    {
+        string cacheKey = GenerateCacheKey(projectId, searchQuery, _userSession.UserId, _userSession.IsAnySvpAdmin);
+        string validationCacheKey = $"{cacheKey}-validation";
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.ListBoardTasks(), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.ListBoardTasks(), cacheKeys);
+        }
+        if (!cacheKeys.Contains(validationCacheKey))
+        {
+            cacheKeys.Add(validationCacheKey);
+            _cache.Add(CacheKeys.ListBoardTasks(), cacheKeys);
+        }
+
+        bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(validationCacheKey, async () =>
+        {
+            return await _context.Projects
+                .Where(p => p.Id == projectId)
+                .AnyAsync(p => _userSession.IsAnySvpAdmin
+                    || p.AssigneeId == _userSession.UserId
+                    || p.CreatedById == _userSession.UserId);
+        }, new TimeSpan(0, 45, 0));
+
+        if (!projectExistAndHaveAccess)
+            return new ErrorResult("Project not found or you do not have access to view tasks in this project");
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            var query = from task in _context.Tasks
+                        where !task.IsDeleted && task.ProjectId == projectId
+                        where string.IsNullOrEmpty(searchQuery) || task.Summary.Contains(searchQuery)
+                        where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
+                        where task.Type != TaskTypeEnum.EPIC
+                        select new
+                        {
+                            task,
+                            task.Parent
+                        };
+
+            var results = await query
+                .AsNoTracking()
+                .OrderBy(t => t.task.Order)
+                .ToListAsync();
+
+            return results.Select(t => new BoardTaskView
+            {
+                Id = t.task.Id,
+                Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
+                Type = t.task.Type,
+                Status = t.task.Status,
+                Summary = t.task.Summary,
+                CreatedAt = t.task.CreatedAt,
+                DueDate = t.task.DueDate,
+                Order = t.task.Order
+            }).ToList();
+        }, new TimeSpan(0, 45, 0));
+
+        return new SuccessResult(cachedResult);
+    }
+
     public async Task<Result> GetTask(int taskId)
     {
         var cachedData = await _cache.GetOrAddAsync(CacheKeys.TaskDetails(taskId), async () =>
@@ -227,8 +291,7 @@ public class TaskService : BaseService, ITaskService
             // clear caches
             _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
                 CacheKeys.TaskDetails(taskId),
-                CacheKeys.BoardTasks(task.ProjectId),
-                CacheKeys.BoardTasksValidation(task.ProjectId));
+                CacheKeys.ListBoardTasks());
         }
         await _context.SaveChangesAsync();
 
@@ -493,54 +556,6 @@ public class TaskService : BaseService, ITaskService
         return new SuccessResult(cachedResult);
     }
 
-    public async Task<Result> ListBoardTasks(int projectId)
-    {
-        bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(CacheKeys.BoardTasksValidation(projectId), async () =>
-        {
-            return await _context.Projects
-                .Where(p => p.Id == projectId)
-                .AnyAsync(p => _userSession.IsAnySvpAdmin
-                    || p.AssigneeId == _userSession.UserId
-                    || p.CreatedById == _userSession.UserId);
-        }, new TimeSpan(0, 45, 0));
-
-        if (!projectExistAndHaveAccess)
-            return new ErrorResult("Project not found or you do not have access to view tasks in this project");
-
-        // Try to get the cached result
-        var cachedResult = await _cache.GetOrAddAsync(CacheKeys.BoardTasks(projectId), async () =>
-        {
-            var query = from task in _context.Tasks
-                        where !task.IsDeleted && task.ProjectId == projectId
-                        where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
-                        where task.Type != TaskTypeEnum.EPIC
-                        select new
-                        {
-                            task,
-                            task.Parent
-                        };
-
-            var results = await query
-                .AsNoTracking()
-                .OrderBy(t => t.task.Order)
-                .ToListAsync();
-
-            return results.Select(t => new BoardTaskView
-            {
-                Id = t.task.Id,
-                Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
-                Type = t.task.Type,
-                Status = t.task.Status,
-                Summary = t.task.Summary,
-                CreatedAt = t.task.CreatedAt,
-                DueDate = t.task.DueDate,
-                Order = t.task.Order
-            }).ToList();
-        }, new TimeSpan(0, 45, 0));
-
-        return new SuccessResult(cachedResult);
-    }
-
     public async Task<Result> ChangeTaskStatus(int taskId, TaskStatusModel model)
     {
         var task = await _context.Tasks
@@ -595,8 +610,7 @@ public class TaskService : BaseService, ITaskService
         // clear caches
         _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
             CacheKeys.TaskDetails(taskId),
-            CacheKeys.BoardTasks(task.ProjectId),
-            CacheKeys.BoardTasksValidation(task.ProjectId));
+            CacheKeys.ListBoardTasks());
 
         // Send Notification Email
         {
@@ -666,8 +680,7 @@ public class TaskService : BaseService, ITaskService
         // clear caches
         _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
             CacheKeys.TaskDetails(taskId),
-            CacheKeys.BoardTasks(task.ProjectId),
-            CacheKeys.BoardTasksValidation(task.ProjectId));
+            CacheKeys.ListBoardTasks());
 
         // Send Notification Email
         {
@@ -751,6 +764,9 @@ public class TaskService : BaseService, ITaskService
 
         if (comment is null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Comment does not exist.");
+
+        if (comment.CreatedById != _userSession.UserId)
+            return new ErrorResult(StatusCodes.Status401Unauthorized, "You do not have permission to delete this comment.");
 
         _context.Remove(comment);
 
