@@ -97,6 +97,7 @@ try
             policy =>
             {
                 string[] hosts = builder.Configuration.GetSection("AppConfig:AllowedHosts").Get<string[]>()!;
+                Log.Information($"Allowed hosts: {string.Join(", ", hosts)}");
                 policy.WithOrigins(hosts)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
