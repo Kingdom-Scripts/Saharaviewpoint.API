@@ -108,7 +108,7 @@ public class ProjectService(
                     "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
                     "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
                     $"<strong>Project Title:</strong> {mappedProject.Title}<br>" +
-                    $"<strong>Project Type:</strong> {mappedProject.Type}<br>" +
+                    $"<strong>Project Type:</strong> {mappedProject.Type.Name}<br>" +
                     $"<strong>Proposed Start Date:</strong> {mappedProject.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {mappedProject.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {mappedProject.SizeOfSite}<br><br>",
