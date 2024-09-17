@@ -4,13 +4,10 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-namespace Saharaviewpoint.Models.Configurations;
+namespace Saharaviewpoint.Models.Email;
 
-public class JwtConfig
+public class EmailAddress
 {
-    public int Expires { get; set; }
-    public string Issuer { get; set; }
-    public string Audience { get; set; }
-    public int RefreshExpireDays { get; set; }
-    public string AllowedDomains { get; set; }
+    public string Address { get; set; }
+    public string Name { get; set; }
 }

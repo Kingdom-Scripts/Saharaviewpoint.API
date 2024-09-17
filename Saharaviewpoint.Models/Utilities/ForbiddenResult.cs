@@ -28,29 +28,23 @@ public class ForbiddenResult : Result
     /// Additional details about the error.
     /// </summary>
     [JsonIgnore]
-    public new string? Detail { get; set; }
+    public new string Detail { get; set; }
 
     /// <summary>
     /// The instance where the error occurred.
     /// </summary>
     [JsonIgnore]
-    public new string? Instance { get; set; }
+    public new string Instance { get; set; }
 
     /// <summary>
     /// The path associated with the error.
     /// </summary>
     [JsonIgnore]
-    public new string? Path { get; set; }
+    public new string Path { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
-    public new object? Content { get; set; }
+    public new object Content { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
-    public new Paging? Paging { get; set; }
+    public new Paging Paging { get; set; }
 }

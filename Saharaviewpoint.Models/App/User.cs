@@ -17,6 +17,7 @@ public class User : BaseAppModel
     public required string Email { get; set; }
 
     [Required]
+    [StringLength(255)]
     public required string Type { get; set; }
 
     [MaxLength(50)]
@@ -26,7 +27,7 @@ public class User : BaseAppModel
     public required string LastName { get; set; }
 
     [MaxLength(25)]
-    public string? Phone { get; set; }
+    public string Phone { get; set; }
 
     [Required]
     [MaxLength(255)]

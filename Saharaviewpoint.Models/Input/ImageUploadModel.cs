@@ -18,19 +18,17 @@ public class ImageUploadModel
 
 public class ImageUploadModelValidator : AbstractValidator<ImageUploadModel>
 {
-    private readonly FileSettings _fileSettings;
-
     public ImageUploadModelValidator(IOptions<AppConfig> appConfig)
     {
-        _fileSettings = appConfig.Value.FileSettings;
+        var fileSettings = appConfig.Value.FileSettings;
 
         RuleFor(model => model.File)
             .Must(file => file.Length > 0)
             .WithMessage("File is unreadable")
-            .Must(file => file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) && file.Length <= _fileSettings.MaxSizeLength)
-            .WithMessage(file => $"File is too large. Max file size for images is {_fileSettings.MaxSizeLength / (1024 * 1024)}MB")
+            .Must(file => file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) && file.Length <= fileSettings.MaxSizeLength)
+            .WithMessage(_ => $"File is too large. Max file size for images is {fileSettings.MaxSizeLength / (1024 * 1024)}MB")
             .Must(file => !string.IsNullOrEmpty(Path.GetExtension(file.FileName).ToLowerInvariant()) &&
-                           _fileSettings.PermittedFileTypes.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
-            .WithMessage(file => $"File is invalid. Please upload only a {string.Join(", ", _fileSettings.PermittedFileTypes)} file");
+                           fileSettings.PermittedFileTypes.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
+            .WithMessage(_ => $"File is invalid. Please upload only a {string.Join(", ", fileSettings.PermittedFileTypes)} file");
     }
 }

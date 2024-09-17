@@ -17,6 +17,7 @@ namespace Saharaviewpoint.Models.App
 
         [Required]
         [MaxLength]
+        // ReSharper disable once EntityFramework.ModelValidation.UnlimitedStringLength
         public string Message { get; set; } = null!;
 
         [Required]
@@ -26,9 +27,9 @@ namespace Saharaviewpoint.Models.App
         [Required]
         public int CreatedById { get; set; }
 
-        public TaskComment? Parent { get; set; }
-        public SvpTask? Task { get; set; }
-        public User? CreatedBy { get; set; }
+        public TaskComment Parent { get; set; }
+        public SvpTask Task { get; set; }
+        public User CreatedBy { get; set; }
         public ICollection<TaskComment> Children { get; set; } = new List<TaskComment>();
     }
 }

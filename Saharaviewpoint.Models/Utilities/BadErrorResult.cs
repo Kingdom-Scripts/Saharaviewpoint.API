@@ -50,15 +50,9 @@ public class BadErrorResult : Result
 
     // Ignore Success related properties
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new object Content { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new Paging Paging { get; set; }
 }
@@ -90,29 +84,23 @@ public class BadErrorResult<T> : Result<T>
     /// <summary>
     /// Additional details about the error.
     /// </summary>
-    public string Detail { get; set; }
+    public new string Detail { get; set; }
 
     /// <summary>
     /// The instance where the error occurred.
     /// </summary>
-    public string Instance { get; set; }
+    public new string Instance { get; set; }
 
     /// <summary>
     /// The path associated with the error.
     /// </summary>
-    public string Path { get; set; }
+    public new string Path { get; set; }
 
     // Ignore Success related properties
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new T Content { get; set; }
 
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
     [JsonIgnore]
     public new Paging Paging { get; set; }
 }

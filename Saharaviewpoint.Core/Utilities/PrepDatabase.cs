@@ -35,7 +35,7 @@ public static class PrepDatabase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "--> Could not run migrations.");
+                Log.Error(ex, "--> Could not run migrations");
             }
         }
 

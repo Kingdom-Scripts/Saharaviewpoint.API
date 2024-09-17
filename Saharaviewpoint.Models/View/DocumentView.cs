@@ -4,9 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Saharaviewpoint.Models.App.Constants;
-using System.Text.Json.Serialization;
-
 namespace Saharaviewpoint.Models.View;
 
 public class DocumentView

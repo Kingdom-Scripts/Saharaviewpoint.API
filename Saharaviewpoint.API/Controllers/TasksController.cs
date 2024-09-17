@@ -39,6 +39,14 @@ public class TasksController(ITaskService taskService) : BaseController
         return ProcessResponse(result);
     }
 
+    [HttpGet("{projectId}/board")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<BoardTaskView>>))]
+    public async Task<IActionResult> ListBoardTasks(int projectId, [FromQuery] string searchQuery)
+    {
+        var result = await _taskService.ListBoardTasks(projectId, searchQuery);
+        return ProcessResponse(result);
+    }
+
     [HttpGet("{taskId}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<TaskDetailView>))]
     [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ErrorResult))]
@@ -66,7 +74,6 @@ public class TasksController(ITaskService taskService) : BaseController
         return ProcessResponse(result);
     }
 
-    // TODO: fix this for dynamic file upload
     [HttpPost("{taskId}/attachments")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(SuccessResult<DocumentView>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResult))]
@@ -108,14 +115,6 @@ public class TasksController(ITaskService taskService) : BaseController
     public async Task<IActionResult> ListLogs(int taskId, [FromQuery] PagingOptionModel request)
     {
         var result = await _taskService.ListLogs(taskId, request);
-        return ProcessResponse(result);
-    }
-
-    [HttpGet("{projectId}/board")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(SuccessResult<List<BoardTaskView>>))]
-    public async Task<IActionResult> ListBoardTasks(int projectId)
-    {
-        var result = await _taskService.ListBoardTasks(projectId);
         return ProcessResponse(result);
     }
 

@@ -8,13 +8,13 @@ namespace Saharaviewpoint.Models.Configurations;
 
 public class AppConfig
 {
-    public string TinifyKey { get; set; }
-    public ApiVideoConfig ApiVideo { get; set; }
+    public string KeyVaultUrl { get; set; }
+    public string ApiVideoUrl { get; set; }
     public FileSettings FileSettings { get; set; }
-    public BaseURLs BaseURLs { get; set; }
+    public BaseUrLs BaseUrLs { get; set; }
 }
 
-public class BaseURLs
+public class BaseUrLs
 {
     public string Api { get; set; }
     public string Admin { get; set; }

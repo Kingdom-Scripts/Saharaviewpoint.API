@@ -4,15 +4,14 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Saharaviewpoint.Models.App;
 
-public class EpicTask
+public class EmailTemplate : BaseAppModel
 {
-    public required int Id { get; set; }
-    public required int TaskId { get; set; }
-    public required int CreatedById { get; set; }
-    public required DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public SvpTask Task { get; set; }
-    public User CreatedBy { get; set; }
+    [StringLength(25)]
+    public string Key { get; set; }
+    // [StringLength(255)]
+    // public string Token { get; set; }
 }

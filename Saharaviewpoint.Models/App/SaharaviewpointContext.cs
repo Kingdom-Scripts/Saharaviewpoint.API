@@ -22,6 +22,7 @@ public class SaharaviewpointContext : DbContext
     {
     }
 
+    // public required DbSet<EmailTemplate> EmailTemplates { get; set; }
     public required DbSet<Role> Roles { get; set; }
     public required DbSet<User> Users { get; set; }
     public required DbSet<UserRole> UserRoles { get; set; }

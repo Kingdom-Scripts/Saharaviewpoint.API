@@ -87,7 +87,7 @@ try
 
     builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
     builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
-    builder.Services.Configure<KeyVaultConfig>(builder.Configuration.GetSection("KeyVault"));
+    builder.Services.Configure<ZeptoMailConfig>(builder.Configuration.GetSection("ZeptoMail"));
 
     // Set up CORS
     string svpAllowedOrigins = "_svpAllowedDomains";
@@ -96,8 +96,8 @@ try
         options.AddPolicy(name: svpAllowedOrigins,
             policy =>
             {
-                // TODO: work on setting app settings directly in Azure App Settings
                 string[] hosts = builder.Configuration.GetSection("AppConfig:AllowedHosts").Get<string[]>()!;
+                Log.Information($"Allowed hosts: {string.Join(", ", hosts)}");
                 policy.WithOrigins(hosts)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
@@ -117,6 +117,7 @@ try
     app.UseSwaggerUI();
 
     app.UseMiddleware<ErrorHandlerMiddleware>();
+    app.UseMiddleware<SecretsMiddleware>();
 
     app.UseHttpsRedirection();
 
@@ -126,12 +127,11 @@ try
     app.UseAuthorization();
 
     app.UseMiddleware<JWTMiddleware>();
-
     app.UseMiddleware<UserSessionMiddleware>();
 
     app.MapControllers();
 
-    await InitializeApiVideoToken.InitializeToken(app);
+    InitializeApiVideoToken.InitializeToken(app);
     PrepDatabase.PrepPopulation(app, app.Environment.IsProduction());
 
     app.Run();

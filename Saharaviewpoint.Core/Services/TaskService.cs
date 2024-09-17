@@ -4,7 +4,7 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Azure.Core;
+using System.Text;
 using LazyCache;
 using Mapster;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Saharaviewpoint.Core.Contants;
+using Saharaviewpoint.Core.Contants.CacheKeys;
 using Saharaviewpoint.Core.Extensions;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
@@ -27,11 +28,9 @@ using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View;
 using Saharaviewpoint.Models.View.Task;
 using Serilog;
-using System.Text;
 
 namespace Saharaviewpoint.Core.Services;
 
-// TODO: add caching
 public class TaskService : BaseService, ITaskService
 {
     private readonly SaharaviewpointContext _context;
@@ -39,7 +38,7 @@ public class TaskService : BaseService, ITaskService
     private readonly IFileService _fileService;
     private readonly IAppCache _cache;
     private readonly IEmailService _emailService;
-    private readonly BaseURLs _baseUrls;
+    private readonly BaseUrLs _baseUrls;
     private readonly HttpClient _apiVideoClient;
     private readonly ILogger _logger;
 
@@ -53,7 +52,7 @@ public class TaskService : BaseService, ITaskService
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _baseUrls = options.Value.BaseURLs;
+        _baseUrls = options.Value.BaseUrLs;
         _apiVideoClient = factory.CreateClient(HttpClientKeys.ApiVideo);
     }
 
@@ -95,7 +94,7 @@ public class TaskService : BaseService, ITaskService
             }
             else
             {
-                Log.Error(uploaded.Message);
+                Log.Error("Failed to upload attachment for task: {@Task}. Error: {@Error}", mappedTask, uploaded.Message);
             }
         }
 
@@ -114,7 +113,8 @@ public class TaskService : BaseService, ITaskService
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // clear caches
-        _cache.ClearCaches(CacheKeys.TaskListCacheKeys());
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
+            CacheKeys.ListBoardTasks());
 
         // Send Notification Email
         {
@@ -200,6 +200,71 @@ public class TaskService : BaseService, ITaskService
         return new SuccessResult(cachedResult);
     }
 
+    public async Task<Result> ListBoardTasks(int projectId, string searchQuery)
+    {
+        string cacheKey = GenerateCacheKey(projectId, searchQuery, _userSession.UserId, _userSession.IsAnySvpAdmin);
+        string validationCacheKey = $"{cacheKey}-validation";
+
+        // Retrieve the current list of cache keys and add the new key
+        var cacheKeys = _cache.GetOrAdd(CacheKeys.ListBoardTasks(), () => new List<string>(), new TimeSpan(0, 45, 0));
+        if (!cacheKeys.Contains(cacheKey))
+        {
+            cacheKeys.Add(cacheKey);
+            _cache.Add(CacheKeys.ListBoardTasks(), cacheKeys);
+        }
+        if (!cacheKeys.Contains(validationCacheKey))
+        {
+            cacheKeys.Add(validationCacheKey);
+            _cache.Add(CacheKeys.ListBoardTasks(), cacheKeys);
+        }
+
+        bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(validationCacheKey, async () =>
+        {
+            return await _context.Projects
+                .Where(p => p.Id == projectId)
+                .AnyAsync(p => _userSession.IsAnySvpAdmin
+                    || p.AssigneeId == _userSession.UserId
+                    || p.CreatedById == _userSession.UserId);
+        }, new TimeSpan(0, 45, 0));
+
+        if (!projectExistAndHaveAccess)
+            return new ErrorResult("Project not found or you do not have access to view tasks in this project");
+
+        // Try to get the cached result
+        var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
+        {
+            var query = from task in _context.Tasks
+                        where !task.IsDeleted && task.ProjectId == projectId
+                        where string.IsNullOrEmpty(searchQuery) || task.Summary.Contains(searchQuery)
+                        where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
+                        where task.Type != TaskTypeEnum.EPIC
+                        select new
+                        {
+                            task,
+                            task.Parent
+                        };
+
+            var results = await query
+                .AsNoTracking()
+                .OrderBy(t => t.task.Order)
+                .ToListAsync();
+
+            return results.Select(t => new BoardTaskView
+            {
+                Id = t.task.Id,
+                Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
+                Type = t.task.Type,
+                Status = t.task.Status,
+                Summary = t.task.Summary,
+                CreatedAt = t.task.CreatedAt,
+                DueDate = t.task.DueDate,
+                Order = t.task.Order
+            }).ToList();
+        }, new TimeSpan(0, 45, 0));
+
+        return new SuccessResult(cachedResult);
+    }
+
     public async Task<Result> GetTask(int taskId)
     {
         var cachedData = await _cache.GetOrAddAsync(CacheKeys.TaskDetails(taskId), async () =>
@@ -221,11 +286,12 @@ public class TaskService : BaseService, ITaskService
         var task = await _context.Tasks.FindAsync(taskId);
         if (task is not null)
         {
-            // TODO: test this
             _context.Remove(task);
 
             // clear caches
-            _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+            _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
+                CacheKeys.TaskDetails(taskId),
+                CacheKeys.ListBoardTasks());
         }
         await _context.SaveChangesAsync();
 
@@ -257,10 +323,17 @@ public class TaskService : BaseService, ITaskService
     {
         var task = await _context.Tasks
             .Where(t => t.Id == taskId)
-            .Select(t => new SvpTask
+            .Select(t => new
             {
-                Id = t.Id,
-                ProjectId = t.ProjectId
+                t.Id,
+                t.ProjectId,
+                t.Summary,
+                TaskOwnerId = t.CreatedById,
+                TaskOwnerEmail = t.CreatedBy.Email,
+                TaskOwnerName = $"{t.CreatedBy.FirstName} {t.CreatedBy.LastName}",
+                ProjectOwnerEmail = t.Project.CreatedBy.Email,
+                ProjectOwnerName = $"{t.Project.CreatedBy.FirstName} {t.Project.CreatedBy.LastName}",
+
             }).FirstOrDefaultAsync();
 
         if (task is null)
@@ -283,7 +356,7 @@ public class TaskService : BaseService, ITaskService
         };
 
         // Add log
-        AddTaskLog(task, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
+        AddTaskLog(new SvpTask{Id = task.Id}, $"{_userSession.Name} added an attachment", "None", uploaded.Content.Name);
 
         await _context.AddAsync(attachment);
 
@@ -294,6 +367,32 @@ public class TaskService : BaseService, ITaskService
 
         // clear caches
         _cache.ClearCaches(CacheKeys.ListAttachments(taskId));
+
+        // Send Notification
+        var emailModel = new GenericEmailModel
+        {
+            To = [new EmailAddress { Address = task.ProjectOwnerEmail, Name = task.ProjectOwnerName }],
+            Cc = [new EmailAddress { Address = task.TaskOwnerEmail, Name = task.TaskOwnerName }],
+            Subject = $"Attachment Uploaded - {task.Summary}",
+            Salutation = "Hello,",
+            PrimaryMessage =
+                $"This is to notify you that <strong>{_userSession.Name}</strong> uploaded an attachment to the task <strong>{task.Summary}</strong>.",
+            ClosingRemark = "Regards",
+            ActionButton = new EmailActionButton
+            {
+                Text = "View Task",
+                Url = $"{_baseUrls.Client}/project/task/{taskId}"
+            },
+            Attachments = [model.File]
+        };
+        if (task.TaskOwnerId != _userSession.UserId)
+            emailModel.Cc.Add(new EmailAddress
+            {
+                Address = _context.Users.First(u => u.Id == _userSession.UserId).Email ,
+                Name = _userSession.Name
+            });
+
+        await _emailService.SendEmail(emailModel);
 
         var result = attachment.Document.Adapt<DocumentView>();
         result.Url = result.Type == DocumentTypes.VIDEO ? result.Url : $"{_baseUrls.AssetBase}/{result.Url}";
@@ -330,12 +429,6 @@ public class TaskService : BaseService, ITaskService
 
         if (task is null)
             return new ErrorResult("Invalid task provided");
-
-        var projectFolders = await _context.Projects
-            .Where(p => p.Id == task.ProjectId)
-            .Select(p => p.FolderNames)
-            .FirstOrDefaultAsync();
-
 
         var attachment = new TaskAttachment
         {
@@ -399,7 +492,7 @@ public class TaskService : BaseService, ITaskService
             {
                 string contentString = await response.Content.ReadAsStringAsync();
                 object error = JsonConvert.DeserializeObject<object>(contentString);
-                _logger.Error("Failed to delete video with ID: {@videoId}. {@Error}", videoId, error);
+                _logger.Error("Failed to delete video with ID: {@VideoId}. {@Error}", videoId, error);
                 return new ErrorResult("Failed to remove video, please try again later.");
             }
         }
@@ -440,7 +533,7 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> ListLogs(int taskId, PagingOptionModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = $"TaskService-ListLogs-{taskId}-{generatedKey}";
 
         // Retrieve the current list of cache keys and add the new key
@@ -458,52 +551,6 @@ public class TaskService : BaseService, ITaskService
                 .OrderByDescending(tl => tl.CreatedAt)
                 .ProjectToType<TaskLogView>()
                 .ToPaginatedListAsync(request.PageIndex, request.PageSize);
-        }, new TimeSpan(0, 45, 0));
-
-        return new SuccessResult(cachedResult);
-    }
-
-    public async Task<Result> ListBoardTasks(int projectId)
-    {
-        bool projectExistAndHaveAccess = await _cache.GetOrAddAsync(CacheKeys.BoardTasksValidation(projectId), async () =>
-        {
-            return await _context.Projects
-            .Where(p => p.Id == projectId)
-            .AnyAsync(p => _userSession.IsAnySvpAdmin || p.AssigneeId == _userSession.UserId || p.CreatedById == _userSession.UserId);
-        }, new TimeSpan(0, 45, 0));
-
-        if (!projectExistAndHaveAccess)
-            return new ErrorResult("Project not found or you do not have access to view tasks in this project");
-
-        // Try to get the cached result
-        var cachedResult = await _cache.GetOrAddAsync(CacheKeys.BoardTasks(projectId), async () =>
-        {
-            var query = from task in _context.Tasks
-                        where !task.IsDeleted && task.ProjectId == projectId
-                        where _userSession.IsAnySvpAdmin || task.Project!.AssigneeId == _userSession.UserId || task.CreatedById == _userSession.UserId
-                        where task.Type != TaskTypeEnum.EPIC
-                        select new
-                        {
-                            task,
-                            task.Parent
-                        };
-
-            var results = await query
-                .AsNoTracking()
-                .OrderBy(t => t.task.Order)
-                .ToListAsync();
-
-            return results.Select(t => new BoardTaskView
-            {
-                Id = t.task.Id,
-                Epic = t.Parent?.Type == "Epic" ? t.Parent.Summary : null,
-                Type = t.task.Type,
-                Status = t.task.Status,
-                Summary = t.task.Summary,
-                CreatedAt = t.task.CreatedAt,
-                DueDate = t.task.DueDate,
-                Order = t.task.Order
-            }).ToList();
         }, new TimeSpan(0, 45, 0));
 
         return new SuccessResult(cachedResult);
@@ -561,7 +608,9 @@ public class TaskService : BaseService, ITaskService
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // clear caches
-        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
+            CacheKeys.TaskDetails(taskId),
+            CacheKeys.ListBoardTasks());
 
         // Send Notification Email
         {
@@ -572,11 +621,12 @@ public class TaskService : BaseService, ITaskService
                     ProjectTitle = p.Title,
                     OwnerEmail = p.CreatedBy!.Email,
                     OwnerFirstName = p.CreatedBy.FirstName,
+                    OwnerLastName = p.CreatedBy.LastName
                 }).FirstAsync();
 
             var emailRequest = new GenericEmailModel
             {
-                To = data.OwnerEmail,
+                To = [new EmailAddress{Address = data.OwnerEmail, Name = $"{data.OwnerFirstName} {data.OwnerLastName}"}],
                 Subject = $"{data.ProjectTitle} - Task Update",
                 Salutation = $"Hello {data.OwnerFirstName},",
                 PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the status of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +
@@ -586,13 +636,11 @@ public class TaskService : BaseService, ITaskService
                     $"<strong>New Status:</strong> {task.Status}<br>" +
                     $"{(taskIsGoingBack ? $"<strong>Remark:</strong> {model.Reason}<br>" : "")}",
                 ClosingRemark = "Regards",
-
-                // TODO: collect the url to view the task detail from Samuel
-                //ActionButton = new()
-                //{
-                //    Text = "View Project",
-                //    Url = url
-                //}
+                ActionButton = new()
+                {
+                    Text = "View Task",
+                    Url = $"{_baseUrls.Client}/project/task/{taskId}"
+                }
             };
 
             await _emailService.SendEmail(emailRequest);
@@ -630,7 +678,9 @@ public class TaskService : BaseService, ITaskService
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // clear caches
-        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(), CacheKeys.TaskDetails(taskId), CacheKeys.BoardTasks(task.ProjectId), CacheKeys.BoardTasksValidation(task.ProjectId));
+        _cache.ClearCaches(CacheKeys.TaskListCacheKeys(),
+            CacheKeys.TaskDetails(taskId),
+            CacheKeys.ListBoardTasks());
 
         // Send Notification Email
         {
@@ -641,12 +691,13 @@ public class TaskService : BaseService, ITaskService
                     ProjectTitle = p.Title,
                     OwnerEmail = p.CreatedBy!.Email,
                     OwnerFirstName = p.CreatedBy.FirstName,
+                    OwnerLastName = p.CreatedBy.LastName
                 }).FirstAsync();
 
             var emailRequest = new GenericEmailModel
             {
-                To = data.OwnerEmail,
-                Subject = $"{data.ProjectTitle} - Task Update",
+                To = [new EmailAddress{Address = data.OwnerEmail, Name = $"{data.OwnerFirstName} {data.OwnerLastName}"}],
+                Subject = $"{data.ProjectTitle} - Task Due Date Update",
                 Salutation = $"Hello {data.OwnerFirstName},",
                 PrimaryMessage = $"This is to notify you that <strong>{_userSession.Name}</strong> changed the due date of a task in the project <strong>{data.ProjectTitle}</strong>.<br><br>" +
                     $"<strong>Task Summary:</strong> {task.Summary}<br>" +
@@ -654,13 +705,11 @@ public class TaskService : BaseService, ITaskService
                     $"<strong>New Due Date:</strong> {task.DueDate:dd MMM, yyyy}<br>" +
                     $"<strong>Remark:</strong> {task.Status}<br>",
                 ClosingRemark = "Regards",
-
-                // TODO: collect the url to view the task detail from Samuel
-                //ActionButton = new()
-                //{
-                //    Text = "View Project",
-                //    Url = url
-                //}
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = $"{_baseUrls.Client}/project/task/{taskId}"
+                }
             };
 
             var adminEmail = emailRequest;
@@ -684,7 +733,7 @@ public class TaskService : BaseService, ITaskService
     public async Task<Result> AddComment(int taskId, CommentModel model)
     {
         // validate task
-        var taskExist = await _context.Tasks
+        bool taskExist = await _context.Tasks
             .AnyAsync(t => t.Id == taskId && !t.IsDeleted);
 
         if (!taskExist)
@@ -716,6 +765,9 @@ public class TaskService : BaseService, ITaskService
         if (comment is null)
             return new ErrorResult(StatusCodes.Status404NotFound, "Comment does not exist.");
 
+        if (comment.CreatedById != _userSession.UserId)
+            return new ErrorResult(StatusCodes.Status401Unauthorized, "You do not have permission to delete this comment.");
+
         _context.Remove(comment);
 
         int saved = await _context.SaveChangesAsync();
@@ -731,7 +783,7 @@ public class TaskService : BaseService, ITaskService
 
     public async Task<Result> ListComments(int taskId, PagingOptionModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = $"TaskService-Comment-{taskId}-{generatedKey}";
 
         // Retrieve the current list of cache keys and add the new key
@@ -765,7 +817,7 @@ public class TaskService : BaseService, ITaskService
 
     #region Private Methods
 
-    private async void AddTaskLog(SvpTask task, string description, string? previousState = null, string? currentState = null, string? remark = null)
+    private async void AddTaskLog(SvpTask task, string description, string previousState = null, string currentState = null, string remark = null)
     {
         var log = new TaskLog
         {
@@ -785,15 +837,4 @@ public class TaskService : BaseService, ITaskService
     }
 
     #endregion
-
-    internal class CacheKeys
-    {
-        internal static string TaskDetails(int id) => $"task-details-{id}";
-        internal static string ListAttachments(int id) => $"task-attachments-{id}";
-        internal static string BoardTasks(int projectId) => $"board-tasks-{projectId}";
-        internal static string BoardTasksValidation(int projectId) => $"board-tasks-{projectId}-validation";
-        internal static string TaskLogsCacheKeys(int id) => $"TaskService-ListLogs-{id}-CacheKeys";
-        internal static string CommentListCacheKeys(int id) => $"TaskService-Comment-{id}-CacheKeys";
-        internal static string TaskListCacheKeys() => "TaskService-ListTasks-CacheKeys";
-    }
 }

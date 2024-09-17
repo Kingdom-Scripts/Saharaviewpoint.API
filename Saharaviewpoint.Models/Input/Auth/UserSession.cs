@@ -15,7 +15,7 @@ public class UserSession
     public string Uid { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string Type { get; set; } = null!;
-    public string? BusinessCode { get; set; }
+    public string BusinessCode { get; set; }
 
     private List<string> _roles = [];
 
@@ -37,7 +37,7 @@ public class UserSession
     public bool IsSvpAdmin => InRole(RolesConstants.SvpAdmin);
     public bool IsProjectManager => InRole(RolesConstants.SvpManager);
 
-    public AppTypes? AppType { get; set; }
+    public AppTypes AppType { get; set; }
 
     public bool FilterByClient => AppType == AppTypes.Client && IsClient;
     public bool FilterByBusinessAdmin => AppType == AppTypes.Client && IsBusinessAdmin;

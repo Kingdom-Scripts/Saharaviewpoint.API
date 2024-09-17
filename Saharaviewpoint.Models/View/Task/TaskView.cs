@@ -13,7 +13,7 @@ public class TaskView
     public required string Type { get; set; }
     public required string Status { get; set; }
     public required string Summary { get; set; }
-    public string? Description { get; set; }
+    public string Description { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime ExpectedStartDate { get; set; }
     public DateTime DueDate { get; set; }

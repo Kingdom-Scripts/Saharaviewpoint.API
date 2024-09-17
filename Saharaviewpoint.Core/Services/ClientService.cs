@@ -11,23 +11,20 @@ using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
-using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Input.Client;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Client;
 
 namespace Saharaviewpoint.Core.Services;
 
-// TODO: add caching
-public class ClientService(SaharaviewpointContext context, UserSession userSession, IAppCache cache) : BaseService, IClientService
+public class ClientService(SaharaviewpointContext context, IAppCache cache) : BaseService, IClientService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-    private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
 
     public async Task<Result> ListClients(ClientSearchModel request)
     {
-        var generatedKey = GenerateCacheKey(request);
+        string generatedKey = GenerateCacheKey(request);
         string cacheKey = CacheKeys.ListClients() + generatedKey;
 
         // Retrieve the current list of cache keys and add the new key

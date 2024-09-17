@@ -11,7 +11,7 @@ namespace Saharaviewpoint.Models.Input.Task;
 public class TaskStatusModel
 {
     public required string Status { get; set; }
-    public string? Reason { get; set; }
+    public string Reason { get; set; }
 }
 
 public class TaskStatusValidator : AbstractValidator<TaskStatusModel>

@@ -64,8 +64,9 @@ public class ProjectTypeService(SaharaviewpointContext context, UserSession user
     }
 
     public async Task<Result> ListTypes() {
-        var allTypes = _context.ProjectTypes
-            .ProjectToType<ProjectTypeView>();
+        var allTypes = await _context.ProjectTypes
+            .ProjectToType<ProjectTypeView>()
+            .ToListAsync();
 
         return new SuccessResult(allTypes);
     }

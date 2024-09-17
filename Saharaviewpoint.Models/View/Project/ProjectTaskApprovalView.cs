@@ -16,8 +16,8 @@ public class ProjectTaskApprovalView
     public required string RequesterName { get; set; }
     public bool IsFulfilled { get; set; }
     public int? FulfilledById { get; set; }
-    public string? FulfilledByName { get; set; }
+    public string FulfilledByName { get; set; }
     public bool? Status { get; set; }
     public DateTime? FulfilledOn { get; set; }
-    public string? Remark { get; set; }
+    public string Remark { get; set; }
 }

@@ -4,14 +4,18 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Saharaviewpoint.Models.App;
 
 public class Login : BaseAppModel
 {
     public int UserId { get; set; }
+    [StringLength(255)]
     public required string HashedToken { get; set; }
+    [StringLength(255)]
     public required string Domain { get; set; }
     public required DateTime ExpiresAt { get; set; }
 
-    public User? User { get; set; }
+    public User User { get; set; }
 }

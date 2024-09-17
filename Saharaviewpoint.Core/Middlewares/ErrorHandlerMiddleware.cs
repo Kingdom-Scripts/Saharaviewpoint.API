@@ -33,26 +33,26 @@ public class ErrorHandlerMiddleware(RequestDelegate next)
             var response = context.Response;
             response.ContentType = "application/json";
 
-            Log.Error("Actual Error: {Error}", error);
+            Log.Error(error, "Actual Error");
 
             response.StatusCode = error switch
             {
-                KeyNotFoundException e => StatusCodes.Status404NotFound,// not found error
-                _ => StatusCodes.Status500InternalServerError,// unhandled error
+                KeyNotFoundException => StatusCodes.Status404NotFound,// not found error
+                var _ => StatusCodes.Status500InternalServerError,// unhandled error
             };
 
-            string? result = JsonSerializer.Serialize(new ErrorResult
+            string result = JsonSerializer.Serialize(new ErrorResult
             {
                 Success = false,
-                Message = error?.Message,
+                Message = error.Message,
                 Status = response.StatusCode,
-                Detail = error?.InnerException?.Message,
+                Detail = error.InnerException?.Message,
                 Instance = Guid.NewGuid().ToString(),
                 Path = $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}",
                 TraceInfo = GetErrorTraceInfo(error),
             }, _options);
 
-            Log.Error("Error: {@result}", result);
+            Log.Error("Error: {@Result}", result);
 
             await response.WriteAsync(result);
         }
@@ -60,7 +60,7 @@ public class ErrorHandlerMiddleware(RequestDelegate next)
         // handle unauthorized error
         if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
         {
-            string? result = JsonSerializer.Serialize(new ErrorResult
+            string result = JsonSerializer.Serialize(new ErrorResult
             {
                 Success = false,
                 Message = "Authentication failed, please log in to access this resource",
@@ -81,8 +81,6 @@ public class ErrorHandlerMiddleware(RequestDelegate next)
         //Get a StackTrace object for the exception
         StackTrace st = new StackTrace(ex, true);
 
-        var traceInfo = new List<TraceInfo>();
-
         List<StackFrame> frames = st.GetFrames().Where(x => x.GetFileName() != null).ToList();
 
         var frame = frames.FirstOrDefault();
@@ -92,7 +90,7 @@ public class ErrorHandlerMiddleware(RequestDelegate next)
         TraceInfo trace = new TraceInfo
         {
             FileName = frame.GetFileName(),
-            MethodName = frame.GetMethod().Name,
+            MethodName = frame.GetMethod()?.Name,
             LineNumber = frame.GetFileLineNumber(),
             ColumnNumber = frame.GetFileColumnNumber()
         };

@@ -3,8 +3,9 @@
 // Author: Mordecai Godwin
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
+// ReSharper disable once RedundantUsingDirective
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Saharaviewpoint.Models.Utilities;
 
@@ -67,7 +68,7 @@ public class Result<T>
     /// <summary>
     /// Indicates whether the operation was successful.
     /// </summary>
-    public bool Success { get; set; } = false;
+    public bool Success { get; set; }
 
     /// <summary>
     /// The title associated with the result.

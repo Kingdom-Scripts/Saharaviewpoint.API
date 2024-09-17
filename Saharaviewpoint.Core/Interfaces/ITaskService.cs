@@ -14,6 +14,7 @@ public interface ITaskService
 {
     Task<Result> CreateTask(TaskModel model);
     Task<Result> ListTasks(TaskSearchModel request);
+    Task<Result> ListBoardTasks(int projectId, string searchQuery);
     Task<Result> GetTask(int taskId);
     Task<Result> DeleteTask(int taskId);
     Task<Result> ListAttachments(int taskId);
@@ -22,7 +23,6 @@ public interface ITaskService
     Task<Result> AddVideoToTask(int taskId, VideoDetailModel model);
     Task<Result> RemoveAttachmentFromTask(int taskId, int documentId);
     Task<Result> ListLogs(int taskId, PagingOptionModel request);
-    Task<Result> ListBoardTasks(int projectId);
     Task<Result> ChangeTaskStatus(int taskId, TaskStatusModel model);
     Task<Result> ChangeDueDate(int taskId, TaskDueDateModel model);
     Task<Result> AddComment(int taskId, CommentModel model);

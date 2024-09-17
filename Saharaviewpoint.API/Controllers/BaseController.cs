@@ -6,7 +6,6 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Models.Utilities;
-using System.Net;
 
 namespace Saharaviewpoint.API.Controllers;
 

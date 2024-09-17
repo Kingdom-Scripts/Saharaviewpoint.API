@@ -4,7 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Saharaviewpoint.Core.Interfaces;
 using Saharaviewpoint.Models.Input;
@@ -138,7 +137,7 @@ public class ProjectsController(IProjectService projectService) : BaseController
     }
 
     [HttpGet("types")]
-    public async Task<IActionResult> ListTypes(string? searchTerm)
+    public async Task<IActionResult> ListTypes(string searchTerm)
     {
         var result = await _projectService.ListTypes(searchTerm);
         return ProcessResponse(result);

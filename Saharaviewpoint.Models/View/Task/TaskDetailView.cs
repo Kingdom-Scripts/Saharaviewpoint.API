@@ -4,8 +4,6 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
-using Saharaviewpoint.Models.View.Project;
-
 namespace Saharaviewpoint.Models.View.Task;
 
 public class TaskDetailView : TaskView

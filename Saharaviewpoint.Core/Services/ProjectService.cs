@@ -25,17 +25,24 @@ using Saharaviewpoint.Models.View.Project;
 
 namespace Saharaviewpoint.Core.Services;
 
-public class ProjectService(SaharaviewpointContext context, UserSession userSession, IFileService fileService,
-    IEmailService emailService, IAppCache cache,
-        IOptions<AppConfig> options) : BaseService, IProjectService
+public class ProjectService(
+    SaharaviewpointContext context,
+    UserSession userSession,
+    IFileService fileService,
+    IEmailService emailService,
+    IAppCache cache,
+    IOptions<AppConfig> options) : BaseService, IProjectService
 {
     private readonly SaharaviewpointContext _context = context ?? throw new ArgumentNullException(nameof(context));
     private readonly UserSession _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
     private readonly IFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
-    private readonly IEmailService _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+
+    private readonly IEmailService
+        _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+
     private readonly IAppCache _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
-    private readonly BaseURLs _baseUrls = options.Value.BaseURLs;
+    private readonly BaseUrLs _baseUrls = options.Value.BaseUrLs;
 
     private const string ListProjectsCacheKeys = "ProjectService-ListProjects-CacheKeys";
     private const string ProjectLogsCacheKeys = "ProjectLogs-CacheKeys";
@@ -91,20 +98,20 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         // Send Notification Email
         {
             string url = $"{_baseUrls.Admin}/projects?approve={mappedProject.Id}";
-            string adminEmails = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
 
             var emailRequest = new GenericEmailModel
             {
-                To = adminEmails,
+                To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin),
                 Subject = "New Project Request",
                 Salutation = "Hello,",
-                PrimaryMessage = "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
-                "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
-                $"<strong>Project Title:</strong> {mappedProject.Title}<br>" +
-                $"<strong>Project Type:</strong> {mappedProject.Type}<br>" +
-                $"<strong>Proposed Start Date:</strong> {mappedProject.StartDate:dd MMM, yyyy}<br>" +
-                $"<strong>Proposed End Date:</strong> {mappedProject.DueDate:dd MMMM, yyyy}<br>" +
-                $"<strong>Size of Site:</strong> {mappedProject.SizeOfSite}<br><br>",
+                PrimaryMessage =
+                    "A new project request has been submitted by Jane Doe. Kindly log on the application and review or click to the button below to review.<br><br>" +
+                    "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
+                    $"<strong>Project Title:</strong> {mappedProject.Title}<br>" +
+                    $"<strong>Project Type:</strong> {mappedProject.Type.Name}<br>" +
+                    $"<strong>Proposed Start Date:</strong> {mappedProject.StartDate:dd MMM, yyyy}<br>" +
+                    $"<strong>Proposed End Date:</strong> {mappedProject.DueDate:dd MMMM, yyyy}<br>" +
+                    $"<strong>Size of Site:</strong> {mappedProject.SizeOfSite}<br><br>",
                 ClosingRemark = "Regards",
                 ActionButton = new()
                 {
@@ -125,6 +132,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     {
         var project = await _context.Projects
             .Include(p => p.CreatedBy)
+            .Include(p => p.Type)
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
         if (project == null)
@@ -142,7 +150,8 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         project.UpdatedOn = DateTime.UtcNow;
 
         // add log
-        AddProjectLog(project, ProjectLogTypes.Assignment, $"Project assigned to {assignee.FirstName} {assignee.LastName}");
+        AddProjectLog(project, ProjectLogTypes.Assignment,
+            $"Project assigned to {assignee.FirstName} {assignee.LastName}");
 
         // save changes to the database
         int saved = await _context.SaveChangesAsync();
@@ -159,13 +168,17 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var emailRequest = new GenericEmailModel
             {
-                To = assignee.Email,
+                To =
+                [
+                    new EmailAddress { Address = assignee.Email, Name = $"{assignee.FirstName} {assignee.LastName}" }
+                ],
                 Subject = "Project Assigned To You",
                 Salutation = $"Hello {assignee.FirstName},",
-                PrimaryMessage = "A new project has been assigned to you. Kindly log on the application to begin setting up tasks.<br><br>" +
+                PrimaryMessage =
+                    "A new project has been assigned to you. Kindly log on the application to begin setting up tasks.<br><br>" +
                     "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
                     $"<strong>Project Title:</strong> {project.Title}<br>" +
-                    $"<strong>Project Type:</strong> {project.Type}<br>" +
+                    $"<strong>Project Type:</strong> {project.Type?.Name}<br>" +
                     $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
@@ -181,18 +194,24 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var clientEmailRequest = new GenericEmailModel
             {
-                To = project.CreatedBy!.Email,
+                To =
+                [
+                    new EmailAddress
+                    {
+                        Address = project.CreatedBy!.Email,
+                        Name = $"{project.CreatedBy.FirstName} {project.CreatedBy.LastName}"
+                    }
+                ],
                 Subject = $"{project.Title} - Approved!",
                 Salutation = $"Hello {project.CreatedBy.FirstName},",
                 PrimaryMessage = $"Congratulations!<br><br>" +
-                    $"This is to notify you that your project - {project.Title} - has been approved and assigned to <strong>{assignee.FirstName} {assignee.LastName}</strong>. The project manager will reach out to you with further instructions while your project tasks is configured. Stay tuned!<br>",
+                                 $"This is to notify you that your project - {project.Title} - has been approved and assigned to <strong>{assignee.FirstName} {assignee.LastName}</strong>. The project manager will reach out to you with further instructions while your project tasks is configured. Stay tuned!<br>",
                 ClosingRemark = "Regards",
-                // TODO: receive the url to view project from Samuel
-                //ActionButton = new()
-                //{
-                //    Text = "View Project",
-                //    Url = clientUrl
-                //}
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = $"{_baseUrls.Client}/project/details/{project.Id}"
+                }
             };
             await _emailService.SendEmail(clientEmailRequest);
         }
@@ -209,12 +228,13 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             return new BadErrorResult("Project does not exist");
 
         project.Status = ProjectStatuses.Rejected;
-        project.RejectionReason = model.Reason;  // TODO: test this
+        project.RejectionReason = model.Reason;
         project.UpdatedById = _userSession.UserId;
         project.UpdatedOn = DateTime.UtcNow;
 
         // add log
-        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project rejected by {_userSession.Name}", remark: model.Reason);
+        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project rejected by {_userSession.Name}",
+            remark: model.Reason);
 
         int saved = await _context.SaveChangesAsync();
 
@@ -258,26 +278,39 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> GetProject(int id)
     {
-        var project = await _cache.GetOrAddAsync($"project-details-{id}", () => _context.Projects
-            .ProjectToType<ProjectDetailView>()
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted), new TimeSpan(0, 45, 0));
+        var cachedData = await _cache.GetOrAddAsync($"project-details-{id}", async () =>
+        {
+            var project = await _context.Projects
+                .ProjectToType<ProjectDetailView>()
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
 
-        if (project == null)
+            if (project == null)
+                return null;
+
+            if (project.Design is not null)
+            {
+                project.Design.Url = $"{_baseUrls.AssetBase}/{project.Design.Url}";
+                project.Design.ThumbnailUrl = $"{_baseUrls.AssetBase}/{project.Design.ThumbnailUrl}";
+            }
+
+            return project;
+        }, new TimeSpan(0, 45, 0));
+
+        if (cachedData == null)
             return new BadErrorResult("Project does not exist");
 
         // return forbidden if it's client and not the owner
         if (_userSession.AppType == AppTypes.Client
-            && project.CreatedById != _userSession.UserId)
+            && cachedData.CreatedById != _userSession.UserId)
             return new ForbiddenResult();
 
-        var mappedProject = project.Adapt<ProjectDetailView>();
-
-        return new SuccessResult(mappedProject);
+        return new SuccessResult(cachedData);
     }
 
     public async Task<Result> ListProjects(ProjectSearchModel request)
     {
-        var cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient, _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
+        string cacheKey = GenerateCacheKey(request, _userSession.UserId, _userSession.FilterByAnyClient,
+            _userSession.FilterByBusinessAdmin, _userSession.FilterBySvpManager);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(ListProjectsCacheKeys, () => new List<string>(), new TimeSpan(0, 45, 0));
@@ -291,9 +324,9 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         var cachedResult = await _cache.GetOrAddAsync(cacheKey, async () =>
         {
             bool shouldGetAll = string.IsNullOrEmpty(request.SearchQuery)
-                            && string.IsNullOrEmpty(request.Status)
-                            && !request.StartDueDate.HasValue
-                            && !request.EndDueDate.HasValue;
+                                && string.IsNullOrEmpty(request.Status)
+                                && !request.StartDueDate.HasValue
+                                && !request.EndDueDate.HasValue;
 
             var projectsQuery = _context.Projects
                 .Where(prd => !prd.IsDeleted)
@@ -316,7 +349,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
                     .ToPaginatedListAsync(request.PageIndex, request.PageSize);
             }
 
-            string? searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
+            string searchTerm = !string.IsNullOrEmpty(request.SearchQuery)
                 ? request.SearchQuery.Trim().ToLower()
                 : null;
 
@@ -351,6 +384,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
     {
         var project = await _context.Projects.Where(p => p.Id == id && !p.IsDeleted)
             .Include(p => p.Assignee)
+            .Include(p => p.Type)
             .FirstOrDefaultAsync();
 
         if (project == null)
@@ -376,7 +410,9 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         project.AssigneeId = model.AssigneeId;
 
         // add log
-        AddProjectLog(project, ProjectLogTypes.Assignment, $"Project reassigned to {model.AssigneeId}", previousState: $"{project.Assignee!.FirstName} {project.Assignee.LastName}", currentState: $"{newAssignee.FirstName} {newAssignee.LastName}");
+        AddProjectLog(project, ProjectLogTypes.Assignment, $"Project reassigned to {model.AssigneeId}",
+            previousState: $"{project.Assignee!.FirstName} {project.Assignee.LastName}",
+            currentState: $"{newAssignee.FirstName} {newAssignee.LastName}");
 
         // save changes to the database
         int saved = await _context.SaveChangesAsync();
@@ -393,13 +429,18 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
             var emailRequest = new GenericEmailModel
             {
-                To = newAssignee.Email,
+                To =
+                [
+                    new EmailAddress
+                        { Address = newAssignee.Email, Name = $"{newAssignee.FirstName} {newAssignee.LastName}" }
+                ],
                 Subject = "Project Re-assigned To You",
                 Salutation = $"Hello {newAssignee.FirstName},",
-                PrimaryMessage = "A new project has been re-assigned to you. Kindly log on the application to view tasks.<br><br>" +
+                PrimaryMessage =
+                    "A new project has been re-assigned to you. Kindly log on the application to view tasks.<br><br>" +
                     "<strong><span style=\"font-size:larger;\">Project Details</span></strong><br>" +
                     $"<strong>Project Title:</strong> {project.Title}<br>" +
-                    $"<strong>Project Type:</strong> {project.Type}<br>" +
+                    $"<strong>Project Type:</strong> {project.Type?.Name}<br>" +
                     $"<strong>Proposed Start Date:</strong> {project.StartDate:dd MMM, yyyy}<br>" +
                     $"<strong>Proposed End Date:</strong> {project.DueDate:dd MMMM, yyyy}<br>" +
                     $"<strong>Size of Site:</strong> {project.SizeOfSite}<br><br>",
@@ -468,7 +509,8 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
         project.Status = model.Status;
 
         // add log
-        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project status changed by {_userSession.Name}", previousState: previousStatus, currentState: model.Status);
+        AddProjectLog(project, ProjectLogTypes.StatusChange, $"Project status changed by {_userSession.Name}",
+            previousState: previousStatus, currentState: model.Status);
 
         // save changes to the database
         int saved = await _context.SaveChangesAsync();
@@ -484,7 +526,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     public async Task<Result> ListProjectLogs(int id, PagingOptionModel request)
     {
-        var cacheKey = GenerateCacheKey(request, id);
+        string cacheKey = GenerateCacheKey(request, id);
 
         // Retrieve the current list of cache keys and add the new key
         var cacheKeys = _cache.GetOrAdd(ProjectLogsCacheKeys, () => new List<string>(), new TimeSpan(0, 45, 0));
@@ -541,40 +583,43 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
         // Send Notification Email
         {
-            //var data = await _context.Projects
-            //    .Where(p => p.Id == project.Id)
-            //    .Select(p => new
-            //    {
-            //        ProjectTitle = p.Title,
-            //        OwnerEmail = p.CreatedBy!.Email,
-            //        OwnerFirstName = p.CreatedBy.FirstName,
-            //    }).FirstAsync();
-
             var emailRequest = new GenericEmailModel
             {
-                To = project.CreatedBy!.Email,
+                To =
+                [
+                    new EmailAddress
+                    {
+                        Address = project.CreatedBy!.Email,
+                        Name = $"{project.CreatedBy.FirstName} {project.CreatedBy.LastName}"
+                    }
+                ],
                 Subject = $"{project.Title} - Completed!",
                 Salutation = $"Hello {project.CreatedBy.FirstName},",
                 PrimaryMessage = $"Congratulations!<br><br>" +
-                    $"This is to notify you that your project - {project.Title} - has been completed. You can now view the project details and download the project files.<br>",
+                                 $"This is to notify you that your project - {project.Title} - has been completed. " +
+                                 "You can now view the project details and download the project files.<br>",
                 SecondaryMessage = "Thank you for choosing Saharaviewpoint!",
                 ClosingRemark = "Regards",
-
-                // TODO: collect the url to view the task detail from Samuel
-                //ActionButton = new()
-                //{
-                //    Text = "View Project",
-                //    Url = url
-                //}
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = $"{_baseUrls.Client}/project/details/{id}"
+                }
             };
 
-            var adminEmail = emailRequest;
-            adminEmail.To = _emailService.GetUserEmails(RolesConstants.SvpAdmin, RolesConstants.SuperAdmin);
-            adminEmail.Salutation = "Hello,";
-            adminEmail.ActionButton = new()
+            var adminEmail = new GenericEmailModel
             {
-                Text = "View Project",
-                Url = $"{_baseUrls.Admin}/projects?approve={project.Id}" // TODO: update this after you create a proper project details interface
+                To = _emailService.GetUserEmails(RolesConstants.SvpAdmin,
+                    RolesConstants.SuperAdmin),
+                Subject = $"{project.Title} - Completed!",
+                Salutation = "Hello,",
+                PrimaryMessage = $"This is to notify you that the project - {project.Title} - has been completed. " +
+                                 "You can now view the project details and download the project files.<br>",
+                ActionButton = new()
+                {
+                    Text = "View Project",
+                    Url = $"{_baseUrls.Admin}/projects?approve={project.Id}"
+                },
             };
 
             await _emailService.SendEmail(emailRequest);
@@ -635,7 +680,7 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
             : new ErrorResult("Unable to save changes, please try again later.");
     }
 
-    public async Task<Result> ListTypes(string? searchTerm)
+    public async Task<Result> ListTypes(string searchTerm)
     {
         searchTerm = string.IsNullOrEmpty(searchTerm)
             ? null
@@ -656,7 +701,8 @@ public class ProjectService(SaharaviewpointContext context, UserSession userSess
 
     #region PRIVATE METHODS
 
-    private async void AddProjectLog(Project project, ProjectLogTypes type, string description, string? previousState = null, string? currentState = null, string? remark = null)
+    private async void AddProjectLog(Project project, ProjectLogTypes type, string description,
+        string previousState = null, string currentState = null, string remark = null)
     {
         var log = new ProjectLog
         {

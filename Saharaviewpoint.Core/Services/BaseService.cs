@@ -29,7 +29,7 @@ public abstract class BaseService
         }
 
         // Handle additional values
-        foreach (var value in additionalValues)
+        foreach (object value in additionalValues)
         {
             if (value == null)
                 continue;
@@ -44,7 +44,7 @@ public abstract class BaseService
         var stringBuilder = new StringBuilder();
 
         bool isFirst = true;
-        foreach (var value in values)
+        foreach (object value in values)
         {
             if (value == null)
                 continue;
@@ -54,7 +54,7 @@ public abstract class BaseService
         return stringBuilder.ToString();
     }
 
-    private static void AppendValueToStringBuilder(ref bool isFirst, StringBuilder stringBuilder, object? value)
+    private static void AppendValueToStringBuilder(ref bool isFirst, StringBuilder stringBuilder, object value)
     {
         if (!isFirst)
         {
@@ -70,7 +70,7 @@ public abstract class BaseService
         // Handle Enum values
         else if (value is Enum enumValue)
         {
-            stringBuilder.Append(enumValue.ToString());
+            stringBuilder.Append(enumValue);
         }
         // Handle Collections (Arrays, Lists, etc.)
         else if (value is IEnumerable enumerableValue && !(value is string))

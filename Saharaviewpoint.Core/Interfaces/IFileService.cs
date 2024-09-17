@@ -40,11 +40,11 @@ public interface IFileService
     /// <param name="subFolder">The sub folder (typically the project title or task name)</param>
     /// <param name="fileName">The name of the file to be retrieved.</param>
     /// <returns></returns>
-    Task<FileStreamResult?> GetFileByPath(string folder, string subFolder, string fileName);
+    Task<FileStreamResult> GetFileByPath(string folder, string subFolder, string fileName);
 
-    Task<FileStreamResult?> GetGenericThumbnail(string filename);
+    Task<FileStreamResult> GetGenericThumbnail(string filename);
 
-    FileStreamResult? GetSvpLogo();
+    FileStreamResult GetSvpLogo();
 
     /// <summary>
     /// Deletes a file from azure blob storage

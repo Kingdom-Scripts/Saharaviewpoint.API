@@ -21,7 +21,7 @@ public class PMInvitation : BaseAppModel
     public required string LastName { get; set; }
 
     [MaxLength(25)]
-    public string? Phone { get; set; }
+    public string Phone { get; set; }
 
     [Required]
     public DateTime ExpiryDate { get; set; }
@@ -32,8 +32,7 @@ public class PMInvitation : BaseAppModel
 
     public bool EmailSent { get; set; } = false;
 
-    // TODO: make this required`
-    public int? CreatedById { get; set; }
+    public int CreatedById { get; set; }
 
-    public User? CreatedBy { get; set; }
+    public User CreatedBy { get; set; }
 }

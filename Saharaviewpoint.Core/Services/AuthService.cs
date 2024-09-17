@@ -4,31 +4,30 @@
 // Website: https://kingdomscripts.com. Email: mordecai@kingdomscripts.com
 // ========================================================================
 
+using System.Web;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Saharaviewpoint.Core.Contants;
 using Saharaviewpoint.Core.Interfaces;
+using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
+using Saharaviewpoint.Models.Configurations;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Auth;
-using Saharaviewpoint.Core.Utilities;
-using System.Web;
-using Saharaviewpoint.Models.Configurations;
-using Microsoft.Extensions.Options;
-using Saharaviewpoint.Core.Contants;
 
 namespace Saharaviewpoint.Core.Services;
 
-// TODO: implement cache for user profile
 public class AuthService : IAuthService
 {
     private readonly SaharaviewpointContext _context;
     private readonly ITokenHandler _tokenGenerator;
     private readonly UserSession _userSession;
     private readonly IEmailService _emailService;
-    private readonly BaseURLs _baseUrls;
+    private readonly BaseUrLs _baseUrls;
 
     public AuthService(SaharaviewpointContext context, ITokenHandler tokenGenerator, UserSession userSession,
         IEmailService emailService, IOptions<AppConfig> options)
@@ -40,7 +39,7 @@ public class AuthService : IAuthService
         _userSession = userSession ?? throw new ArgumentNullException(nameof(userSession));
         _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
 
-        _baseUrls = options.Value.BaseURLs;
+        _baseUrls = options.Value.BaseUrLs;
     }
 
     public async Task<Result> CreateClient(RegisterModel model)
@@ -83,7 +82,7 @@ public class AuthService : IAuthService
     public async Task<Result> AuthenticateUser(LoginModel model)
     {
         model.Email = model.Email.ToLower().Trim();
-        User? user = await _context.Users
+        User user = await _context.Users
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == model.Email);
 
@@ -145,7 +144,7 @@ public class AuthService : IAuthService
             $"{_baseUrls.Client}/auth/reset-password?email={model.Email}&token={HttpUtility.UrlEncode(token)}";
 
         // send email
-        var args = new Dictionary<string, string?> {
+        var args = new Dictionary<string, string> {
             {
                 "url", url
             },

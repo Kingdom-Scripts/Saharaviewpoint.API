@@ -23,8 +23,8 @@ public class ProjectView
     public int Order { get; set; }
     public int? AssigneeId { get; set; }
 
-    public ReferenceUserView? Assignee { get; set; }
-    public ReferenceUserView? CreatedBy { get; set; }
+    public ReferenceUserView Assignee { get; set; }
+    public ReferenceUserView CreatedBy { get; set; }
 
     [JsonIgnore]
     public bool IsDeleted { get; set; }
