@@ -15,6 +15,7 @@ using Saharaviewpoint.Core.Utilities;
 using Saharaviewpoint.Models.App;
 using Saharaviewpoint.Models.App.Constants;
 using Saharaviewpoint.Models.Configurations;
+using Saharaviewpoint.Models.Constants;
 using Saharaviewpoint.Models.Input.Auth;
 using Saharaviewpoint.Models.Utilities;
 using Saharaviewpoint.Models.View.Auth;
@@ -140,8 +141,18 @@ public class AuthService : IAuthService
             return new ErrorResult("Unable to send password reset email at the moment. Please try again.");
 
         // get and encode the url with token
-        string url =
-            $"{_baseUrls.Client}/auth/reset-password?email={model.Email}&token={HttpUtility.UrlEncode(token)}";
+        string url;
+        if (_userSession.AppType == AppTypes.Client)
+        {
+            url = $"{_baseUrls.Client}/auth/reset-password?email={model.Email}&token={HttpUtility.UrlEncode(token)}";
+        } else if (_userSession.AppType == AppTypes.Admin)
+        {
+            url = $"{_baseUrls.Admin}/auth/reset-password?email={model.Email}&token={HttpUtility.UrlEncode(token)}";
+        }
+        else
+        {
+            return new ErrorResult("Invalid request. Please try again.");
+        }
 
         // send email
         var args = new Dictionary<string, string> {

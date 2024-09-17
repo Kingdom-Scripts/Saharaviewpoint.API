@@ -29,10 +29,10 @@ public class UserSessionMiddleware(RequestDelegate next)
         }
 
         // get the app type
-        string token = context.Request.Headers["AppType"];
-        if (token is not null)
+        string appType = context.Request.Headers["AppType"];
+        if (appType is not null)
         {
-            session.AppType = token == "Client" ? AppTypes.Client : AppTypes.Admin;
+            session.AppType = appType == "Client" ? AppTypes.Client : AppTypes.Admin;
         }
 
         // Call the next delegate/middleware in the pipeline
