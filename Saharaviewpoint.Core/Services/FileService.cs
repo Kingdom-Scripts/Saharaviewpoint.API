@@ -158,7 +158,7 @@ public class FileService : IFileService
         }
     }
 
-    public FileStreamResult? GetSvpLogo()
+    public FileStreamResult GetSvpLogo()
     {
         // get logo from file storage
         string filePath = Path.Combine(_hostEnvironment.WebRootPath, "images", "svp-logo.svg");
@@ -176,7 +176,7 @@ public class FileService : IFileService
         };
     }
 
-    private async Task<FileStreamResult?> GetFile(string folder, string subFolder, string fileName)
+    private async Task<FileStreamResult> GetFile(string folder, string subFolder, string fileName)
     {
         var blobContainer = _blobServiceClient.GetBlobContainerClient(folder);
 
@@ -188,7 +188,7 @@ public class FileService : IFileService
         }
 
         var stream = await blobClient.OpenReadAsync();
-        string? contentType = blobClient.GetProperties().Value.ContentType;
+        string contentType = blobClient.GetProperties().Value.ContentType;
         return new FileStreamResult(stream, contentType)
         {
             FileDownloadName = fileName
