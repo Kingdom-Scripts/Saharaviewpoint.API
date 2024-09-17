@@ -202,13 +202,18 @@ public class AuthService : IAuthService
 
         int saved = await _context.SaveChangesAsync();
 
-        var login = await AuthenticateUser(new LoginModel { Email = model.Email, Password = model.Password });
-
         if (saved < 1)
             return new ErrorResult("Unable to reset password at the moment. Please try again.");
 
         // send password reset notification Email
-        await _emailService.SendEmail(model.Email, "Your Password Was Just Reset - Saharaviewpoint", EmailTemplates.ResetPassword);
+        var args = new Dictionary<string, string> {
+            {
+                "name", user.FirstName
+            }
+        };
+        await _emailService.SendEmail(model.Email, "Your Password Was Just Reset - Saharaviewpoint", EmailTemplates.ResetPassword, args);
+
+        var login = await AuthenticateUser(new LoginModel { Email = model.Email, Password = model.Password });
 
         if (!login.Success)
             return new SuccessResult("Password reset successfully, kindly log in to your account again.");
