@@ -96,7 +96,6 @@ public class ProjectService(
             return new ErrorResult("Unable to save changes, please try again later.");
 
         // Send Notification Email
-        {
             string url = $"{_baseUrls.Admin}/projects?approve={mappedProject.Id}";
 
             var emailRequest = new GenericEmailModel
@@ -121,7 +120,6 @@ public class ProjectService(
             };
 
             await _emailService.SendEmail(emailRequest);
-        }
 
         _cache.ClearCaches(ListProjectsCacheKeys, ProjectLogsCacheKeys);
 

@@ -209,7 +209,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
         {
             return await _context.ProjectTaskApprovals
                 .Where(pta => pta.ProjectId == projectId)
-                .OrderByDescending(pta => pta.CreatedAt)
+                .OrderBy(pta => pta.CreatedAt)
                 .ProjectToType<ProjectTaskApprovalView>()
                 .LastOrDefaultAsync();
         }, new TimeSpan(0, 45, 0));
@@ -272,8 +272,7 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
                          $"<strong>Project:</strong> {project.Title}<br>" +
                          $"<strong>Approval Status:</strong> {(model.Status ? "Approved" : "Declined")}<br>" +
                          $"<strong>Reviewed By:</strong> {_userSession.Name}<br>" +
-                         $"<strong>Date Reviewed:</strong> {approval.FulfilledOn:dd MMM, yyyy}<br>" +
-                         $"{(!string.IsNullOrEmpty(model.Remark) ? $"<strong>Remark:</strong> {model.Remark}<br>" : "")}";
+                         $"<strong>Date Reviewed:</strong> {approval.FulfilledOn:dd MMM, yyyy}<br>";
 
         var emailToPm = new GenericEmailModel
         {
@@ -281,7 +280,9 @@ public class ApprovalService(SaharaviewpointContext context, UserSession userSes
             Subject = $"Task Setup Approval - {project.Title}",
             Salutation = $"Hello {approval.Requester.FirstName},",
             PrimaryMessage = $"Your task setup approval request for project - {project.Title} " +
-                             $"has been reviewed and {(model.Status ? "approved" : "declined")} by an administrator.<br><br>" + details,
+                             $"has been reviewed and {(model.Status ? "approved" : "declined")} by an administrator.<br><br>"
+                             + details +
+                             $"{(!string.IsNullOrEmpty(model.Remark) ? $"<strong>Remark:</strong> {model.Remark}<br>" : "")}",
             ClosingRemark = "Regards",
             ActionButton = new EmailActionButton
             {

@@ -13,7 +13,7 @@ namespace Saharaviewpoint.Core.Services;
 
 public abstract class BaseService
 {
-    protected static string GenerateCacheKey<TModel>(TModel model, params object[] additionalValues)
+    protected static string GenerateCacheKey<TModel>(TModel model, params object[] additionalValues) where TModel : class
     {
         var stringBuilder = new StringBuilder();
 
